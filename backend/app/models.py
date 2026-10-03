@@ -12,8 +12,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 Priority = Literal["high", "medium", "low"]
-Mode = Literal["NORMAL", "FROST", "REPLAY"]
+Mode = Literal["NORMAL", "FROST", "HUMID", "DRY", "REPLAY"]
 FrostLevel = Literal["OK", "WARNING", "CRITICAL"]
+HumidityLevel = Literal["OK", "LOW", "HIGH"]
+AlertType = Literal["FROST", "HUMIDITY_HIGH", "HUMIDITY_LOW"]
 
 
 class CamelModel(BaseModel):
@@ -74,11 +76,11 @@ class FieldReport(CamelModel):
 class Reason(CamelModel):
     code: str
     text: str
-    source: Literal["vision", "field", "sensor", "system"]
+    source: Literal["vision", "field", "sensor", "satellite", "system"]
 
 
 class Action(CamelModel):
-    type: str = Field(description="protect_from_frost | check_sensor_service | irrigate | treat_disease | treat_pests | remove_weeds | harvest | fertilize | fly_drone | check_sensors")
+    type: str = Field(description="protect_from_frost | check_sensor_service | inspect_weak_zone | irrigate | treat_disease | treat_pests | remove_weeds | harvest | fertilize | fly_drone | check_sensors")
     title: str
     score: int = Field(ge=0, le=100)
     priority: Priority
@@ -104,6 +106,7 @@ class Metrics(CamelModel):
 class UpdatedAt(CamelModel):
     vision: datetime | None = None
     field: datetime | None = None
+    imagery: datetime | None = None
 
 
 class SensorReadingOut(CamelModel):
@@ -127,15 +130,19 @@ class FrostAssessment(CamelModel):
 class SensorLatestOut(SensorReadingOut):
     """Shared contract (parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel) + our additions."""
     frost_level: FrostLevel
-    mode: Mode = Field(description="REPLAY is detected from past timestamps; FROST if switched through this API")
+    crop: str | None = Field(None, description="Crop key the sensors service applies thresholds for")
+    humidity_level: HumidityLevel | None = Field(None, description="Against the crop's humidity range")
+    mode: Mode = Field(description="Simulator mode, as reported by sensors-alerts")
     drop_last_hour_c: float | None = Field(description="How much colder than an hour ago (reading time); <0 = warming")
     frost: FrostAssessment
 
 
 class AlertOut(CamelModel):
-    """Shared contract + priority and title. Level OK is the all-clear."""
+    """Shared contract + priority and title. Level OK is the all-clear; humidity alerts are WARNING or OK."""
     parcel_id: str
     parcel_name: str
+    crop: str | None = None
+    type: AlertType = "FROST"
     level: FrostLevel
     temperature_c: float
     humidity_pct: float
@@ -150,6 +157,22 @@ class DemoOut(CamelModel):
     parcel_id: str | None = None
     mode: Mode
     message: str
+
+
+class ImageryOut(CamelModel):
+    """Latest satellite scene of the parcel, as posted by the imagery pipeline (imagery/push.py)."""
+    model_config = ConfigDict(extra="allow")  # merged with CamelModel config
+    scene_date: date
+    ndvi_median: float | None = None
+    affected_pct: float | None = Field(None, description="% of the visible parcel in weak-vegetation zones")
+    affected_sector: str | None = Field(None, description="N, NE, ... | C | scattered | null")
+    zone_count: int | None = None
+    zone_center: list[float] | None = Field(None, description="[lon, lat] of the largest weak zone")
+    zone_confirmed: bool | None = None
+    overlay_path: str | None = Field(None, description="Transparent weak-zone overlay, served by this API")
+    photo_path: str | None = Field(None, description="True-colour photo with the same bounds")
+    overlay_bounds: list[float] | None = Field(None, description="[south, west, north, east]")
+    warnings: list[dict] = []
 
 
 class ParcelOut(CamelModel):
@@ -170,4 +193,5 @@ class ParcelOut(CamelModel):
     actions: list[Action] = Field(description="Sorted by score, most urgent first")
     metrics: Metrics
     zones: list[Zone]
+    imagery: ImageryOut | None = None
     updated_at: UpdatedAt

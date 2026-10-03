@@ -2,7 +2,6 @@ package md.agro.sensors.config;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -71,16 +70,4 @@ public record AppProperties(
             @DefaultValue("telegram-chats.txt") String chatsFile) {
     }
 
-    public Optional<Parcel> parcel(String id) {
-        return parcels.stream().filter(p -> p.id().equalsIgnoreCase(id)).findFirst();
-    }
-
-    /** Crop key of the parcel, or "" if it has none. */
-    public String cropKey(String parcelId) {
-        return parcel(parcelId).map(p -> p.crop().trim().toLowerCase()).orElse("");
-    }
-
-    public Crop cropFor(String parcelId) {
-        return crops.getOrDefault(cropKey(parcelId), DEFAULT_CROP);
-    }
 }

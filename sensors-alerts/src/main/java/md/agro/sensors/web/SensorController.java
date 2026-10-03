@@ -14,11 +14,14 @@ import md.agro.sensors.model.AlertType;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.model.SensorMode;
 import md.agro.sensors.sim.SensorSimulator;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,18 +31,21 @@ public class SensorController {
 
     // Field names here are what Coder 3 sees; align with the shared JSON contract.
     public record LatestResponse(String parcelId, Instant timestamp, double temperatureC, double humidityPct,
-            double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel) {
+            double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel, SensorMode mode) {
     }
 
-    private final AppProperties props;
+    public record ParcelRequest(String name, String crop) {
+    }
+
+    private final ParcelRegistry parcels;
 
     private final SensorStore store;
     private final SensorSimulator simulator;
     private final AlertService alertService;
 
-    public SensorController(AppProperties props, SensorStore store, SensorSimulator simulator,
+    public SensorController(ParcelRegistry parcels, SensorStore store, SensorSimulator simulator,
             AlertService alertService) {
-        this.props = props;
+        this.parcels = parcels;
         this.store = store;
         this.simulator = simulator;
         this.alertService = alertService;
@@ -53,7 +59,20 @@ public class SensorController {
         Reading r = st.reading();
         return new LatestResponse(r.parcelId(), r.timestamp(), r.temperatureC(), r.humidityPct(),
                 Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level(),
-                props.cropKey(id), st.humidity());
+                parcels.cropKey(id), st.humidity(), simulator.mode(id));
+    }
+
+    @GetMapping("/sensors/parcels")
+    public List<AppProperties.Parcel> parcels() {
+        return parcels.all();
+    }
+
+    /** The backend registers its parcels here, so a parcel created in the web app gets a sensor. */
+    @PutMapping("/sensors/parcels/{id}")
+    public AppProperties.Parcel register(@PathVariable String id, @RequestBody ParcelRequest body) {
+        AppProperties.Parcel parcel = parcels.put(id, body.name(), body.crop());
+        simulator.ensureSensor(id);
+        return parcel;
     }
 
     @GetMapping("/sensors/parcels/{id}/readings")

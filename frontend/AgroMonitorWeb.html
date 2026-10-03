@@ -111,6 +111,9 @@ main{min-width:0;padding:28px 36px 48px;max-width:1440px;width:100%}
   <div><b>Demo</b><p class="mut">Scenarii pentru prezentare</p></div>
   <button class="sec" onclick="demo('frost')">❄️ Simulează înghețul</button>
   <button class="sec" onclick="demo('replay')">🌙 Redă o noapte reală</button>
+  <button class="sec" onclick="demo('humid')">💧 Simulează aer umed</button>
+  <button class="sec" onclick="demo('dry')">🌵 Simulează aer uscat</button>
+  <button class="lnk" onclick="demo('normal')">☀️ Revino la vreme normală</button>
   <button class="lnk" onclick="demo('reset')">↺ Resetează demo</button>
  </div>
  <div class="conn"><i id="cdot"></i><span id="ctext">Se conectează…</span></div>
@@ -230,11 +233,13 @@ var POLL_MS=3000;
 var ST={ok:['t-a','Totul este în regulă'],warning:['t-w','Necesită atenție'],critical:['t-u','Problemă detectată'],no_data:['t-e','Date insuficiente']};
 var FR={OK:['t-a','Fără risc de îngheț'],WARNING:['t-w','Risc de îngheț'],CRITICAL:['t-u','Îngheț']};
 var PRI={high:['t-u','Alertă urgentă','u','al'],medium:['t-w','Avertizare','w','al'],low:['t-a','De făcut','','td']};
-var MODE={NORMAL:'Normal',FROST:'Simulare îngheț',REPLAY:'Redare noapte reală'};
+var MODE={NORMAL:'Normal',FROST:'Simulare îngheț',HUMID:'Simulare aer umed',DRY:'Simulare aer uscat',REPLAY:'Redare noapte reală'};
+var HUM={LOW:'scăzută pentru cultură',HIGH:'ridicată pentru cultură'};
+var SECTOR={N:'nord',NE:'nord-est',E:'est',SE:'sud-est',S:'sud',SW:'sud-vest',W:'vest',NW:'nord-vest',C:'centru',scattered:'mai multe locuri'};
 var CROP={wheat:'Grâu',barley:'Orz',corn:'Porumb',sunflower:'Floarea-soarelui',orchard:'Livadă',vineyard:'Viță de vie'};
 var DIS={rust:'rugină',septoria:'septorioză',powdery_mildew:'făinare',fusarium:'fuzarioză',smut:'tăciune',scab:'rapăn',downy_mildew:'mană'};
-var SRC={vision:['🚁','Dronă'],field:['🧪','Sol și vreme'],sensor:['🌡️','Senzor pentru aer'],system:['⚙️','Sistem']};
-var ICON={protect_from_frost:'❄️',irrigate:'💧',treat_disease:'🍂',treat_pests:'🐛',remove_weeds:'🌿',harvest:'🌾',fertilize:'🧪',fly_drone:'🚁',check_sensors:'📡',check_sensor_service:'📡'};
+var SRC={vision:['🚁','Dronă'],field:['🧪','Sol și vreme'],sensor:['🌡️','Senzor pentru aer'],satellite:['🛰️','Satelit'],system:['⚙️','Sistem']};
+var ICON={protect_from_frost:'❄️',inspect_weak_zone:'🛰️',irrigate:'💧',treat_disease:'🍂',treat_pests:'🐛',remove_weeds:'🌿',harvest:'🌾',fertilize:'🧪',fly_drone:'🚁',check_sensors:'📡',check_sensor_service:'📡'};
 var TODO={
  protect_from_frost:['Pornește aspersiunea înainte ca temperatura să scadă sub 0°C.','Acoperă culturile sensibile cu agril sau folie.','Verifică plantele după răsărit pentru semne de degerare.'],
  irrigate:['Verifică solul manual în zonele uscate.','Pornește irigarea dimineața devreme sau seara.','Controlează funcționarea sistemului de irigare.'],
@@ -243,6 +248,7 @@ var TODO={
  remove_weeds:['Erbicidează sau prășește zonele cu buruieni.'],
  harvest:['Pregătește combina și transportul.','Verifică prognoza meteo pentru zilele de recoltare.'],
  fertilize:['Fă o analiză a solului pentru azot.','Aplică îngrășământ cu azot în doze fracționate.'],
+ inspect_weak_zone:['Mergi în zona marcată pe imaginea din satelit și verifică plantele.','Caută semne de boală, dăunători, lipsă de apă sau băltire.','Compară cu imaginea următoare ca să vezi dacă zona persistă.'],
  fly_drone:['Planifică un zbor cu drona deasupra terenului.'],
  check_sensors:['Verifică alimentarea și conexiunea senzorilor.'],
  check_sensor_service:['Pornește serviciul sensors-alerts (port 8081).','Verifică variabila SENSORS_URL a API-ului.']};
@@ -294,7 +300,8 @@ function notifyNew(){
  var top=st.alerts.length?st.alerts[0].timestamp:'';
  if(st.toasted!==null&&top>st.toasted){var a=st.alerts[0];toast(aicon(a)+' '+a.title+' · '+a.parcelName)}
  st.toasted=top}
-function aicon(a){return a.level=='OK'?'✅':a.level=='CRITICAL'?'❄️':'⚠️'}
+function aicon(a){return a.level=='OK'?'✅':a.type=='HUMIDITY_HIGH'?'💧':a.type=='HUMIDITY_LOW'?'🌵':a.level=='CRITICAL'?'❄️':'⚠️'}
+function sdate(d){return new Date(d).toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'})}
 
 // ---------- render ----------
 function render(){var p=P();renderTop(p);renderHome(p);renderRecs(p);renderMaps(p);renderHist(p);renderProf(p);renderBell()}
@@ -332,13 +339,20 @@ function renderHome(p){
   '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Temperatură</span><b>'+num(s.temperatureC)+'°C</b></div><div class="m"><span class="mut">Punct de rouă</span><b>'+num(s.dewPointC)+'°C</b></div>'+
   '<div class="m"><span class="mut">Umiditate aer</span><b>'+num(s.humidityPct,0)+'<small>%</small></b></div><div class="m"><span class="mut">Față de acum o oră</span><b>'+(dr==null?'—':(dr>0?'−':'+')+num(Math.abs(dr))+'°C')+'</b></div></div>'+
   '<p style="margin-top:12px">'+(dr==null?'<span class="mut">Tendința se calculează…</span>':dr>0.3?'↘ Temperatura scade':dr<-0.3?'↗ Temperatura crește':'→ Temperatura e stabilă')+'</p>'+
+  (HUM[s.humidityLevel]?'<p style="margin-top:6px">'+(s.humidityLevel=='HIGH'?'💧':'🌵')+' Umiditatea aerului e '+HUM[s.humidityLevel]+'</p>':'')+
   '<p class="mut" style="margin-top:6px">Mod: '+esc(MODE[s.mode]||s.mode)+' · '+(s.mode=='REPLAY'?'ora reală '+esc(new Date(s.timestamp).toLocaleString('ro-RO',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})):when(s.timestamp))+'</p>'}
  // crop
  var m=p.metrics,dz=m.disease&&['none','healthy'].indexOf(m.disease)<0;
- $('hcrop').innerHTML='<div class="row"><h2 class="sp">Starea culturii</h2><span class="tag t-a">Dronă</span></div>'+
+ var im=p.imagery;
+ $('hcrop').innerHTML='<div class="row"><h2 class="sp">Starea culturii</h2><span class="tag t-a">'+(p.updatedAt.vision?'Dronă':im?'Satelit':'Fără date')+'</span></div>'+
   '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">NDVI</span><b>'+num(m.ndviMean,2)+'</b></div><div class="m"><span class="mut">Stres hidric</span><b>'+num(m.waterStressPct,0)+'<small>%</small></b></div>'+
   '<div class="m"><span class="mut">Boală</span><b style="font-size:18px">'+(dz?esc(DIS[m.disease]||m.disease)+' <small>'+num(m.diseaseAreaPct,0)+'%</small>':'Nu')+'</b></div><div class="m"><span class="mut">Maturitate</span><b>'+(m.ripeness==null?'—':num(m.ripeness*100,0)+'<small>%</small>')+'</b></div></div>'+
-  '<p class="mut" style="margin-top:10px">Imagine dronă: '+when(p.updatedAt.vision)+'</p>';
+  '<p class="mut" style="margin-top:10px">Imagine dronă: '+when(p.updatedAt.vision)+'</p>'+
+  // satellite scene from the imagery pipeline: true-colour photo with the weak-zone overlay on top
+  (im?(im.photoPath?'<div style="position:relative;margin-top:10px"><img src="'+esc(API+im.photoPath)+'" alt="Imagine din satelit a parcelei" style="display:block;width:100%;border-radius:8px">'+
+   (im.overlayPath?'<img src="'+esc(API+im.overlayPath)+'" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%">':'')+'</div>':'')+
+   '<p class="mut" style="margin-top:6px">🛰️ Satelit Sentinel-2 · '+sdate(im.sceneDate)+' · NDVI '+num(im.ndviMedian,2)+' · '+
+   (im.affectedPct?num(im.affectedPct)+'% vegetație slabă'+(SECTOR[im.affectedSector]?' ('+SECTOR[im.affectedSector]+')':''):'fără zone slabe')+'</p>':'');
  // soil
  $('hsoil').innerHTML='<div class="row"><h2 class="sp">Starea solului</h2><span class="tag t-a">Media sondelor</span></div>'+
   '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Umiditate</span><b>'+num(m.soilMoisturePct,0)+'<small>%</small></b></div><div class="m"><span class="mut">Ploaie 48 h</span><b>'+num(m.rainForecastMm48h,0)+' <small>mm</small></b></div><div class="m"><span class="mut">pH</span><b>6,3</b></div><div class="m"><span class="mut">EC</span><b>0,9 <small>mS/cm</small></b></div></div>'+

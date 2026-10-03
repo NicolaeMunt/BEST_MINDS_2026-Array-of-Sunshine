@@ -18,6 +18,7 @@ import md.agro.sensors.alert.AlertService;
 import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.model.SensorMode;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,28 +57,54 @@ public class SensorSimulator {
         }
     }
 
-    private final AppProperties props;
+    private final ParcelRegistry parcels;
     private final AppProperties.Simulator cfg;
     private final AlertService alertService;
     private final SensorStore store;
     private final ResourceLoader resourceLoader;
+    // Guarded by itself; parcels can be added while the simulator runs.
     private final Map<String, Sensor> sensors = new LinkedHashMap<>();
+    private boolean started;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
-    public SensorSimulator(AppProperties props, AlertService alertService, SensorStore store,
+    public SensorSimulator(AppProperties props, ParcelRegistry parcels, AlertService alertService, SensorStore store,
             ResourceLoader resourceLoader) {
-        this.props = props;
+        this.parcels = parcels;
         this.cfg = props.simulator();
         this.alertService = alertService;
         this.store = store;
         this.resourceLoader = resourceLoader;
-        props.parcels().forEach(p -> sensors.put(p.id(), new Sensor(p.id())));
+        parcels.all().forEach(p -> sensors.put(p.id(), new Sensor(p.id())));
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        log.info("Simulator started for parcels {} every {} s", sensors.keySet(), cfg.intervalSeconds());
-        sensors.values().forEach(s -> scheduleTick(s, s.generation, 0));
+        synchronized (sensors) {
+            started = true;
+            log.info("Simulator started for parcels {} every {} s", sensors.keySet(), cfg.intervalSeconds());
+            sensors.values().forEach(s -> scheduleTick(s, s.generation, 0));
+        }
+    }
+
+    /** Starts a virtual sensor for a parcel added at runtime; does nothing if it already has one. */
+    public void ensureSensor(String parcelId) {
+        synchronized (sensors) {
+            if (sensors.containsKey(parcelId)) {
+                return;
+            }
+            Sensor s = new Sensor(parcelId);
+            sensors.put(parcelId, s);
+            if (started) {
+                scheduleTick(s, s.generation, 0);
+            }
+        }
+        log.info("Sensor added for parcel {}", parcelId);
+    }
+
+    private Sensor sensor(String parcelId) {
+        synchronized (sensors) {
+            return sensors.get(parcelId);
+        }
     }
 
     @PreDestroy
@@ -86,23 +113,27 @@ public class SensorSimulator {
     }
 
     public boolean hasParcel(String parcelId) {
-        return sensors.containsKey(parcelId);
+        return sensor(parcelId) != null;
     }
 
     public SensorMode mode(String parcelId) {
-        Sensor s = sensors.get(parcelId);
+        Sensor s = sensor(parcelId);
         synchronized (s) {
             return s.mode;
         }
     }
 
     public void setAll(SensorMode mode) {
-        sensors.keySet().forEach(id -> setMode(id, mode));
+        List<String> ids;
+        synchronized (sensors) {
+            ids = List.copyOf(sensors.keySet());
+        }
+        ids.forEach(id -> setMode(id, mode));
     }
 
     /** @throws IllegalStateException if REPLAY is requested and the CSV cannot be loaded */
     public void setMode(String parcelId, SensorMode mode) {
-        Sensor s = sensors.get(parcelId);
+        Sensor s = sensor(parcelId);
         if (s == null) {
             throw new IllegalArgumentException("Unknown parcel " + parcelId);
         }
@@ -119,7 +150,7 @@ public class SensorSimulator {
             if (mode == SensorMode.FROST || mode == SensorMode.HUMID || mode == SensorMode.DRY) {
                 ThreadLocalRandom rnd = ThreadLocalRandom.current();
                 // Targets go past the thresholds of the parcel's crop, so the alert fires for any crop.
-                AppProperties.Crop crop = props.cropFor(parcelId);
+                AppProperties.Crop crop = parcels.cropFor(parcelId);
                 s.rampStart = Instant.now();
                 s.rampFromTemp = Double.isNaN(s.lastTemp) ? normalTemp() : s.lastTemp;
                 s.rampFromHum = Double.isNaN(s.lastHum) ? normalHumidity(s.rampFromTemp) : s.lastHum;

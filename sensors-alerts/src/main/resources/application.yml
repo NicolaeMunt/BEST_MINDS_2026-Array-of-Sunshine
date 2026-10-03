@@ -1,0 +1,41 @@
+server:
+  port: ${PORT:8081}
+
+app:
+  # Frontend origin(s), comma separated. "*" allows everything (fine for the demo).
+  cors-origins: ${FRONTEND_ORIGIN:*}
+
+  # Must match Coder 3's parcel IDs.
+  parcels:
+    - id: P1
+      name: Livada Nord
+    - id: P2
+      name: Via Sud
+    - id: P3
+      name: Câmpul Mare
+
+  simulator:
+    interval-seconds: 5
+    # How long FROST mode takes to reach sub-zero temperature.
+    frost-ramp-seconds: 60
+    # classpath:... or file:... (timestamp,temperatureC,humidityPct)
+    replay-file: ${REPLAY_FILE:classpath:replay/sample-frost-night.csv}
+    # 1 hour of the CSV is replayed in this many real seconds.
+    replay-seconds-per-hour: 10
+    max-readings-per-parcel: 720
+
+  frost:
+    warning-temp-c: 2
+    critical-temp-c: 0
+    # WARNING also when below falling-below-c and dropped more than falling-drop-c in the last hour.
+    falling-below-c: 5
+    falling-drop-c: 3
+    all-clear-temp-c: 3
+    # Real time. Set to e.g. 30 for demos.
+    cooldown-seconds: ${FROST_COOLDOWN_SECONDS:1800}
+
+  telegram:
+    token: ${TELEGRAM_BOT_TOKEN:}
+    username: ${TELEGRAM_BOT_USERNAME:}
+    # Always receives alerts, even if /start was never sent.
+    fallback-chat-id: ${TELEGRAM_CHAT_ID:}

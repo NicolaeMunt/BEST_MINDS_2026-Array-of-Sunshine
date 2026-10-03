@@ -1,0 +1,810 @@
+{
+  "results": [
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-01",
+      "ndvi_median": 0.143,
+      "ndmi_median": -0.385,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": null,
+      "median_change": null,
+      "declined_pct": null,
+      "ndmi_change": null,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-01.png",
+      "photo_path": "/overlays/demo1_2026-05-01_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.14 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-04",
+      "ndvi_median": 0.192,
+      "ndmi_median": -0.33,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-01",
+      "median_change": 0.049,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.055,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-04.png",
+      "photo_path": "/overlays/demo1_2026-05-04_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.19 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-06",
+      "ndvi_median": 0.181,
+      "ndmi_median": -0.326,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-04",
+      "median_change": -0.011,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.004,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-06.png",
+      "photo_path": "/overlays/demo1_2026-05-06_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.18 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-11",
+      "ndvi_median": 0.206,
+      "ndmi_median": -0.297,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 64.5,
+      "prev_scene_date": "2026-05-06",
+      "median_change": 0.025,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.029,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-11.png",
+      "photo_path": "/overlays/demo1_2026-05-11_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-14",
+      "ndvi_median": 0.208,
+      "ndmi_median": -0.292,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 79.2,
+      "prev_scene_date": "2026-05-11",
+      "median_change": 0.002,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.005,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-14.png",
+      "photo_path": "/overlays/demo1_2026-05-14_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-16",
+      "ndvi_median": 0.227,
+      "ndmi_median": -0.298,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-14",
+      "median_change": 0.019,
+      "declined_pct": 0.0,
+      "ndmi_change": -0.006,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-16.png",
+      "photo_path": "/overlays/demo1_2026-05-16_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-24",
+      "ndvi_median": 0.27,
+      "ndmi_median": -0.248,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 98.7,
+      "prev_scene_date": "2026-05-16",
+      "median_change": 0.043,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.05,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-24.png",
+      "photo_path": "/overlays/demo1_2026-05-24_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.27 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-26",
+      "ndvi_median": 0.286,
+      "ndmi_median": -0.225,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-24",
+      "median_change": 0.016,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.023,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-26.png",
+      "photo_path": "/overlays/demo1_2026-05-26_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.29 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-28",
+      "ndvi_median": 0.354,
+      "ndmi_median": -0.189,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-26",
+      "median_change": 0.068,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.036,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-28.png",
+      "photo_path": "/overlays/demo1_2026-05-28_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.35 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-31",
+      "ndvi_median": 0.404,
+      "ndmi_median": -0.14,
+      "affected_pct": 1.4,
+      "affected_sector": "scattered",
+      "zone_count": 3,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-28",
+      "median_change": 0.049,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.049,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-05-31.png",
+      "photo_path": "/overlays/demo1_2026-05-31_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.40 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-05",
+      "ndvi_median": 0.522,
+      "ndmi_median": -0.033,
+      "affected_pct": 3.6,
+      "affected_sector": "scattered",
+      "zone_count": 5,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-05-31",
+      "median_change": 0.118,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.107,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-06-05.png",
+      "photo_path": "/overlays/demo1_2026-06-05_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "low_vegetation",
+          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-10",
+      "ndvi_median": 0.637,
+      "ndmi_median": 0.097,
+      "affected_pct": 1.6,
+      "affected_sector": "NE",
+      "zone_count": 3,
+      "zone_center": [
+        28.869263,
+        47.404003
+      ],
+      "valid_pct": 83.7,
+      "prev_scene_date": "2026-06-05",
+      "median_change": 0.116,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.13,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-06-10.png",
+      "photo_path": "/overlays/demo1_2026-06-10_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "possible_cloud",
+          "text": "2 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-18",
+      "ndvi_median": 0.745,
+      "ndmi_median": 0.167,
+      "affected_pct": 3.0,
+      "affected_sector": "scattered",
+      "zone_count": 4,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-06-10",
+      "median_change": 0.107,
+      "declined_pct": 0.9,
+      "ndmi_change": 0.07,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-06-18.png",
+      "photo_path": "/overlays/demo1_2026-06-18_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-20",
+      "ndvi_median": 0.748,
+      "ndmi_median": 0.225,
+      "affected_pct": 2.5,
+      "affected_sector": "NW",
+      "zone_count": 3,
+      "zone_center": [
+        28.864274,
+        47.405344
+      ],
+      "valid_pct": 94.1,
+      "prev_scene_date": "2026-06-18",
+      "median_change": 0.004,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.058,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-06-20.png",
+      "photo_path": "/overlays/demo1_2026-06-20_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "possible_cloud",
+          "text": "1 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
+        }
+      ]
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-25",
+      "ndvi_median": 0.799,
+      "ndmi_median": 0.236,
+      "affected_pct": 1.2,
+      "affected_sector": "NW",
+      "zone_count": 2,
+      "zone_center": [
+        28.864271,
+        47.405254
+      ],
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-06-20",
+      "median_change": 0.05,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.011,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-06-25.png",
+      "photo_path": "/overlays/demo1_2026-06-25_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-28",
+      "ndvi_median": 0.783,
+      "ndmi_median": 0.236,
+      "affected_pct": 0.9,
+      "affected_sector": "NW",
+      "zone_count": 2,
+      "zone_center": [
+        28.864145,
+        47.405436
+      ],
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-06-25",
+      "median_change": -0.015,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.0,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-06-28.png",
+      "photo_path": "/overlays/demo1_2026-06-28_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-30",
+      "ndvi_median": 0.752,
+      "ndmi_median": 0.232,
+      "affected_pct": 0.9,
+      "affected_sector": "N",
+      "zone_count": 2,
+      "zone_center": [
+        28.8678,
+        47.403847
+      ],
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-06-28",
+      "median_change": -0.032,
+      "declined_pct": 0.0,
+      "ndmi_change": -0.004,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-06-30.png",
+      "photo_path": "/overlays/demo1_2026-06-30_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-03",
+      "ndvi_median": 0.71,
+      "ndmi_median": 0.234,
+      "affected_pct": 0.4,
+      "affected_sector": "N",
+      "zone_count": 1,
+      "zone_center": [
+        28.8678,
+        47.403847
+      ],
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-06-30",
+      "median_change": -0.041,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.002,
+      "zone_confirmed": true,
+      "overlay_path": "/overlays/demo1_2026-07-03.png",
+      "photo_path": "/overlays/demo1_2026-07-03_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-05",
+      "ndvi_median": 0.72,
+      "ndmi_median": 0.244,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-07-03",
+      "median_change": 0.01,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.01,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-07-05.png",
+      "photo_path": "/overlays/demo1_2026-07-05_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-17",
+      "ndvi_median": 0.757,
+      "ndmi_median": 0.299,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 69.2,
+      "prev_scene_date": "2026-07-05",
+      "median_change": 0.037,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.055,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-07-17.png",
+      "photo_path": "/overlays/demo1_2026-07-17_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-18",
+      "ndvi_median": 0.744,
+      "ndmi_median": 0.285,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "prev_scene_date": "2026-07-17",
+      "median_change": -0.013,
+      "declined_pct": 0.0,
+      "ndmi_change": -0.014,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-07-18.png",
+      "photo_path": "/overlays/demo1_2026-07-18_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-20",
+      "ndvi_median": 0.683,
+      "ndmi_median": 0.348,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 51.5,
+      "prev_scene_date": "2026-07-18",
+      "median_change": -0.062,
+      "declined_pct": 0.0,
+      "ndmi_change": 0.063,
+      "zone_confirmed": null,
+      "overlay_path": "/overlays/demo1_2026-07-20.png",
+      "photo_path": "/overlays/demo1_2026-07-20_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-30",
+      "ndvi_median": 0.647,
+      "ndmi_median": 0.222,
+      "affected_pct": 0.6,
+      "affected_sector": "NW",
+      "zone_count": 1,
+      "zone_center": [
+        28.863066,
+        47.404914
+      ],
+      "valid_pct": 97.8,
+      "prev_scene_date": "2026-07-20",
+      "median_change": -0.036,
+      "declined_pct": 0.0,
+      "ndmi_change": -0.126,
+      "zone_confirmed": false,
+      "overlay_path": "/overlays/demo1_2026-07-30.png",
+      "photo_path": "/overlays/demo1_2026-07-30_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": [
+        {
+          "code": "possible_cloud",
+          "text": "1 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-08",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-09",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-18",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-19",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-21",
+      "valid_pct": 0.1,
+      "reason": "only 0.1% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-05-29",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-03",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-07",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-08",
+      "valid_pct": 14.5,
+      "reason": "only 14.5% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-13",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-15",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-17",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-23",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-27",
+      "valid_pct": 2.0,
+      "reason": "only 2.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-07",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-08",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-10",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-13",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-15",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-23",
+      "valid_pct": 44.3,
+      "reason": "only 44.3% of the parcel is cloud-free (minimum 50%)"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-25",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-27",
+      "valid_pct": 0.0,
+      "reason": "only 0.0% of the parcel is cloud-free (minimum 50%); bands not downloaded"
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-28",
+      "valid_pct": 24.6,
+      "reason": "only 24.6% of the parcel is cloud-free (minimum 50%)"
+    }
+  ]
+}

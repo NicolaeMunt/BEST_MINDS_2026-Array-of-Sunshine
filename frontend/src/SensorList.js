@@ -2,7 +2,7 @@ import { html, num } from './lib.js';
 import { CROP, verdict } from './labels.js';
 
 export function SensorList({ sensors, selected, onSelect }) {
-  if (!sensors.length) return html`<p className="sensors-empty">Niciun senzor de arătat.</p>`;
+  if (!sensors.length) return html`<p className="sensors-empty">Niciun teren de arătat.</p>`;
   return html`<ul className="sensor-list">
     ${sensors.map(sensor => {
       const v = verdict(sensor);

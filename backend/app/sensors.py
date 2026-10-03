@@ -1,6 +1,6 @@
 """Adapter over the sensors-alerts service: keeps its contract fields and adds what the frontend
 needs on top (dew point per reading, drop over the last hour, mode, priority and reasons).
-The readings for the chart come from the database (see collector.py)."""
+The readings for the chart and the alerts come from the database (see collector.py)."""
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -19,6 +19,8 @@ ALERT_TITLE = {
     ("HUMIDITY_HIGH", "OK"): "Umiditate revenită la normal",
     ("HUMIDITY_LOW", "OK"): "Umiditate revenită la normal",
 }
+# Chart resolution: (window up to this many minutes, seconds per point); 0 = the readings themselves.
+SUMMARY_STEPS = [(120, 0), (2 * 24 * 60, 300), (14 * 24 * 60, 3600)]
 # Replay readings carry the timestamps of the recorded night.
 REPLAY_AGE = timedelta(minutes=10)
 
@@ -62,13 +64,19 @@ def latest(parcel_id):
 
 
 def readings(parcel_id, minutes, max_points=300):
-    """Stored readings of the last N minutes with the dew point, thinned out evenly to max_points for the chart."""
+    """Stored readings of the last N minutes with the dew point, at most ~max_points for the chart.
+    Up to two hours: the readings themselves, thinned out evenly. Longer: one point per 5 minutes,
+    hour or day with the average, and the lowest and highest temperature of that stretch."""
+    bucket = next((sec for limit, sec in SUMMARY_STEPS if minutes <= limit), 86400)
     with db.get_conn() as conn:
-        rows = db.readings(conn, parcel_id, minutes)
-    step = -(-len(rows) // max_points) or 1
-    rows = rows[::step] + (rows[-1:] if (len(rows) - 1) % step else [])  # the newest reading always stays
-    return [{"parcelId": r["parcel_id"], "timestamp": r["timestamp"], "temperatureC": r["temperature_c"],
-             "humidityPct": r["humidity_pct"], "dewPointC": dew_point(r["temperature_c"], r["humidity_pct"])}
+        rows = db.readings_summary(conn, parcel_id, minutes, bucket) if bucket else db.readings(conn, parcel_id, minutes)
+    if not bucket:
+        step = -(-len(rows) // max_points) or 1
+        rows = rows[::step] + (rows[-1:] if (len(rows) - 1) % step else [])  # the newest reading always stays
+    return [{"parcelId": r["parcel_id"], "timestamp": r["timestamp"], "temperatureC": round(r["temperature_c"], 1),
+             "humidityPct": round(r["humidity_pct"], 1), "dewPointC": dew_point(r["temperature_c"], r["humidity_pct"]),
+             "minTemperatureC": r["min_temperature_c"] if bucket else None,
+             "maxTemperatureC": r["max_temperature_c"] if bucket else None}
             for r in rows]
 
 
@@ -78,9 +86,12 @@ def parcels():
 
 
 def alerts(parcel_id=None, type_="ALL"):
-    result = []
-    for a in client.alerts(parcel_id, type_):
-        kind = a.get("type") or "FROST"
-        result.append({**a, "type": kind, "priority": ALERT_PRIORITY.get(a["level"], "low"),
-                       "title": ALERT_TITLE.get((kind, a["level"]), a["level"])})
-    return result
+    """Stored alerts, newest first, with priority and title."""
+    with db.get_conn() as conn:
+        rows = db.alerts(conn, parcel_id, type_)
+    return [{"parcelId": a["parcel_id"], "parcelName": a["parcel_name"], "crop": a["crop"], "type": a["type"],
+             "level": a["level"], "temperatureC": a["temperature_c"], "humidityPct": a["humidity_pct"],
+             "dewPointC": a["dew_point_c"], "timestamp": a["timestamp"], "message": a["message"],
+             "priority": ALERT_PRIORITY.get(a["level"], "low"),
+             "title": ALERT_TITLE.get((a["type"], a["level"]), a["level"])}
+            for a in rows]

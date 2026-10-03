@@ -1,11 +1,11 @@
-# Crop Monitor API (Coder 3)
+# Agronomicon API (Coder 3)
 
 Берёт показания датчиков, уровень заморозка и оповещения из сервиса **sensors-alerts** (Coder 2,
 `../sensors-alerts`), сохраняет показания с метками времени в SQLite и отдаёт всё веб-приложению.
 Участки, отчёты дрона и почвы и оценка приоритетов пока убраны: они вернутся вместе с экраном участка.
 
 ```
-frontend ──> Crop Monitor API :8000 ──> sensors-alerts :8081  (показания, OK/WARNING/CRITICAL, оповещения, демо)
+frontend ──> Agronomicon API :8000 ──> sensors-alerts :8081  (показания, OK/WARNING/CRITICAL, оповещения, демо)
                     │
                     └── SQLite (sensors.db): показания датчиков с метками времени
 ```
@@ -58,19 +58,34 @@ sensors-alerts держит в памяти только последние по
 «Последние N минут» отсчитываются от показания, сохранённого последним, поэтому во время реплея
 (метки времени 2020 года) график показывает реплей, а после него — снова текущие показания.
 
+Оповещения копируются так же, в таблицу `sensor_alerts` (датчик, время отправки, тип, уровень, показания
+в тот момент и текст для фермера; ключ — `(parcel_id, timestamp, type, level)`), и `GET /alerts` читает их из базы.
+
+## Пример сезона
+
+Чтобы было что показать, в `data/` лежит пример сезона для пяти демо-датчиков. **Цифры придуманы, не измерены**:
+поздний заморозок в мае, дождливые периоды, две волны жары и первый осенний заморозок.
+
+| | |
+|---|---|
+| `data/sensor-history-sample.csv` | показания раз в час с 1 мая: `parcelId,timestamp,temperatureC,humidityPct` |
+| `data/alert-history-sample.csv` | оповещения, которые эти показания вызвали бы по порогам культур |
+| `python load_sample.py` | загружает оба файла в базу (можно запускать повторно); `start.ps1` делает это для новой базы |
+| `python make_sample.py` | пересоздаёт файлы до вчерашнего дня; пороги культур скопированы из `application.yml` |
+
 ## Эндпоинты
 
 | | |
 |---|---|
 | `GET /sensors/parcels` | датчики (`id`, `name`, `crop`) с последним показанием в `latest` (`null`, пока показаний нет) |
 | `GET /sensors/parcels/{id}/latest` | контракт sensors-alerts + `mode`, `dropLastHourC`, `frost` (приоритет, рекомендация, причины) |
-| `GET /sensors/parcels/{id}/readings?minutes=60` | сохранённые показания из базы + `dewPointC`; до 7 суток, не больше 300 точек (равномерно прорежены) |
-| `GET /alerts?parcelId={id}` | контракт + `priority`, `title`; уровень `OK` — отбой тревоги |
+| `GET /sensors/parcels/{id}/readings?minutes=60` | сохранённые показания из базы + `dewPointC`. До 2 часов — сами показания (не больше 300, равномерно прорежены); дольше — по точке на 5 минут, час или день со средним и `minTemperatureC` / `maxTemperatureC` |
+| `GET /alerts?parcelId={id}` | сохранённые оповещения из базы, новые первыми: контракт + `priority`, `title`; уровень `OK` — отбой тревоги |
 | `POST /demo/{frost\|humid\|dry\|replay\|normal}/{parcelId}` | → sensors-alerts: режим симулятора |
 | `POST /demo/reset` | → sensors-alerts: всё в NORMAL, оповещения и cooldowns очищены |
 
-Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest`, `/alerts` и `/demo` возвращают `503`;
-`readings` продолжает отдавать то, что уже сохранено.
+Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
+`readings` и `/alerts` продолжают отдавать то, что уже сохранено.
 
 `GET /sensors/parcels/P1/latest`:
 ```jsonc

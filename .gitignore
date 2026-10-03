@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local SQLite database, recreated by `python backend/seed.py`
+*.db
+*.db-journal

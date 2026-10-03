@@ -1,0 +1,140 @@
+{
+ "source": "Open-Meteo Historical Weather API (ERA5), https://open-meteo.com - CC BY 4.0",
+ "location": {
+  "lat": 47.0245,
+  "lon": 28.8322,
+  "place": "Chisinau, Moldova"
+ },
+ "timezone": "Europe/Chisinau",
+ "night": "2020-04-01/02",
+ "hourly": [
+  {
+   "time": "2020-04-01T18:00",
+   "temperature": 6.4,
+   "humidity": 37,
+   "dewPoint": -7.2,
+   "windSpeed": 0.95,
+   "soilTemperature": 0.6
+  },
+  {
+   "time": "2020-04-01T19:00",
+   "temperature": 2.2,
+   "humidity": 45,
+   "dewPoint": -8.7,
+   "windSpeed": 2.42,
+   "soilTemperature": 0.7
+  },
+  {
+   "time": "2020-04-01T20:00",
+   "temperature": -1.1,
+   "humidity": 48,
+   "dewPoint": -10.7,
+   "windSpeed": 3.13,
+   "soilTemperature": 0.6
+  },
+  {
+   "time": "2020-04-01T21:00",
+   "temperature": -1.7,
+   "humidity": 51,
+   "dewPoint": -10.4,
+   "windSpeed": 2.51,
+   "soilTemperature": 0.5
+  },
+  {
+   "time": "2020-04-01T22:00",
+   "temperature": -3.1,
+   "humidity": 59,
+   "dewPoint": -9.9,
+   "windSpeed": 2.66,
+   "soilTemperature": 0.4
+  },
+  {
+   "time": "2020-04-01T23:00",
+   "temperature": -3.5,
+   "humidity": 64,
+   "dewPoint": -9.3,
+   "windSpeed": 2.38,
+   "soilTemperature": 0.3
+  },
+  {
+   "time": "2020-04-02T00:00",
+   "temperature": -3.3,
+   "humidity": 65,
+   "dewPoint": -9.0,
+   "windSpeed": 2.11,
+   "soilTemperature": 0.2
+  },
+  {
+   "time": "2020-04-02T01:00",
+   "temperature": -4.0,
+   "humidity": 69,
+   "dewPoint": -8.9,
+   "windSpeed": 2.55,
+   "soilTemperature": 0.1
+  },
+  {
+   "time": "2020-04-02T02:00",
+   "temperature": -3.7,
+   "humidity": 62,
+   "dewPoint": -9.9,
+   "windSpeed": 2.57,
+   "soilTemperature": 0.0
+  },
+  {
+   "time": "2020-04-02T03:00",
+   "temperature": -2.1,
+   "humidity": 55,
+   "dewPoint": -9.9,
+   "windSpeed": 2.38,
+   "soilTemperature": 0.8
+  },
+  {
+   "time": "2020-04-02T04:00",
+   "temperature": -1.8,
+   "humidity": 53,
+   "dewPoint": -10.1,
+   "windSpeed": 2.02,
+   "soilTemperature": 0.7
+  },
+  {
+   "time": "2020-04-02T05:00",
+   "temperature": -1.9,
+   "humidity": 53,
+   "dewPoint": -10.2,
+   "windSpeed": 2.06,
+   "soilTemperature": 0.5
+  },
+  {
+   "time": "2020-04-02T06:00",
+   "temperature": -2.6,
+   "humidity": 59,
+   "dewPoint": -9.6,
+   "windSpeed": 1.89,
+   "soilTemperature": 0.5
+  },
+  {
+   "time": "2020-04-02T07:00",
+   "temperature": -2.8,
+   "humidity": 65,
+   "dewPoint": -8.4,
+   "windSpeed": 1.86,
+   "soilTemperature": 0.4
+  },
+  {
+   "time": "2020-04-02T08:00",
+   "temperature": 0.4,
+   "humidity": 57,
+   "dewPoint": -7.3,
+   "windSpeed": 1.98,
+   "soilTemperature": 0.4
+  },
+  {
+   "time": "2020-04-02T09:00",
+   "temperature": 3.6,
+   "humidity": 48,
+   "dewPoint": -6.3,
+   "windSpeed": 1.64,
+   "soilTemperature": 0.5
+  }
+ ]
+}

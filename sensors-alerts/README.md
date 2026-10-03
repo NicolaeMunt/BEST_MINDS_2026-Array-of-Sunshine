@@ -13,6 +13,9 @@ $env:TELEGRAM_CHAT_ID      = "111222333"       # optional: demo phone, always ge
 mvn spring-boot:run
 ```
 
+Instead of environment variables you can put the same three values in a `.env` file in this folder
+(copy `.env.example`). It is gitignored and read at start-up when the app is run from this folder.
+
 The app listens on port 8081 (`PORT` to change). Without a token it still runs and writes the
 alert texts to the log instead of sending them.
 
@@ -23,9 +26,9 @@ Docker: `docker build -t sensors-alerts .` then
 
 1. In Telegram open **@BotFather**, send `/newbot`, pick a name and a username ending in `bot`.
 2. Copy the token into `TELEGRAM_BOT_TOKEN` and the username into `TELEGRAM_BOT_USERNAME`.
-3. Start the app, open your bot and send `/start`. The reply ends with `Chat ID: ...`;
-   put that into `TELEGRAM_CHAT_ID` so the phone gets alerts even after a restart
-   (subscriptions from `/start` are kept in memory only).
+3. Start the app, open your bot and send `/start` (in a group: `/start@YourBot`). The chat is
+   saved to `telegram-chats.txt` (gitignored) and keeps getting alerts after restarts.
+   `TELEGRAM_CHAT_ID` is an optional extra chat that always gets alerts.
 
 Commands: `/start`, `/parcele`, `/status <parcelId>`.
 
@@ -44,6 +47,22 @@ Invoke-RestMethod -Method Post http://localhost:8081/demo/reset
 
 Always call `/demo/reset` between demo runs; otherwise the cooldown (30 min by default) hides
 a repeated alert. For rehearsals set `FROST_COOLDOWN_SECONDS=30`.
+
+### Demo file
+
+`demo/frost-demo.csv` is a made-up night that falls fast, freezes down to -4.3 °C and recovers in the
+morning. `demo/demo.ps1` replays it on one parcel and prints every reading and every message.
+
+```powershell
+# window 1, from sensors-alerts/
+$env:REPLAY_FILE = "file:demo/frost-demo.csv"
+mvn spring-boot:run
+
+# window 2, from sensors-alerts/ (takes about 2 minutes)
+powershell -ExecutionPolicy Bypass -File demo\demo.ps1
+```
+
+`-ParcelId P2` picks another parcel.
 
 ## Endpoints
 

@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.frost.FrostAssessment;
 import md.agro.sensors.frost.FrostLevel;
@@ -13,9 +17,6 @@ import md.agro.sensors.frost.FrostRule;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.store.SensorStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 /** Runs the frost rule on every reading and decides what gets sent. */
 @Service

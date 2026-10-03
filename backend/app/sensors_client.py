@@ -1,5 +1,5 @@
 """HTTP client for the sensors-alerts service (Coder 2): the source of truth for sensor readings,
-frost levels, alerts and demo modes. Responses use the shared JSON contract field names."""
+frost and humidity levels, alerts and demo modes. Responses use the shared JSON contract field names."""
 import json
 import os
 import urllib.error
@@ -14,9 +14,11 @@ class SensorsUnavailable(Exception):
     """The service is down or answered with an error other than 404."""
 
 
-def _call(method, path, params=None):
+def _call(method, path, params=None, body=None):
     url = SENSORS_URL + path + ("?" + urllib.parse.urlencode(params) if params else "")
-    request = urllib.request.Request(url, method=method, data=b"" if method == "POST" else None)
+    data = json.dumps(body).encode() if body is not None else (b"" if method == "POST" else None)
+    request = urllib.request.Request(url, method=method, data=data,
+                                     headers={"Content-Type": "application/json"} if body is not None else {})
     try:
         with urllib.request.urlopen(request, timeout=TIMEOUT_SEC) as response:
             body = response.read()
@@ -29,27 +31,37 @@ def _call(method, path, params=None):
         raise SensorsUnavailable(f"Serviciul de senzori ({SENSORS_URL}) nu răspunde") from e
 
 
+def _parcel_path(parcel_id):
+    return f"/sensors/parcels/{urllib.parse.quote(parcel_id)}"
+
+
+def register_parcel(parcel):
+    """Gives the parcel a sensor in sensors-alerts (or updates its name and crop there)."""
+    return _call("PUT", _parcel_path(parcel["id"]), body={"name": parcel["name"], "crop": parcel["crop"]})
+
+
 def latest(parcel_id):
-    """{parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel} or None."""
-    return _call("GET", f"/sensors/parcels/{urllib.parse.quote(parcel_id)}/latest")
+    """{parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel, mode} or None."""
+    return _call("GET", _parcel_path(parcel_id) + "/latest")
 
 
 def readings(parcel_id, minutes):
     """[{parcelId, timestamp, temperatureC, humidityPct}], oldest first."""
-    return _call("GET", f"/sensors/parcels/{urllib.parse.quote(parcel_id)}/readings", {"minutes": minutes}) or []
+    return _call("GET", _parcel_path(parcel_id) + "/readings", {"minutes": minutes}) or []
 
 
-def alerts(parcel_id=None):
-    """[{parcelId, parcelName, level, temperatureC, humidityPct, dewPointC, timestamp, message}], newest first."""
-    return _call("GET", "/alerts", {"parcelId": parcel_id} if parcel_id else None) or []
+def alerts(parcel_id=None, type_="ALL"):
+    """[{parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message}],
+    newest first. type_: FROST | HUMIDITY | ALL."""
+    params = {"type": type_}
+    if parcel_id:
+        params["parcelId"] = parcel_id
+    return _call("GET", "/alerts", params) or []
 
 
-def demo_frost(parcel_id):
-    return _call("POST", f"/demo/frost/{urllib.parse.quote(parcel_id)}")
-
-
-def demo_replay(parcel_id):
-    return _call("POST", f"/demo/replay/{urllib.parse.quote(parcel_id)}")
+def demo(kind, parcel_id):
+    """kind: frost | humid | dry | replay | normal."""
+    return _call("POST", f"/demo/{kind}/{urllib.parse.quote(parcel_id)}")
 
 
 def demo_reset():

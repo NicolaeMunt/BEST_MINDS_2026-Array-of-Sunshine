@@ -1,4 +1,5 @@
-"""SQLite storage: parcels + raw reports from the drone (vision) and field (soil/weather) modules.
+"""SQLite storage: parcels + raw reports from the drone (vision), field (soil/weather) and satellite
+(imagery) modules.
 Sensor readings and frost alerts live in the sensors-alerts service (see sensors_client.py)."""
 import json
 import os
@@ -11,7 +12,7 @@ DB_PATH = Path(os.getenv("DB_PATH", Path(__file__).resolve().parent.parent / "ag
 
 # Each report kind maps to its own table; data is stored as JSON so the
 # other modules can add fields without schema migrations.
-REPORT_TABLES = {"vision": "vision_reports", "field": "field_reports"}
+REPORT_TABLES = {"vision": "vision_reports", "field": "field_reports", "imagery": "imagery_reports"}
 
 # Parcel IDs are strings ("P1", "P2", ...) and must match the sensors-alerts service config.
 SCHEMA = """
@@ -37,6 +38,13 @@ CREATE TABLE IF NOT EXISTS field_reports (
     reported_at TEXT NOT NULL,
     data        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS imagery_reports (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    parcel_id   TEXT NOT NULL REFERENCES parcels(id) ON DELETE CASCADE,
+    reported_at TEXT NOT NULL,
+    data        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_imagery_parcel ON imagery_reports(parcel_id, reported_at);
 CREATE INDEX IF NOT EXISTS idx_vision_parcel ON vision_reports(parcel_id, reported_at);
 CREATE INDEX IF NOT EXISTS idx_field_parcel ON field_reports(parcel_id, reported_at);
 """

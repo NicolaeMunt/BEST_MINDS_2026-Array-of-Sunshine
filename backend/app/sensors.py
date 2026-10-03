@@ -7,11 +7,20 @@ from . import sensors_client as client
 from .frost import assess_frost, dew_point, drop_last_hour
 
 ALERT_PRIORITY = {"CRITICAL": "high", "WARNING": "medium", "OK": "low"}
-ALERT_TITLE = {"CRITICAL": "Îngheț", "WARNING": "Risc de îngheț", "OK": "Pericol trecut"}
+# (alert type, level) -> title; alerts without a type come from an older service and are frost alerts.
+ALERT_TITLE = {
+    ("FROST", "CRITICAL"): "Îngheț",
+    ("FROST", "WARNING"): "Risc de îngheț",
+    ("FROST", "OK"): "Pericol trecut",
+    ("HUMIDITY_HIGH", "WARNING"): "Umiditate ridicată",
+    ("HUMIDITY_LOW", "WARNING"): "Umiditate scăzută",
+    ("HUMIDITY_HIGH", "OK"): "Umiditate revenită la normal",
+    ("HUMIDITY_LOW", "OK"): "Umiditate revenită la normal",
+}
 # Replay readings carry the timestamps of the recorded night.
 REPLAY_AGE = timedelta(minutes=10)
 
-# The service has no "mode" endpoint, so we remember what was switched through this API.
+# Fallback for a sensors-alerts build that does not report "mode": what was switched through this API.
 _modes = {}
 
 
@@ -31,6 +40,8 @@ def reset_modes():
 
 
 def _mode(parcel_id, latest):
+    if latest.get("mode"):
+        return latest["mode"]
     if datetime.now(timezone.utc) - parse_ts(latest["timestamp"]) > REPLAY_AGE:
         return "REPLAY"
     mode = _modes.get(parcel_id, "NORMAL")
@@ -38,7 +49,8 @@ def _mode(parcel_id, latest):
 
 
 def latest(parcel_id):
-    """Contract fields + mode, dropLastHourC and frost {priority, title, message, reasons}; None if no readings."""
+    """Contract fields (incl. crop, humidityLevel) + mode, dropLastHourC and
+    frost {priority, title, message, reasons}; None if no readings."""
     reading = client.latest(parcel_id)
     if not reading:
         return None
@@ -52,6 +64,10 @@ def readings(parcel_id, minutes):
             for r in client.readings(parcel_id, minutes)]
 
 
-def alerts(parcel_id=None):
-    return [{**a, "priority": ALERT_PRIORITY.get(a["level"], "low"), "title": ALERT_TITLE.get(a["level"], a["level"])}
-            for a in client.alerts(parcel_id)]
+def alerts(parcel_id=None, type_="ALL"):
+    result = []
+    for a in client.alerts(parcel_id, type_):
+        kind = a.get("type") or "FROST"
+        result.append({**a, "type": kind, "priority": ALERT_PRIORITY.get(a["level"], "low"),
+                       "title": ALERT_TITLE.get((kind, a["level"]), a["level"])})
+    return result

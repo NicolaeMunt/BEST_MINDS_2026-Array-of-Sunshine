@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db, sensors, sensors_client
-from .models import (AlertOut, DemoOut, FieldReport, ParcelIn, ParcelOut, SensorLatestOut, SensorReadingOut,
-                     VisionReport)
+from .models import (AlertOut, DemoOut, FieldReport, ImageryOut, ParcelIn, ParcelOut, SensorLatestOut,
+                     SensorReadingOut, VisionReport)
 from .scoring import assess
 from .sensors_client import SensorsUnavailable
 
@@ -20,7 +20,17 @@ CORS_ORIGINS = os.getenv(
     "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,"
     "http://localhost:5500,http://127.0.0.1:5500",
 ).split(",")
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+REPO_DIR = Path(__file__).resolve().parent.parent.parent
+FRONTEND_DIR = REPO_DIR / "frontend"
+# Overlay and photo PNGs written by imagery/analyze.py; imagery.json refers to them as /overlays/<file>.
+OVERLAYS_DIR = Path(os.getenv("OVERLAYS_DIR", REPO_DIR / "imagery" / "out" / "overlays"))
+DEMO_MESSAGES = {
+    "frost": ("FROST", "Terenul a trecut în modul îngheț"),
+    "humid": ("HUMID", "Terenul a trecut în modul aer umed și cald"),
+    "dry": ("DRY", "Terenul a trecut în modul aer uscat și fierbinte"),
+    "replay": ("REPLAY", "Redarea nopții de îngheț a pornit"),
+    "normal": ("NORMAL", "Terenul a revenit la vremea normală"),
+}
 
 
 @asynccontextmanager
@@ -41,6 +51,9 @@ if FRONTEND_DIR.is_dir():
     def root():
         return RedirectResponse("/app/AgroMonitorWeb.html")
 
+if OVERLAYS_DIR.is_dir():
+    app.mount("/overlays", StaticFiles(directory=OVERLAYS_DIR), name="overlays")
+
 
 @app.exception_handler(SensorsUnavailable)
 def sensors_unavailable(request: Request, exc: SensorsUnavailable):
@@ -53,13 +66,16 @@ def _build(conn, parcel, sensors_up=True):
     if sensors_up:
         try:
             latest = sensors.latest(parcel["id"])
+            if latest is None:
+                # Unknown to sensors-alerts (created here, or that service restarted): give it a sensor.
+                sensors_client.register_parcel(parcel)
             status = "ok" if latest else "no_readings"
         except SensorsUnavailable:
             pass
     return assess(parcel,
                   db.latest_report(conn, "vision", parcel["id"]),
                   db.latest_report(conn, "field", parcel["id"]),
-                  latest, status)
+                  latest, status, imagery=db.latest_report(conn, "imagery", parcel["id"]))
 
 
 def _require_parcel(conn, parcel_id):
@@ -110,27 +126,24 @@ def recent_readings(parcel_id: str, minutes: int = Query(60, ge=1, le=24 * 60)):
 
 
 @app.get("/alerts", response_model=list[AlertOut])
-def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId")):
-    """Recent alerts from sensors-alerts, newest first. Level OK is the all-clear."""
-    return sensors.alerts(parcel_id)
+def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId"),
+                  type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|ALL)$")):
+    """Recent frost and humidity alerts from sensors-alerts, newest first. Level OK is the all-clear."""
+    return sensors.alerts(parcel_id, type_)
 
 
 # ---------- demo (forwarded to sensors-alerts) ----------
 
-@app.post("/demo/frost/{parcel_id}", response_model=DemoOut)
-def demo_frost(parcel_id: str):
-    if sensors_client.demo_frost(parcel_id) is None:
+@app.post("/demo/{kind}/{parcel_id}", response_model=DemoOut)
+def demo(kind: str, parcel_id: str):
+    """kind: frost | humid | dry | replay | normal (normal sends the all-clear messages)."""
+    if kind not in DEMO_MESSAGES:
+        raise HTTPException(404, f"Unknown demo scenario {kind}")
+    if sensors_client.demo(kind, parcel_id) is None:
         raise HTTPException(404, f"Parcel {parcel_id} unknown to the sensors service")
-    sensors.set_mode(parcel_id, "FROST")
-    return {"parcel_id": parcel_id, "mode": "FROST", "message": "Terenul a trecut în modul îngheț"}
-
-
-@app.post("/demo/replay/{parcel_id}", response_model=DemoOut)
-def demo_replay(parcel_id: str):
-    if sensors_client.demo_replay(parcel_id) is None:
-        raise HTTPException(404, f"Parcel {parcel_id} unknown to the sensors service")
-    sensors.set_mode(parcel_id, "REPLAY")
-    return {"parcel_id": parcel_id, "mode": "REPLAY", "message": "Redarea nopții de îngheț a pornit"}
+    mode, message = DEMO_MESSAGES[kind]
+    sensors.set_mode(parcel_id, mode)
+    return {"parcel_id": parcel_id, "mode": mode, "message": message}
 
 
 @app.post("/demo/reset", response_model=DemoOut)
@@ -149,7 +162,12 @@ def create_parcel(body: ParcelIn):
             raise HTTPException(409, f"Parcel {body.id} already exists")
         data = body.model_dump()
         data["planted_at"] = data["planted_at"].isoformat() if data["planted_at"] else None
-        return _build(conn, db.create_parcel(conn, **data))
+        parcel = db.create_parcel(conn, **data)
+        try:
+            sensors_client.register_parcel(parcel)
+        except SensorsUnavailable:
+            pass  # _build registers it again once the service is back
+        return _build(conn, parcel)
 
 
 @app.post("/parcels/{parcel_id}/vision", status_code=201)
@@ -159,6 +177,16 @@ def add_vision_report(parcel_id: str, body: VisionReport):
         _require_parcel(conn, parcel_id)
         data = body.model_dump(mode="json", exclude={"captured_at"})
         db.add_report(conn, "vision", parcel_id, _utc_iso(body.captured_at), data)
+    return {"ok": True}
+
+
+@app.post("/parcels/{parcel_id}/imagery", status_code=201)
+def add_imagery_report(parcel_id: str, body: ImageryOut):
+    """The satellite pipeline (imagery/push.py) posts one analysed scene here."""
+    with db.get_conn() as conn:
+        _require_parcel(conn, parcel_id)
+        data = body.model_dump(mode="json")
+        db.add_report(conn, "imagery", parcel_id, _utc_iso(datetime.combine(body.scene_date, datetime.min.time())), data)
     return {"ok": True}
 
 

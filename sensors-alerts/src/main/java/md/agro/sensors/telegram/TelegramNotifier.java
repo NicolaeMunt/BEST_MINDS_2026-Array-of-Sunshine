@@ -16,6 +16,7 @@ import md.agro.sensors.alert.Messages;
 import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.Reading;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +36,16 @@ public class TelegramNotifier implements AlertNotifier {
     private static final Logger log = LoggerFactory.getLogger(TelegramNotifier.class);
 
     private final AppProperties props;
+    private final ParcelRegistry parcels;
     private final SensorStore store;
     // Chats that sent /start; also written to chatsFile so they survive restarts.
     private final Set<String> chats = ConcurrentHashMap.newKeySet();
     private final ExecutorService sender = Executors.newSingleThreadExecutor();
     private volatile Bot bot;
 
-    public TelegramNotifier(AppProperties props, SensorStore store) {
+    public TelegramNotifier(AppProperties props, ParcelRegistry parcels, SensorStore store) {
         this.props = props;
+        this.parcels = parcels;
         this.store = store;
     }
 
@@ -140,9 +143,9 @@ public class TelegramNotifier implements AlertNotifier {
 
     private String parcelList() {
         StringBuilder sb = new StringBuilder("Parcele:\n");
-        for (AppProperties.Parcel p : props.parcels()) {
+        for (AppProperties.Parcel p : parcels.all()) {
             sb.append(p.id()).append(" – ").append(p.name())
-                    .append(" (").append(props.cropFor(p.id()).name()).append("): ");
+                    .append(" (").append(parcels.cropFor(p.id()).name()).append("): ");
             Optional<SensorStore.Status> st = store.latest(p.id());
             if (st.isPresent()) {
                 sb.append(Messages.num(st.get().reading().temperatureC())).append(" °C · ")
@@ -157,7 +160,7 @@ public class TelegramNotifier implements AlertNotifier {
     }
 
     private String status(String parcelId) {
-        Optional<AppProperties.Parcel> parcel = props.parcel(parcelId);
+        Optional<AppProperties.Parcel> parcel = parcels.get(parcelId);
         if (parcel.isEmpty()) {
             return "Parcelă necunoscută: " + parcelId;
         }
@@ -166,7 +169,7 @@ public class TelegramNotifier implements AlertNotifier {
             return parcel.get().name() + ": fără date";
         }
         Reading r = st.get().reading();
-        AppProperties.Crop crop = props.cropFor(parcel.get().id());
+        AppProperties.Crop crop = parcels.cropFor(parcel.get().id());
         return ("%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n"
                 + "Praguri %s: îngheț %s / %s °C · umiditate %.0f–%.0f%%").formatted(
                 parcel.get().name(), parcel.get().id(), crop.name(), Messages.num(r.temperatureC()),

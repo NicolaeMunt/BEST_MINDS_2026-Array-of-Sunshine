@@ -91,7 +91,7 @@ def _irrigation(v, f, t):
     return make_action("irrigate", "Este necesară irigarea", score, reasons)
 
 
-def _disease(v, f):
+def _disease(v, f, sensors=None):
     if not _has_disease(v):
         return None
     name = DISEASE_NAMES.get(v["disease"].lower(), v["disease"])
@@ -101,7 +101,13 @@ def _disease(v, f):
     reasons = [reason("disease_detected",
                        f"Boală detectată: {name} (încredere {conf:.0%}, {area:.0f}% din suprafață)", "vision")]
     humidity = f.get("humidity_pct")
-    if humidity is not None and humidity >= HIGH_HUMIDITY:
+    if sensors and sensors.get("humidityLevel"):
+        # Live air sensor: sensors-alerts compares it with the crop's own range (and ignores cold, humid air).
+        if sensors["humidityLevel"] == "HIGH":
+            score += 10
+            reasons.append(reason("high_humidity", f"Umiditatea aerului {sensors['humidityPct']:.0f}% — peste pragul "
+                                                   "culturii, favorizează răspândirea", "sensor"))
+    elif humidity is not None and humidity >= HIGH_HUMIDITY:
         score += 10
         reasons.append(reason("high_humidity", f"Umiditatea aerului {humidity:.0f}% favorizează răspândirea", "field"))
     return make_action("treat_disease", f"Tratează boala ({name})", score, reasons)
@@ -208,21 +214,48 @@ def _frost_action(sensors):
     return make_action("protect_from_frost", f"{frost['title']} — protejează culturile", frost["score"], frost["reasons"])
 
 
-def assess(parcel, vision, field, sensors=None, sensors_status="no_readings", now=None):
-    """parcel: DB row dict; vision/field: latest reports (or None); sensors: sensors.latest() (or None);
+SECTOR_NAMES = {"N": "nord", "NE": "nord-est", "E": "est", "SE": "sud-est", "S": "sud", "SW": "sud-vest",
+                "W": "vest", "NW": "nord-vest", "C": "centru"}
+
+
+def _weak_zone_action(imagery):
+    """Satellite scene (imagery pipeline): a patch of the parcel is clearly weaker than the rest."""
+    if not imagery or not imagery.get("affected_pct") or not imagery.get("zone_count"):
+        return None
+    pct = imagery["affected_pct"]
+    sector = imagery.get("affected_sector")
+    where = "în mai multe locuri" if sector == "scattered" else f"în partea de {SECTOR_NAMES.get(sector, sector)}"
+    score = 25 + pct * 10
+    reasons = [reason("weak_zone", f"Satelitul ({imagery['scene_date']}) arată vegetație mai slabă pe {pct:.1f}% "
+                                   f"din parcelă, {where}", "satellite")]
+    if imagery.get("zone_confirmed"):
+        score += 10
+        reasons.append(reason("zone_confirmed", "Zona apare și în imaginea anterioară", "satellite"))
+    codes = {w.get("code") for w in imagery.get("warnings") or []}
+    if "possible_cloud" in codes:
+        score -= 10
+        reasons.append(reason("possible_cloud", "Zona e lângă nori — poate fi o umbră, nu o problemă reală", "satellite"))
+    return make_action("inspect_weak_zone", "Verifică zona cu vegetație slabă", score, reasons)
+
+
+def assess(parcel, vision, field, sensors=None, sensors_status="no_readings", now=None, imagery=None):
+    """parcel: DB row dict; vision/field/imagery: latest reports (or None); sensors: sensors.latest() (or None);
     sensors_status: ok | no_readings | unavailable. Returns the ParcelOut-shaped dict."""
     now = now or datetime.now(timezone.utc)
     v, f = vision or {}, field or {}
     t = CROP_THRESHOLDS.get((parcel["crop"] or "").lower(), CROP_THRESHOLDS[DEFAULT_CROP])
+    if v.get("ndvi_mean") is None and imagery and imagery.get("ndvi_median") is not None:
+        v = {**v, "ndvi_mean": imagery["ndvi_median"]}  # no drone flight: the satellite NDVI stands in
 
-    candidates = [_frost_action(sensors), _sensors_action(sensors_status), _irrigation(v, f, t), _disease(v, f), _pests(v), _weeds(v),
+    candidates = [_frost_action(sensors), _sensors_action(sensors_status), _irrigation(v, f, t), _disease(v, f, sensors),
+                  _pests(v), _weeds(v), _weak_zone_action(imagery),
                   _harvest(v, f), _nutrients(v, f, t), *_freshness(vision, field, now)]
     actions = sorted((a for a in candidates if a and a["score"] >= MIN_ACTION_SCORE),
                      key=lambda a: a["score"], reverse=True)
 
     health = _health_score(v, t)
     priority = actions[0]["priority"] if actions else "none"
-    if vision is None and field is None and sensors is None:
+    if vision is None and field is None and sensors is None and imagery is None:
         status = "no_data"
     elif priority == "high" or (health is not None and health < 40):
         status = "critical"
@@ -253,5 +286,7 @@ def assess(parcel, vision, field, sensors=None, sensors_status="no_readings", no
         "actions": actions,
         "metrics": {k: merged.get(k) for k in metric_keys},
         "zones": v.get("zones") or [],
-        "updated_at": {"vision": v.get("reported_at"), "field": f.get("reported_at")},
+        "imagery": imagery,
+        "updated_at": {"vision": v.get("reported_at"), "field": f.get("reported_at"),
+                       "imagery": (imagery or {}).get("reported_at")},
     }

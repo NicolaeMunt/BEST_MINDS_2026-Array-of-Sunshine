@@ -19,6 +19,7 @@ import md.agro.sensors.humidity.HumidityRule;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.AlertType;
 import md.agro.sensors.model.Reading;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 
 /** Runs the frost and humidity rules on every reading and decides what gets sent. */
@@ -44,6 +45,7 @@ public class AlertService {
     }
 
     private final AppProperties props;
+    private final ParcelRegistry parcels;
     private final FrostRule frostRule;
     private final HumidityRule humidityRule;
     private final SensorStore store;
@@ -53,9 +55,10 @@ public class AlertService {
     private final Map<String, HumidityEpisode> humidityEpisodes = new HashMap<>();
     private final Map<String, Instant> lastSent = new HashMap<>();
 
-    public AlertService(AppProperties props, FrostRule frostRule, HumidityRule humidityRule, SensorStore store,
+    public AlertService(AppProperties props, ParcelRegistry parcels, FrostRule frostRule, HumidityRule humidityRule, SensorStore store,
             AlertNotifier notifier) {
         this.props = props;
+        this.parcels = parcels;
         this.frostRule = frostRule;
         this.humidityRule = humidityRule;
         this.store = store;
@@ -63,7 +66,7 @@ public class AlertService {
     }
 
     public synchronized void onReading(Reading reading) {
-        AppProperties.Crop crop = props.cropFor(reading.parcelId());
+        AppProperties.Crop crop = parcels.cropFor(reading.parcelId());
         List<Reading> history = store.readings(reading.parcelId());
         FrostAssessment a = frostRule.evaluate(reading, history, crop);
         HumidityLevel humidity = humidityRule.evaluate(reading, crop);
@@ -151,7 +154,7 @@ public class AlertService {
     }
 
     private void send(Reading r, FrostAssessment a, AlertType type, FrostLevel level, String text) {
-        Alert alert = new Alert(r.parcelId(), parcelName(r), props.cropKey(r.parcelId()), type, level,
+        Alert alert = new Alert(r.parcelId(), parcelName(r), parcels.cropKey(r.parcelId()), type, level,
                 r.temperatureC(), r.humidityPct(), round1(a.dewPointC()), Instant.now(), text);
         store.addAlert(alert);
         try {
@@ -162,7 +165,7 @@ public class AlertService {
     }
 
     private String parcelName(Reading r) {
-        return props.parcel(r.parcelId()).map(AppProperties.Parcel::name).orElse(r.parcelId());
+        return parcels.name(r.parcelId());
     }
 
     private static String key(String parcelId, String what) {

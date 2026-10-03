@@ -78,7 +78,9 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel` |
+| GET | `/sensors/parcels` | the parcels this service has sensors for: `id, name, crop` |
+| PUT | `/sensors/parcels/{id}` | body `{"name": ..., "crop": ...}`: adds the parcel (it gets a sensor) or updates its name and crop. The backend calls this for its parcels |
+| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel, mode` |
 | GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct` |
 | GET | `/alerts?parcelId={id}&type=FROST` | newest first: `parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
 | POST | `/demo/frost/{parcelId}` | switches the parcel to FROST |
@@ -101,7 +103,8 @@ back from the newest reading. Switching into or out of REPLAY clears that parcel
 
 ## Configuration (`src/main/resources/application.yml`)
 
-- `app.parcels` – IDs, names and crop; **IDs must match Coder 3's IDs**.
+- `app.parcels` – the parcels known at start-up. The backend registers its own parcels at runtime
+  (`PUT /sensors/parcels/{id}`), which are kept in memory until the next restart.
 - `app.crops` – per-crop thresholds and advice texts (see below).
 - `app.simulator` – reading interval, ramp time of the demo modes, replay file and speed.
 - `app.frost` – falling-fast rule, all-clear margin and cooldown. The rule is `ThresholdFrostRule` behind `FrostRule`.

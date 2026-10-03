@@ -1,5 +1,8 @@
 package md.agro.sensors.telegram;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +16,7 @@ import md.agro.sensors.alert.Messages;
 import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.Reading;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,20 +36,23 @@ public class TelegramNotifier implements AlertNotifier {
     private static final Logger log = LoggerFactory.getLogger(TelegramNotifier.class);
 
     private final AppProperties props;
+    private final ParcelRegistry parcels;
     private final SensorStore store;
-    // Subscriptions live in memory only; the fallback chat ID covers restarts.
+    // Chats that sent /start; also written to chatsFile so they survive restarts.
     private final Set<String> chats = ConcurrentHashMap.newKeySet();
     private final ExecutorService sender = Executors.newSingleThreadExecutor();
     private volatile Bot bot;
 
-    public TelegramNotifier(AppProperties props, SensorStore store) {
+    public TelegramNotifier(AppProperties props, ParcelRegistry parcels, SensorStore store) {
         this.props = props;
+        this.parcels = parcels;
         this.store = store;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        String token = props.telegram().token();
+        loadChats();
+        String token = props.telegram().token().trim();
         if (token.isBlank()) {
             log.warn("TELEGRAM_BOT_TOKEN not set: alerts are logged, not sent");
             return;
@@ -54,9 +61,30 @@ public class TelegramNotifier implements AlertNotifier {
             Bot b = new Bot(token);
             new TelegramBotsApi(DefaultBotSession.class).registerBot(b);
             bot = b;
-            log.info("Telegram bot @{} started", props.telegram().username());
+            log.info("Telegram bot @{} started", b.getBotUsername());
         } catch (Exception e) {
             log.error("Telegram bot could not start; alerts are logged, not sent", e);
+        }
+    }
+
+    private void loadChats() {
+        Path file = Path.of(props.telegram().chatsFile());
+        if (!Files.exists(file)) {
+            return;
+        }
+        try {
+            Files.readAllLines(file).stream().map(String::trim).filter(s -> !s.isEmpty()).forEach(chats::add);
+            log.info("Loaded {} subscribed Telegram chat(s) from {}", chats.size(), file);
+        } catch (IOException e) {
+            log.warn("Could not read {}: {}", file, e.getMessage());
+        }
+    }
+
+    private void saveChats() {
+        try {
+            Files.write(Path.of(props.telegram().chatsFile()), chats);
+        } catch (IOException e) {
+            log.warn("Could not save subscribed chats: {}", e.getMessage());
         }
     }
 
@@ -102,7 +130,8 @@ public class TelegramNotifier implements AlertNotifier {
         return switch (command) {
             case "/start" -> {
                 chats.add(chatId);
-                yield "Bun venit! Veți primi alerte de îngheț pentru toate parcelele.\n"
+                saveChats();
+                yield "Bun venit! Veți primi alerte de îngheț și de umiditate pentru toate parcelele.\n"
                         + "/parcele – lista parcelelor\n/status <parcelId> – detalii parcelă\n"
                         + "Chat ID: " + chatId;
             }
@@ -114,12 +143,14 @@ public class TelegramNotifier implements AlertNotifier {
 
     private String parcelList() {
         StringBuilder sb = new StringBuilder("Parcele:\n");
-        for (AppProperties.Parcel p : props.parcels()) {
-            sb.append(p.id()).append(" – ").append(p.name()).append(": ");
+        for (AppProperties.Parcel p : parcels.all()) {
+            sb.append(p.id()).append(" – ").append(p.name())
+                    .append(" (").append(parcels.cropFor(p.id()).name()).append("): ");
             Optional<SensorStore.Status> st = store.latest(p.id());
             if (st.isPresent()) {
                 sb.append(Messages.num(st.get().reading().temperatureC())).append(" °C · ")
-                        .append(Messages.status(st.get().assessment().level()));
+                        .append(Messages.status(st.get().assessment().level()))
+                        .append(" · umiditate ").append(Messages.status(st.get().humidity()));
             } else {
                 sb.append("fără date");
             }
@@ -129,7 +160,7 @@ public class TelegramNotifier implements AlertNotifier {
     }
 
     private String status(String parcelId) {
-        Optional<AppProperties.Parcel> parcel = props.parcel(parcelId);
+        Optional<AppProperties.Parcel> parcel = parcels.get(parcelId);
         if (parcel.isEmpty()) {
             return "Parcelă necunoscută: " + parcelId;
         }
@@ -138,9 +169,14 @@ public class TelegramNotifier implements AlertNotifier {
             return parcel.get().name() + ": fără date";
         }
         Reading r = st.get().reading();
-        return "%s (%s)\nTemperatura: %s °C\nUmiditate: %.0f%%\nPunct de rouă: %s °C\nStare: %s".formatted(
-                parcel.get().name(), parcel.get().id(), Messages.num(r.temperatureC()), r.humidityPct(),
-                Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()));
+        AppProperties.Crop crop = parcels.cropFor(parcel.get().id());
+        return ("%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n"
+                + "Praguri %s: îngheț %s / %s °C · umiditate %.0f–%.0f%%").formatted(
+                parcel.get().name(), parcel.get().id(), crop.name(), Messages.num(r.temperatureC()),
+                r.humidityPct(), Messages.status(st.get().humidity()),
+                Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()),
+                crop.name(), Messages.num(crop.frostWarningC()), Messages.num(crop.frostCriticalC()),
+                crop.humidityLowPct(), crop.humidityHighPct());
     }
 
     private final class Bot extends TelegramLongPollingBot {
@@ -151,7 +187,8 @@ public class TelegramNotifier implements AlertNotifier {
 
         @Override
         public String getBotUsername() {
-            return props.telegram().username();
+            // Tolerate "@MyBot" in the config.
+            return props.telegram().username().trim().replaceFirst("^@", "");
         }
 
         @Override
@@ -159,6 +196,7 @@ public class TelegramNotifier implements AlertNotifier {
             try {
                 if (update.hasMessage() && update.getMessage().hasText()) {
                     String chatId = String.valueOf(update.getMessage().getChatId());
+                    log.info("Telegram message from chat {}: {}", chatId, update.getMessage().getText());
                     String answer = reply(chatId, update.getMessage().getText());
                     sender.submit(() -> deliver(chatId, answer));
                 }

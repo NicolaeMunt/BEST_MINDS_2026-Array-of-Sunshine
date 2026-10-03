@@ -3,18 +3,25 @@ package md.agro.sensors.web;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import md.agro.sensors.alert.AlertService;
+import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.frost.FrostLevel;
+import md.agro.sensors.humidity.HumidityLevel;
 import md.agro.sensors.model.Alert;
+import md.agro.sensors.model.AlertType;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.model.SensorMode;
 import md.agro.sensors.sim.SensorSimulator;
+import md.agro.sensors.store.ParcelRegistry;
 import md.agro.sensors.store.SensorStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,14 +31,21 @@ public class SensorController {
 
     // Field names here are what Coder 3 sees; align with the shared JSON contract.
     public record LatestResponse(String parcelId, Instant timestamp, double temperatureC, double humidityPct,
-            double dewPointC, FrostLevel frostLevel) {
+            double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel, SensorMode mode) {
     }
+
+    public record ParcelRequest(String name, String crop) {
+    }
+
+    private final ParcelRegistry parcels;
 
     private final SensorStore store;
     private final SensorSimulator simulator;
     private final AlertService alertService;
 
-    public SensorController(SensorStore store, SensorSimulator simulator, AlertService alertService) {
+    public SensorController(ParcelRegistry parcels, SensorStore store, SensorSimulator simulator,
+            AlertService alertService) {
+        this.parcels = parcels;
         this.store = store;
         this.simulator = simulator;
         this.alertService = alertService;
@@ -44,7 +58,21 @@ public class SensorController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No readings yet for " + id));
         Reading r = st.reading();
         return new LatestResponse(r.parcelId(), r.timestamp(), r.temperatureC(), r.humidityPct(),
-                Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level());
+                Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level(),
+                parcels.cropKey(id), st.humidity(), simulator.mode(id));
+    }
+
+    @GetMapping("/sensors/parcels")
+    public List<AppProperties.Parcel> parcels() {
+        return parcels.all();
+    }
+
+    /** The backend registers its parcels here, so a parcel created in the web app gets a sensor. */
+    @PutMapping("/sensors/parcels/{id}")
+    public AppProperties.Parcel register(@PathVariable String id, @RequestBody ParcelRequest body) {
+        AppProperties.Parcel parcel = parcels.put(id, body.name(), body.crop());
+        simulator.ensureSensor(id);
+        return parcel;
     }
 
     @GetMapping("/sensors/parcels/{id}/readings")
@@ -54,12 +82,22 @@ public class SensorController {
     }
 
     @GetMapping("/alerts")
-    public List<Alert> alerts(@RequestParam(required = false) String parcelId) {
+    public List<Alert> alerts(@RequestParam(required = false) String parcelId,
+            @RequestParam(defaultValue = "FROST") String type) {
+        Stream<Alert> alerts;
         if (parcelId == null) {
-            return store.alerts();
+            alerts = store.alerts().stream();
+        } else {
+            requireParcel(parcelId);
+            alerts = store.alerts(parcelId).stream();
         }
-        requireParcel(parcelId);
-        return store.alerts(parcelId);
+        // FROST by default: existing clients label every alert as a frost alert.
+        return switch (type.toUpperCase()) {
+            case "ALL" -> alerts.toList();
+            case "FROST" -> alerts.filter(a -> a.type() == AlertType.FROST).toList();
+            case "HUMIDITY" -> alerts.filter(a -> a.type() != AlertType.FROST).toList();
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type must be FROST, HUMIDITY or ALL");
+        };
     }
 
     @PostMapping("/demo/frost/{parcelId}")
@@ -67,9 +105,25 @@ public class SensorController {
         return switchMode(parcelId, SensorMode.FROST);
     }
 
+    @PostMapping("/demo/humid/{parcelId}")
+    public Map<String, Object> humid(@PathVariable String parcelId) {
+        return switchMode(parcelId, SensorMode.HUMID);
+    }
+
+    @PostMapping("/demo/dry/{parcelId}")
+    public Map<String, Object> dry(@PathVariable String parcelId) {
+        return switchMode(parcelId, SensorMode.DRY);
+    }
+
     @PostMapping("/demo/replay/{parcelId}")
     public Map<String, Object> replay(@PathVariable String parcelId) {
         return switchMode(parcelId, SensorMode.REPLAY);
+    }
+
+    /** Back to normal weather for one parcel; unlike reset, the all-clear messages are sent. */
+    @PostMapping("/demo/normal/{parcelId}")
+    public Map<String, Object> normal(@PathVariable String parcelId) {
+        return switchMode(parcelId, SensorMode.NORMAL);
     }
 
     @PostMapping("/demo/reset")

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ro"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgroMonitor</title>
+<style>
+:root{--bg:#F5F8F3;--g:#246B45;--gl:#E6F2E8;--card:#fff;--tx:#203329;--mut:#5d7366;--wb:#FFF3DB;--wt:#6b4a12;--ub:#FDE8E7;--ut:#9b1c1c;--out:#d8e4da;--page:#dfe8dc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131c17;--card:#1b2822;--tx:#e8f1ea;--mut:#9bb1a3;--gl:#254334;--wb:#3d3118;--wt:#f3d9a0;--ub:#46211f;--ut:#ffb4ae;--out:#2c4034;--page:#0b110e}}
+:root[data-theme="dark"]{--bg:#131c17;--card:#1b2822;--tx:#e8f1ea;--mut:#9bb1a3;--gl:#254334;--wb:#3d3118;--wt:#f3d9a0;--ub:#46211f;--ut:#ffb4ae;--out:#2c4034;--page:#0b110e}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--page);font:16px/1.4 Inter,Roboto,system-ui,sans-serif;color:var(--tx);display:flex;justify-content:center}
+#app{width:100%;max-width:412px;height:100vh;height:100dvh;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.scr{display:none;flex:1;overflow-y:auto;padding:20px 20px 24px;flex-direction:column;gap:16px}
+.scr.on{display:flex}
+h1{font-size:24px;margin:0;font-weight:700}h2{font-size:18px;margin:0;font-weight:700}p{margin:0}
+.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border-radius:20px;padding:16px;border:1px solid var(--out)}
+.row{display:flex;align-items:center;gap:12px}.sp{flex:1}
+button{font:inherit;cursor:pointer;border:0;border-radius:16px;padding:14px 16px;min-height:48px}
+.pri{background:var(--g);color:#fff;font-weight:600;width:100%}
+.sec{background:var(--gl);color:var(--g);font-weight:600;width:100%}
+:root[data-theme="dark"] .sec{color:#9fd8b4}
+.lnk{background:none;color:var(--g);padding:6px 0;min-height:0;font-weight:600;text-align:left}
+.ic{width:44px;height:44px;border-radius:14px;background:var(--gl);display:grid;place-items:center;font-size:22px;flex:none}
+.big{background:var(--gl)}
+.tag{display:inline-block;border-radius:10px;padding:3px 10px;font-size:13px;font-weight:700}
+.t-w{background:var(--wb);color:var(--wt)}.t-u{background:var(--ub);color:var(--ut)}.t-a{background:var(--gl);color:var(--g)}.t-e{background:var(--out);color:var(--tx)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.m{background:var(--bg);border-radius:16px;padding:12px}.m b{font-size:24px;display:block}
+.map{height:220px;border-radius:20px;position:relative;overflow:hidden;background:linear-gradient(135deg,#7a8f5a,#9aa56e 40%,#6f8a55);border:1px solid var(--out)}
+.map.full{height:60vh;min-height:360px}
+.map:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(80deg,rgba(0,0,0,.07) 0 14px,transparent 14px 28px)}
+.plot{position:absolute;left:12%;top:16%;width:76%;height:68%;border:3px solid #2fbf71;border-radius:8px;background:rgba(36,107,69,.18)}
+.pt{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;min-height:0;background:none;transform:translate(-50%,-50%)}
+.pt i{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--g);display:block}
+.pt i.bad{border-color:#d9822b}.pt i.off{border-color:#c0392b}
+.pt span{background:#fff;color:#203329;font-weight:700;font-size:13px;border-radius:8px;padding:1px 8px}
+.maplink{position:absolute;right:12px;bottom:12px;width:auto;padding:10px 14px;min-height:0;background:#fff;color:var(--g);font-weight:700}
+nav{display:flex;background:var(--card);border-top:1px solid var(--out);padding:6px 8px 8px;flex:none}
+nav button{flex:1;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;padding:6px;min-height:56px;border-radius:14px}
+nav button b{font-size:22px;font-weight:400}nav button.on{color:var(--g);background:var(--gl);font-weight:700}
+:root[data-theme="dark"] nav button.on{color:#9fd8b4}
+.chips{display:flex;gap:8px}.chips button{padding:8px 16px;min-height:40px;background:var(--card);border:1px solid var(--out);color:var(--tx);border-radius:20px}
+.chips button.on{background:var(--g);color:#fff;border-color:var(--g)}
+.rc.w{background:var(--wb);border-color:transparent}.rc.u{background:var(--ub);border-color:transparent}
+.rc.w .mut,.rc.w h2{color:var(--wt)}.rc.u .mut,.rc.u h2{color:var(--ut)}
+.sub{background:var(--g);color:#fff;border-color:var(--g)}.sub .mut{color:#cfe6d6}
+.sub .tag{background:#fff;color:var(--g)}
+ul{margin:8px 0 0;padding-left:20px}li{margin:4px 0}
+.back{background:none;color:var(--g);padding:0;min-height:0;font-weight:700;text-align:left;width:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:20px;transform:translateY(105%);transition:transform .25s;box-shadow:0 -8px 30px rgba(0,0,0,.25);z-index:5;max-height:80%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sheet.on{transform:none}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:4;display:none}.dim.on{display:block}
+input,select{font:inherit;width:100%;padding:14px;border-radius:14px;border:1px solid var(--out);background:var(--card);color:var(--tx);min-height:48px}
+label{font-weight:600;display:block;margin-bottom:6px}
+.toast{position:absolute;left:20px;right:20px;bottom:90px;background:var(--tx);color:var(--bg);padding:14px;border-radius:16px;z-index:9;display:none;text-align:center}
+.fb{background:var(--card);border:2px solid var(--out);color:var(--tx);font-weight:700;min-height:56px;padding:10px}
+.fb.on{background:var(--g);border-color:var(--g);color:#fff}
+#hplot{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;background:none;padding:0;overflow:hidden}
+.zn{min-height:0;border-radius:0;padding:0;border:1px solid rgba(255,255,255,.55);width:100%;height:100%}
+.zn.g{background:rgba(47,191,113,.5)}.zn.y{background:rgba(240,180,40,.6)}.zn.r{background:rgba(220,60,50,.6)}.zn.x{background:rgba(150,150,150,.6)}
+.zn.e{border:2px dashed #fff;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 4px,transparent 4px 10px)}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:14px}.leg u{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+@media(prefers-reduced-motion:reduce){.sheet{transition:none}}
+</style></head><body>
+<div id="app">
+
+<!-- ACASĂ -->
+<section class="scr on" id="home">
+ <div class="row"><div class="sp"><h1>AgroMonitor</h1><p class="mut" style="font-size:16px">Bună, Liliana!</p></div><button class="ic" aria-label="Notificări" onclick="toast('2 notificări noi')">🔔</button></div>
+ <button class="card row" style="text-align:left;width:100%" onclick="toast('Un singur teren în acest prototip')"><span class="ic">🌱</span><span class="sp"><b>Terenul meu</b><br><span class="mut">Ialoveni · Porumb · 100 m²</span></span><span>›</span></button>
+ <div class="card big"><div class="row"><span class="tag t-w">Necesită atenție</span><span class="sp"></span><span class="mut">Starea generală</span></div><h2 style="margin-top:8px">Necesită atenție: umiditate scăzută la S2</h2><p style="margin-top:4px">Cultura arată o diferență în zona de nord, iar solul din zona S2 este prea uscat.</p><p class="mut" style="margin-top:8px">Sol: azi, 09:42 · Imagine satelitară: 28 sept.</p></div>
+ <div>
+  <div class="grid" id="mf"><button class="fb on" data-m="c">🌾 Starea culturii</button><button class="fb" data-m="s">🧪 Starea solului</button></div>
+  <div class="map" id="hmap" style="height:280px;margin-top:12px"><div class="plot" id="hplot"></div>
+   <button class="pt" style="left:30%;top:33%" onclick="sensor(1)"><i></i><span>S1</span></button>
+   <button class="pt" style="left:68%;top:40%" onclick="sensor(2)"><i class="bad"></i><span>S2</span></button>
+   <button class="pt" style="left:48%;top:70%" onclick="sensor(3)"><i class="off"></i><span>S3</span></button></div>
+  <div class="row" style="margin-top:10px"><button class="sec" onclick="toast('Harta este centrată pe teren')">Centrează terenul</button><button class="sec" onclick="go('map')">Extinde harta</button></div>
+  <div class="leg"><span><u style="background:#2fbf71"></u>Bună</span><span><u style="background:#f0b428"></u>Necesită atenție</span><span><u style="background:#dc3c32"></u>Problemă detectată</span><span><u style="background:#9a9a9a"></u>Date insuficiente</span></div>
+  <p class="mut" id="mnote" style="margin-top:6px"></p>
+ </div>
+ <div class="card"><div class="row"><h2 class="sp">Starea solului</h2><span class="tag t-a">Media sondelor</span></div>
+  <div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Umiditate</span><b>38%</b></div><div class="m"><span class="mut">Temperatură</span><b>19,4°C</b></div><div class="m"><span class="mut">pH</span><b>6,3</b></div><div class="m"><span class="mut">EC</span><b>0,9</b><span class="mut">mS/cm</span></div></div>
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px"><div class="m"><span class="mut">N</span><b>30</b></div><div class="m"><span class="mut">P</span><b>16</b></div><div class="m"><span class="mut">K</span><b>132</b></div></div>
+  <p style="margin-top:12px"><span class="tag t-w">Necesită atenție</span> umiditate scăzută la S2 (24%)</p>
+  <p class="mut" style="margin-top:6px">Actualizat azi, 09:42 · apasă pe S1–S3 pentru fiecare sondă</p></div>
+ <div class="card rc w"><span class="tag t-w">Prioritar</span><h2 style="margin-top:8px">Verifică irigarea în zona S2</h2><p style="margin-top:4px">Solul este mai uscat decât în restul parcelei.</p><button class="pri" style="margin-top:12px" onclick="show('recs');stack=['recs'];">Vezi recomandările</button></div>
+ <button class="pri" onclick="toast('Analiza a pornit…')">Analizează terenul</button>
+ <button class="sec" onclick="toast('Senzorii se actualizează…')">Actualizează senzorii</button>
+ <button class="lnk" onclick="go('hist')">Vezi istoricul</button>
+</section>
+
+<!-- RECOMANDĂRI -->
+<section class="scr" id="recs">
+ <div><h1>Recomandări</h1><p class="mut">Terenul meu · Porumb</p></div>
+ <div class="chips" id="chips"><button class="on" data-f="all">Toate</button><button data-f="al">Alerte</button><button data-f="td">De făcut</button></div>
+ <div class="card rc w" data-k="al"><div class="row"><span class="ic">💧</span><div class="sp"><span class="tag t-w">Avertizare</span><h2>Umiditate scăzută în zona S2</h2></div></div><p style="margin-top:8px">Verifică solul și funcționarea irigării în această zonă.</p><p class="mut" style="margin-top:6px">Zona S2 · detectat azi, 09:30</p><div class="row" style="margin-top:10px"><button class="sec" onclick="go('map')">Vezi zona</button><button class="pri" onclick="go('detail')">Detalii</button></div></div>
+ <div class="card rc" data-k="td"><div class="row"><span class="ic">🌿</span><div class="sp"><span class="tag t-a">De făcut</span><h2>Verifică necesarul de fertilizare</h2></div></div><p style="margin-top:8px">Analiza indică o posibilă problemă de nutriție.</p><p class="mut" style="margin-top:6px">Toată parcela · detectat ieri</p><button class="sec" style="margin-top:10px" onclick="go('hist')">Vezi analiza</button></div>
+ <div class="card rc" data-k="td"><div class="row"><span class="ic">🧭</span><div class="sp"><span class="tag t-a">De făcut</span><h2>Verifică zona de nord</h2></div></div><p style="margin-top:8px">În imaginea satelitară apare o diferență față de restul parcelei.</p><p class="mut" style="margin-top:6px">Nord · detectat 28 sept.</p><button class="sec" style="margin-top:10px" onclick="go('map')">Deschide harta</button></div>
+ <div class="card rc u" data-k="al"><div class="row"><span class="ic">📡</span><div class="sp"><span class="tag t-u">Alertă urgentă</span><h2>Senzorul S3 nu transmite date</h2></div></div><p style="margin-top:8px">Ultima citire a fost primită acum 2 ore.</p><p class="mut" style="margin-top:6px">Zona S3 · detectat azi, 08:10</p><button class="sec" style="margin-top:10px" onclick="sensor(3)">Vezi senzorul</button></div>
+ <details class="card"><summary><b>Acțiuni efectuate</b></summary><ul><li>Irigare verificată · 25 sept.</li><li>Sondă S1 repoziționată · 20 sept.</li></ul></details>
+</section>
+
+<!-- PROFIL -->
+<section class="scr" id="prof">
+ <h1>Profil</h1>
+ <div class="card row"><span class="ic" style="border-radius:50%;width:56px;height:56px">👩‍🌾</span><div class="sp"><b>Liliana Istrati</b><p class="mut">liliana@exemplu.md</p></div><button class="lnk" onclick="toast('Editare profil')">Editează</button></div>
+ <div class="card sub"><div class="row"><h2 class="sp">Abonamentul meu</h2><span class="tag">Activ</span></div><p style="margin-top:6px"><b>Plan Standard</b> · se reînnoiește 15 nov.</p><ul><li>3 sonde de sol</li><li>Analiză satelitară lunară</li><li>Recomandări în aplicație</li></ul><button class="sec" style="margin-top:12px" onclick="toast('Gestionare abonament')">Gestionează abonamentul</button></div>
+ <div class="card"><h2>Terenurile mele</h2><div class="row" style="margin:10px 0"><span class="ic">🌱</span><div><b>Terenul meu</b><p class="mut">Porumb · 100 m²</p></div></div><button class="sec" onclick="go('addland')">+ Adaugă teren</button></div>
+ <div class="card"><h2>Senzorii mei</h2>
+  <button class="row" style="width:100%;background:none;padding:10px 0;text-align:left" onclick="sensor(1)"><span class="sp"><b>3 sonde de sol 7 în 1</b><br><span class="mut">2 conectate · 1 offline</span></span>›</button>
+  <div class="row" style="padding:10px 0"><span class="sp"><b>1 senzor pentru aer</b><br><span class="mut">Conectat</span></span><span class="tag t-a">Activ</span></div>
+  <button class="sec" onclick="go('addeq')">+ Adaugă senzor</button></div>
+ <div class="card"><h2>Dronele mele</h2><p class="mut" style="margin:6px 0 10px">Nu ai adăugat o dronă. Este opțională.</p><button class="sec" onclick="go('addeq')">+ Adaugă dronă</button></div>
+ <div class="card"><h2>Alte echipamente</h2><p class="mut" style="margin:6px 0 10px">Stație meteo, irigare sau dispozitiv de comunicare.</p><button class="sec" onclick="go('addeq')">+ Adaugă echipament</button></div>
+ <div class="card"><h2>Setări</h2><ul style="list-style:none;padding:0"><li>🔔 Notificări</li><li>⏱️ Intervalul citirilor · 30 min</li><li>🌐 Limba · Română</li><li>📏 Unități · metric</li></ul></div>
+ <div class="card"><h2>Ajutor și cont</h2><ul style="list-style:none;padding:0"><li>❓ Ajutor</li><li>✉️ Contact</li><li style="color:var(--ut)">↪ Deconectare</li></ul></div>
+</section>
+
+<!-- Ecrane suplimentare -->
+<section class="scr" id="map"><button class="back" onclick="back()">‹ Înapoi</button><h1>Harta terenului</h1>
+ <div class="map full"><div class="plot"></div>
+  <button class="pt" style="left:30%;top:35%" onclick="sensor(1)"><i></i><span>S1</span></button>
+  <button class="pt" style="left:68%;top:42%" onclick="sensor(2)"><i class="bad"></i><span>S2</span></button>
+  <button class="pt" style="left:48%;top:70%" onclick="sensor(3)"><i class="off"></i><span>S3</span></button></div>
+ <p class="mut">Imagine satelitară din 28 sept. Atinge o sondă pentru detalii.</p></section>
+
+<section class="scr" id="hist"><button class="back" onclick="back()">‹ Înapoi</button><h1>Istoricul analizelor</h1>
+ <div class="card"><b>28 sept.</b><p>Diferență de vegetație în zona de nord.</p><span class="tag t-w">Atenție</span></div>
+ <div class="card"><b>28 aug.</b><p>Vegetație uniformă pe toată parcela.</p><span class="tag t-a">Normal</span></div>
+ <div class="card"><b>28 iul.</b><p>Creștere bună, fără probleme.</p><span class="tag t-a">Normal</span></div></section>
+
+<section class="scr" id="detail"><button class="back" onclick="back()">‹ Înapoi</button><span class="tag t-w" style="align-self:flex-start">Avertizare</span><h1>Umiditate scăzută în zona S2</h1>
+ <div class="card"><h2>Ce s-a observat</h2><p>Umiditatea din S2 este sub media celorlalte sonde.</p></div>
+ <div class="card"><h2>Pe ce date se bazează</h2><p class="mut">Citirea sondei S2 (azi, 09:30): 24% față de media 38%.</p></div>
+ <div class="card"><h2>Ce poți face</h2><ul><li>Verifică solul manual în zonă.</li><li>Controlează funcționarea irigării.</li></ul></div>
+ <div class="card"><h2>Zona de pe hartă</h2><div class="map" style="height:120px;margin-top:8px"><div class="plot"></div><button class="pt" style="left:68%;top:45%"><i class="bad"></i><span>S2</span></button></div></div>
+ <button class="pri" onclick="toast('Marcat ca efectuat');setTimeout(back,700)">Marchează ca efectuat</button></section>
+
+<section class="scr" id="addland"><button class="back" onclick="back()">‹ Înapoi</button><h1>Adaugă teren</h1>
+ <div><label>Denumire</label><input placeholder="Ex.: Terenul din deal"></div>
+ <div><label>Cultura</label><select><option>Porumb</option><option>Grâu</option><option>Floarea-soarelui</option></select></div>
+ <div><label>Suprafață (m²)</label><input inputmode="numeric" placeholder="100"></div>
+ <div class="map" style="height:140px"><div class="plot"></div></div><p class="mut">Conturează parcela pe hartă.</p>
+ <button class="pri" onclick="toast('Teren salvat');setTimeout(back,700)">Salvează terenul</button></section>
+
+<section class="scr" id="addeq"><button class="back" onclick="back()">‹ Înapoi</button><h1>Adaugă echipament</h1>
+ <button class="card row" style="width:100%;text-align:left" onclick="toast('Caut senzori…')"><span class="ic">📟</span><b class="sp">Sondă de sol 7 în 1</b></button>
+ <button class="card row" style="width:100%;text-align:left" onclick="toast('Caut senzori…')"><span class="ic">🌡️</span><b class="sp">Senzor pentru aer</b></button>
+ <button class="card row" style="width:100%;text-align:left" onclick="toast('Caut drone…')"><span class="ic">🚁</span><b class="sp">Dronă</b></button>
+ <button class="card row" style="width:100%;text-align:left" onclick="toast('Caută dispozitive…')"><span class="ic">⛅</span><b class="sp">Stație meteo / irigare</b></button></section>
+
+<nav id="nav"><button class="on" data-s="home"><b>🏠</b>Acasă</button><button data-s="recs"><b>✅</b>Recomandări</button><button data-s="prof"><b>👤</b>Profil</button></nav>
+
+<div class="dim" id="dim" onclick="closeS()"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="Detalii sondă"></div>
+<div class="toast" id="toast"></div>
+</div>
+<script>
+var stack=['home'],S={1:{n:'S1',st:'Conectat',c:'t-a',v:[41,'19,2°C','6,4','0,9',32,18,140],t:'09:42'},2:{n:'S2',st:'Conectat · umiditate scăzută',c:'t-w',v:[24,'19,8°C','6,2','1,0',28,15,125],t:'09:30'},3:{n:'S3',st:'Fără conexiune',c:'t-u',v:[40,'19,3°C','6,3','0,8',30,16,132],t:'07:40 (acum 2 ore)'}};
+var L=['Umiditate','Temperatură','pH','EC','Azot (N)','Fosfor (P)','Potasiu (K)'],U=['%','','','mS/cm','mg/kg','mg/kg','mg/kg'];
+function $(i){return document.getElementById(i)}
+function show(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.id==id)});$(id).scrollTop=0;
+ var main=['home','recs','prof'].indexOf(id)>-1;$('nav').style.display=main?'flex':'none';
+ document.querySelectorAll('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.s==id)})}
+function go(id){closeS();stack.push(id);show(id)}
+function back(){closeS();if(stack.length>1)stack.pop();show(stack[stack.length-1])}
+document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(){closeS();stack=[b.dataset.s];show(b.dataset.s)}});
+function sensor(n,note){var s=S[n],h='<div class="row"><div class="sp"><h2>Sonda '+s.n+'</h2><span class="tag '+s.c+'">'+s.st+'</span></div><button class="lnk" onclick="closeS()">Închide</button></div><div class="grid">';
+ s.v.forEach(function(v,i){h+='<div class="m"><span class="mut">'+L[i]+'</span><b>'+v+(U[i]?' <small>'+U[i]+'</small>':'')+'</b></div>'});
+ h+='</div><p class="mut">Ultima citire: '+s.t+(note?' · '+note:'')+'</p><p class="mut">Model sondă 7 în 1 · baterie 78%</p><button class="pri" onclick="toast(\'Se actualizează '+s.n+'…\')">Actualizează acum</button>';
+ $('sheet').innerHTML=h;$('sheet').classList.add('on');$('dim').classList.add('on')}
+function closeS(){$('sheet').classList.remove('on');$('dim').classList.remove('on')}
+var tt;function toast(m){var t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(function(){t.style.display='none'},1600)}
+document.querySelectorAll('#chips button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#chips button').forEach(function(x){x.classList.toggle('on',x==b)});
+ document.querySelectorAll('.rc').forEach(function(c){c.style.display=(b.dataset.f=='all'||c.dataset.k==b.dataset.f)?'':'none'})}});
+var mode='c';
+var Z={c:[['y','Nord-vest','Vegetație mai slabă decât în restul parcelei, vizibilă în imaginea din 28 sept.'],['y','Nord-est','Vegetație mai slabă; posibilă lipsă de nutriție sau apă.'],['g','Sud-vest','Vegetație bună, fără diferențe.'],['g','Sud-est','Vegetație bună, fără diferențe.']],
+s:[['g','Zona S1','Măsurat de S1: umiditate 41%, valori în limite normale.'],['y','Zona S2','Măsurat de S2: umiditate scăzută (24%). Verifică irigarea.'],['g e','Între senzori (estimare)','Valoare estimată între S1, S2 și S3, nu este măsurată direct.'],['x e','Zona S3 (estimare)','S3 nu transmite date de 2 ore, deci datele sunt insuficiente.']]};
+function drawMap(){var h='';Z[mode].forEach(function(z,i){h+='<button class="zn '+z[0]+'" aria-label="'+z[1]+'" onclick="zone('+i+')"></button>'});$('hplot').innerHTML=h;
+ document.querySelectorAll('#mf button').forEach(function(b){b.classList.toggle('on',b.dataset.m==mode)});
+ $('mnote').textContent=mode=='c'?'Zone evaluate din imaginea satelitară din 28 sept.':'Zonele cu linie punctată sunt estimări între senzori.'}
+function zone(i){var z=Z[mode][i],n={g:'Bună',y:'Necesită atenție',r:'Problemă detectată',x:'Date insuficiente'}[z[0][0]];
+ $('sheet').innerHTML='<div class="row"><div class="sp"><h2>'+z[1]+'</h2><span class="tag t-'+(z[0][0]=='g'?'a':z[0][0]=='y'?'w':z[0][0]=='r'?'u':'e')+'">'+n+'</span></div><button class="lnk" onclick="closeS()">Închide</button></div><p>'+z[2]+'</p><p class="mut">'+(mode=='c'?'Sursa: imagine satelitară, 28 sept.':'Sursa: sonde, azi 09:42')+'</p>';
+ $('sheet').classList.add('on');$('dim').classList.add('on')}
+document.querySelectorAll('#mf button').forEach(function(b){b.onclick=function(){mode=b.dataset.m;drawMap()}});
+drawMap();
+show('home');
+</script></body></html>

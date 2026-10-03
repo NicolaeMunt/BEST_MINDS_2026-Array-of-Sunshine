@@ -1,3 +1,8 @@
+spring:
+  config:
+    # Local secrets (bot token). The .env file is gitignored; see .env.example.
+    import: optional:file:.env[.properties]
+
 server:
   port: ${PORT:8081}
 
@@ -5,18 +10,85 @@ app:
   # Frontend origin(s), comma separated. "*" allows everything (fine for the demo).
   cors-origins: ${FRONTEND_ORIGIN:*}
 
-  # Must match Coder 3's parcel IDs.
+  # IDs must match Coder 3's parcel IDs; crop is a key of app.crops below.
   parcels:
     - id: P1
       name: Livada Nord
+      crop: orchard
     - id: P2
       name: Via Sud
+      crop: vineyard
     - id: P3
       name: Câmpul Mare
+      crop: wheat
+    - id: P4
+      name: Lanul de Porumb
+      crop: corn
+    - id: P5
+      name: Lotul de Floarea-soarelui
+      crop: sunflower
+
+  # Per-crop alert thresholds (same crop keys as the backend). Spring values, air temperature and
+  # relative air humidity. Starting points only: to be verified by the research teammate.
+  crops:
+    wheat:
+      name: grâu
+      frost-warning-c: 0
+      frost-critical-c: -3
+      humidity-low-pct: 30
+      humidity-high-pct: 85
+      frost-advice: Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața.
+      humid-advice: Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid.
+      dry-advice: Risc de șiștăvire a boabelor. Irigați dacă este posibil.
+    barley:
+      name: orz
+      frost-warning-c: 0
+      frost-critical-c: -3
+      humidity-low-pct: 30
+      humidity-high-pct: 85
+      frost-advice: Orzul rezistă la înghețuri ușoare. Verificați lanul dimineața.
+      humid-advice: Risc de făinare și helmintosporioză. Verificați lanul și pregătiți tratamentul fungicid.
+      dry-advice: Risc de șiștăvire a boabelor. Irigați dacă este posibil.
+    corn:
+      name: porumb
+      frost-warning-c: 3
+      frost-critical-c: 0
+      humidity-low-pct: 35
+      humidity-high-pct: 85
+      frost-advice: Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție.
+      humid-advice: Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții.
+      dry-advice: Risc de polenizare slabă. Irigați dacă este posibil.
+    sunflower:
+      name: floarea-soarelui
+      frost-warning-c: 1
+      frost-critical-c: -3
+      humidity-low-pct: 25
+      humidity-high-pct: 80
+      frost-advice: Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața.
+      humid-advice: Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile.
+      dry-advice: Risc de stres hidric. Urmăriți umiditatea solului.
+    orchard:
+      name: livadă
+      frost-warning-c: 2
+      frost-critical-c: -1
+      humidity-low-pct: 35
+      humidity-high-pct: 85
+      frost-advice: Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația.
+      humid-advice: Risc de rapăn și monilioză. Pregătiți tratamentul fungicid.
+      dry-advice: Risc de stres hidric și cădere a fructelor. Irigați livada.
+    vineyard:
+      name: viță-de-vie
+      frost-warning-c: 2
+      frost-critical-c: -1
+      humidity-low-pct: 30
+      humidity-high-pct: 80
+      frost-advice: Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea.
+      humid-advice: Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid.
+      dry-advice: Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere.
 
   simulator:
     interval-seconds: 5
-    # How long FROST mode takes to reach sub-zero temperature.
+    # How long FROST, HUMID and DRY modes take to reach their target values.
     frost-ramp-seconds: 60
     # classpath:... or file:... (timestamp,temperatureC,humidityPct)
     replay-file: ${REPLAY_FILE:classpath:replay/sample-frost-night.csv}
@@ -25,14 +97,20 @@ app:
     max-readings-per-parcel: 720
 
   frost:
-    warning-temp-c: 2
-    critical-temp-c: 0
-    # WARNING also when below falling-below-c and dropped more than falling-drop-c in the last hour.
-    falling-below-c: 5
+    # WARNING also when less than falling-margin-c above the crop's warning threshold and
+    # dropped more than falling-drop-c in the last hour.
+    falling-margin-c: 3
     falling-drop-c: 3
-    all-clear-temp-c: 3
-    # Real time. Set to e.g. 30 for demos.
+    # All-clear when this far above the crop's warning threshold.
+    all-clear-margin-c: 1
+    # Real time, applies to frost and humidity alerts. Set to e.g. 30 for demos.
     cooldown-seconds: ${FROST_COOLDOWN_SECONDS:1800}
+
+  humidity:
+    # High humidity only counts as disease risk when it is at least this warm.
+    disease-min-temp-c: 10
+    # All-clear when humidity is this far back inside the crop's low/high range.
+    clear-margin-pct: 5
 
   telegram:
     token: ${TELEGRAM_BOT_TOKEN:}

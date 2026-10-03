@@ -1,75 +1,57 @@
-"""Stores sensor readings, enriches them with dew point / frost level and raises alerts with cooldowns."""
-import os
+"""Adapter over the sensors-alerts service: keeps its contract fields and adds what the frontend
+needs on top (dew point per reading, drop over the last hour, mode, priority and reasons)."""
+import re
 from datetime import datetime, timedelta, timezone
 
-from . import db
-from .frost import assess_frost, level_index
+from . import sensors_client as client
+from .frost import assess_frost, dew_point, drop_last_hour
 
-ALERT_COOLDOWN = timedelta(seconds=int(os.getenv("ALERT_COOLDOWN_SEC", 600)))
-TREND_WINDOW = timedelta(minutes=30)
+ALERT_PRIORITY = {"CRITICAL": "high", "WARNING": "medium", "OK": "low"}
+ALERT_TITLE = {"CRITICAL": "Îngheț", "WARNING": "Risc de îngheț", "OK": "Pericol trecut"}
+# Replay readings carry the timestamps of the recorded night.
+REPLAY_AGE = timedelta(minutes=10)
 
-
-def utc_now():
-    return datetime.now(timezone.utc)
-
-
-def _trend_from_history(conn, parcel_id, reading):
-    """°C/h over the last TREND_WINDOW of stored readings (used for real sensors)."""
-    ts = datetime.fromisoformat(reading["timestamp"])
-    history = db.readings_since(conn, parcel_id, (ts - TREND_WINDOW).isoformat(), reading["source"])
-    if not history:
-        return None
-    first = history[0]
-    hours = (ts - datetime.fromisoformat(first["timestamp"])).total_seconds() / 3600
-    if hours < 5 / 60:
-        return None
-    return round((reading["temperature"] - first["temperature"]) / hours, 2)
+# The service has no "mode" endpoint, so we remember what was switched through this API.
+_modes = {}
 
 
-def enrich(reading):
-    """DB reading row -> API shape with dew point and frost level."""
-    frost = assess_frost(reading)
-    return {
-        **reading,
-        "dew_point": frost["dew_point"],
-        "frost_level": frost["frost_level"],
-        "predicted_temperature_1h": frost["predicted_temperature_1h"],
-    }
+def parse_ts(value):
+    """Java Instant (up to 9 fractional digits, 'Z') -> aware datetime."""
+    value = re.sub(r"(\.\d{6})\d+", r"\1", value).replace("Z", "+00:00")
+    ts = datetime.fromisoformat(value)
+    return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
 
 
-def _maybe_alert(conn, parcel_id, frost, now):
-    """One alert per level; repeats of the same/lower level are muted for ALERT_COOLDOWN, escalations always pass."""
-    if frost["frost_level"] == "NONE":
-        return None
-    cooldown = db.get_cooldown(conn, parcel_id, "FROST")
-    if cooldown:
-        recent = now - datetime.fromisoformat(cooldown["last_at"]) < ALERT_COOLDOWN
-        if recent and level_index(frost["frost_level"]) <= level_index(cooldown["last_level"]):
-            return None
-    return db.add_alert(conn, parcel_id, now.isoformat(), "FROST", frost["frost_level"], frost["priority"],
-                        frost["title"], frost["message"], frost["reasons"])
+def set_mode(parcel_id, mode):
+    _modes[parcel_id] = mode
 
 
-def record_reading(conn, parcel_id, reading, compute_trend=True):
-    """reading: timestamp (ISO, UTC), temperature, humidity, wind_speed, soil_temperature, trend, source."""
-    reading = {**reading}
-    if reading.get("trend") is None and compute_trend:
-        reading["trend"] = _trend_from_history(conn, parcel_id, reading)
-    db.add_reading(conn, parcel_id, reading)
-    frost = assess_frost(reading)
-    _maybe_alert(conn, parcel_id, frost, utc_now())
-    return frost
+def reset_modes():
+    _modes.clear()
 
 
-def latest(conn, parcel):
-    """Latest reading + dew point + frost level/priority/reasons, or None if the parcel has no readings."""
-    reading = db.latest_reading(conn, parcel["id"])
+def _mode(parcel_id, latest):
+    if datetime.now(timezone.utc) - parse_ts(latest["timestamp"]) > REPLAY_AGE:
+        return "REPLAY"
+    mode = _modes.get(parcel_id, "NORMAL")
+    return "NORMAL" if mode == "REPLAY" else mode  # the replay has finished
+
+
+def latest(parcel_id):
+    """Contract fields + mode, dropLastHourC and frost {priority, title, message, reasons}; None if no readings."""
+    reading = client.latest(parcel_id)
     if not reading:
         return None
-    frost = assess_frost(reading)
-    return {**enrich(reading), "mode": parcel["mode"], "frost": frost}
+    drop = drop_last_hour(reading, client.readings(parcel_id, 60), parse_ts)
+    return {**reading, "mode": _mode(parcel_id, reading), "drop_last_hour_c": drop,
+            "frost": assess_frost(reading, drop)}
 
 
-def recent(conn, parcel_id, minutes):
-    since = (utc_now() - timedelta(minutes=minutes)).isoformat()
-    return [enrich(r) for r in db.readings_since(conn, parcel_id, since)]
+def readings(parcel_id, minutes):
+    return [{**r, "dewPointC": dew_point(r["temperatureC"], r["humidityPct"])}
+            for r in client.readings(parcel_id, minutes)]
+
+
+def alerts(parcel_id=None):
+    return [{**a, "priority": ALERT_PRIORITY.get(a["level"], "low"), "title": ALERT_TITLE.get(a["level"], a["level"])}
+            for a in client.alerts(parcel_id)]

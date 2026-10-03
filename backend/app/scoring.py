@@ -10,6 +10,8 @@ CROP_THRESHOLDS = {
     "barley":    {"moisture_low": 25, "moisture_critical": 15, "ndvi_good": 0.65, "ndvi_poor": 0.40, "heat_c": 30},
     "corn":      {"moisture_low": 30, "moisture_critical": 20, "ndvi_good": 0.70, "ndvi_poor": 0.45, "heat_c": 35},
     "sunflower": {"moisture_low": 22, "moisture_critical": 12, "ndvi_good": 0.60, "ndvi_poor": 0.40, "heat_c": 35},
+    "orchard":   {"moisture_low": 25, "moisture_critical": 15, "ndvi_good": 0.70, "ndvi_poor": 0.45, "heat_c": 32},
+    "vineyard":  {"moisture_low": 20, "moisture_critical": 12, "ndvi_good": 0.60, "ndvi_poor": 0.40, "heat_c": 35},
 }
 DEFAULT_CROP = "wheat"
 
@@ -19,6 +21,8 @@ DISEASE_NAMES = {
     "powdery_mildew": "făinare",
     "fusarium": "fuzarioză",
     "smut": "tăciune",
+    "scab": "rapăn",
+    "downy_mildew": "mană",
 }
 NO_DISEASE = {None, "", "none", "healthy"}
 
@@ -189,21 +193,29 @@ def _health_score(v, t):
     return int(round(max(0, min(100, base - penalty))))
 
 
+def _sensors_action(sensors_status):
+    if sensors_status != "unavailable":
+        return None
+    return make_action("check_sensor_service", "Verifică serviciul de senzori", 50,
+                       [reason("sensors_unavailable", "Serviciul de senzori nu răspunde — riscul de îngheț nu poate "
+                                                      "fi evaluat", "system")])
+
+
 def _frost_action(sensors):
-    if not sensors or sensors["frost"]["frost_level"] == "NONE":
+    if not sensors or sensors["frost"]["frost_level"] == "OK":
         return None
     frost = sensors["frost"]
     return make_action("protect_from_frost", f"{frost['title']} — protejează culturile", frost["score"], frost["reasons"])
 
 
-def assess(parcel, vision, field, sensors=None, now=None):
-    """parcel: DB row dict; vision/field: latest reports (or None); sensors: sensors.latest() (or None).
-    Returns the ParcelOut-shaped dict."""
+def assess(parcel, vision, field, sensors=None, sensors_status="no_readings", now=None):
+    """parcel: DB row dict; vision/field: latest reports (or None); sensors: sensors.latest() (or None);
+    sensors_status: ok | no_readings | unavailable. Returns the ParcelOut-shaped dict."""
     now = now or datetime.now(timezone.utc)
     v, f = vision or {}, field or {}
     t = CROP_THRESHOLDS.get((parcel["crop"] or "").lower(), CROP_THRESHOLDS[DEFAULT_CROP])
 
-    candidates = [_frost_action(sensors), _irrigation(v, f, t), _disease(v, f), _pests(v), _weeds(v),
+    candidates = [_frost_action(sensors), _sensors_action(sensors_status), _irrigation(v, f, t), _disease(v, f), _pests(v), _weeds(v),
                   _harvest(v, f), _nutrients(v, f, t), *_freshness(vision, field, now)]
     actions = sorted((a for a in candidates if a and a["score"] >= MIN_ACTION_SCORE),
                      key=lambda a: a["score"], reverse=True)
@@ -233,6 +245,7 @@ def assess(parcel, vision, field, sensors=None, now=None):
     return {
         **parcel,
         "sensors": sensors,
+        "sensors_status": sensors_status,
         "status": status,
         "health_score": health,
         "priority": priority,

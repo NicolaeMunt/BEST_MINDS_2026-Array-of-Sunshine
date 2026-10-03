@@ -138,7 +138,7 @@ main{min-width:0;padding:28px 36px 48px;max-width:1440px;width:100%}
     <p class="mut mnote" style="margin-top:6px"></p>
    </div>
    <div class="card c5 chart">
-    <div class="row"><h2 class="sp">Temperatura aerului</h2><div class="chips sm" id="rng"><button data-r="5">5 min</button><button class="on" data-r="15">15 min</button><button data-r="60">1 oră</button></div></div>
+    <div class="row"><h2 class="sp">Temperatura aerului</h2><div class="chips sm" id="rng"><button data-r="5">5 min</button><button class="on" data-r="15">15 min</button><button data-r="60">1 oră</button><button data-r="720">12 ore</button></div></div>
     <div id="chart"></div>
     <div class="leg"><span><u style="background:var(--g)"></u>Temperatură</span><span><u style="background:var(--dew)"></u>Punct de rouă</span><span><u style="background:var(--ub);border:1px dashed var(--ut)"></u>Sub 0°C</span></div>
    </div>
@@ -197,7 +197,7 @@ main{min-width:0;padding:28px 36px 48px;max-width:1440px;width:100%}
      <div class="row" style="padding:10px 0"><span class="sp"><b>1 senzor pentru aer</b><br><span class="mut" id="airst">—</span></span><span class="tag t-a" id="airtag">Activ</span></div>
      <button class="sec" onclick="go('addeq')">+ Adaugă senzor</button></div>
     <div class="card"><h2>Dronele mele</h2><p class="mut" style="margin:6px 0 10px" id="dronest">—</p><button class="sec" onclick="go('addeq')">+ Adaugă dronă</button></div>
-    <div class="card"><h2>Setări</h2><ul style="list-style:none;padding:0"><li>🔔 Notificări · alerte de îngheț active</li><li>⏱️ Intervalul citirilor · 3 s (demo)</li><li>🌐 Limba · Română</li><li>📏 Unități · metric</li></ul></div>
+    <div class="card"><h2>Setări</h2><ul style="list-style:none;padding:0"><li>🔔 Notificări · alerte de îngheț active</li><li>⏱️ Intervalul citirilor · 5 s (demo)</li><li>🌐 Limba · Română</li><li>📏 Unități · metric</li></ul></div>
     <div class="card"><h2>Ajutor și cont</h2><ul style="list-style:none;padding:0"><li>❓ Ajutor</li><li>✉️ Contact</li><li style="color:var(--ut)">↪ Deconectare</li></ul></div>
    </div>
   </div>
@@ -228,13 +228,13 @@ var API=new URLSearchParams(location.search).get('api')||(location.pathname.inde
 var POLL_MS=3000;
 
 var ST={ok:['t-a','Totul este în regulă'],warning:['t-w','Necesită atenție'],critical:['t-u','Problemă detectată'],no_data:['t-e','Date insuficiente']};
-var FR={NONE:['t-a','Fără risc de îngheț'],LOW:['t-w','Risc de îngheț'],MEDIUM:['t-u','Îngheț'],HIGH:['t-u','Îngheț puternic']};
+var FR={OK:['t-a','Fără risc de îngheț'],WARNING:['t-w','Risc de îngheț'],CRITICAL:['t-u','Îngheț']};
 var PRI={high:['t-u','Alertă urgentă','u','al'],medium:['t-w','Avertizare','w','al'],low:['t-a','De făcut','','td']};
 var MODE={NORMAL:'Normal',FROST:'Simulare îngheț',REPLAY:'Redare noapte reală'};
-var CROP={wheat:'Grâu',barley:'Orz',corn:'Porumb',sunflower:'Floarea-soarelui'};
-var DIS={rust:'rugină',septoria:'septorioză',powdery_mildew:'făinare',fusarium:'fuzarioză',smut:'tăciune'};
+var CROP={wheat:'Grâu',barley:'Orz',corn:'Porumb',sunflower:'Floarea-soarelui',orchard:'Livadă',vineyard:'Viță de vie'};
+var DIS={rust:'rugină',septoria:'septorioză',powdery_mildew:'făinare',fusarium:'fuzarioză',smut:'tăciune',scab:'rapăn',downy_mildew:'mană'};
 var SRC={vision:['🚁','Dronă'],field:['🧪','Sol și vreme'],sensor:['🌡️','Senzor pentru aer'],system:['⚙️','Sistem']};
-var ICON={protect_from_frost:'❄️',irrigate:'💧',treat_disease:'🍂',treat_pests:'🐛',remove_weeds:'🌿',harvest:'🌾',fertilize:'🧪',fly_drone:'🚁',check_sensors:'📡'};
+var ICON={protect_from_frost:'❄️',irrigate:'💧',treat_disease:'🍂',treat_pests:'🐛',remove_weeds:'🌿',harvest:'🌾',fertilize:'🧪',fly_drone:'🚁',check_sensors:'📡',check_sensor_service:'📡'};
 var TODO={
  protect_from_frost:['Pornește aspersiunea înainte ca temperatura să scadă sub 0°C.','Acoperă culturile sensibile cu agril sau folie.','Verifică plantele după răsărit pentru semne de degerare.'],
  irrigate:['Verifică solul manual în zonele uscate.','Pornește irigarea dimineața devreme sau seara.','Controlează funcționarea sistemului de irigare.'],
@@ -244,7 +244,8 @@ var TODO={
  harvest:['Pregătește combina și transportul.','Verifică prognoza meteo pentru zilele de recoltare.'],
  fertilize:['Fă o analiză a solului pentru azot.','Aplică îngrășământ cu azot în doze fracționate.'],
  fly_drone:['Planifică un zbor cu drona deasupra terenului.'],
- check_sensors:['Verifică alimentarea și conexiunea senzorilor.']};
+ check_sensors:['Verifică alimentarea și conexiunea senzorilor.'],
+ check_sensor_service:['Pornește serviciul sensors-alerts (port 8081).','Verifică variabila SENSORS_URL a API-ului.']};
 var ISSUE={disease:'Semne de boală detectate de dronă.',pest:'Semne de dăunători detectate de dronă.',water_stress:'Stres hidric — plantele nu primesc destulă apă.',weed:'Buruieni detectate de dronă.'};
 
 // Soil probes are not in the API yet: demo values from the mobile prototype
@@ -253,8 +254,8 @@ var L=['Umiditate','Temperatură','pH','EC','Azot (N)','Fosfor (P)','Potasiu (K)
 var SOILZ=[['g','Zona S1','Măsurat de S1: umiditate 41%, valori în limite normale.'],['y','Zona S2','Măsurat de S2: umiditate scăzută (24%). Verifică irigarea.'],['g e','Între senzori (estimare)','Valoare estimată între S1, S2 și S3, nu este măsurată direct.'],['x e','Zona S3 (estimare)','S3 nu transmite date de 2 ore, deci datele sunt insuficiente.']];
 var PINS=[[1,30,33,''],[2,68,40,'bad'],[3,48,70,'off']];
 
-var st={parcels:[],pid:null,alerts:[],readings:[],minutes:15,mapMode:'c',recF:'all',sel:null,done:[],online:null,
- seen:+localStorage.getItem('am_seen')||0,toasted:null,stack:['home']};
+var st={parcels:[],pid:new URLSearchParams(location.search).get('parcel'),alerts:[],readings:[],minutes:15,mapMode:'c',recF:'all',sel:null,done:[],online:null,
+ seen:localStorage.getItem('am_seen')||'',toasted:null,stack:['home']};
 
 function $(i){return document.getElementById(i)}
 function $$(q){return Array.prototype.slice.call(document.querySelectorAll(q))}
@@ -274,7 +275,7 @@ function load(){
   st.parcels=ps;
   if(!ps.some(function(p){return p.id==st.pid}))st.pid=ps.length?ps[0].id:null;
   if(st.pid==null)return [[],[]];
-  return Promise.all([api('/alerts?parcelId='+st.pid+'&limit=50'),api('/sensors/parcels/'+st.pid+'/readings?minutes='+st.minutes).catch(function(){return[]})]);
+  return Promise.all([api('/alerts?parcelId='+encodeURIComponent(st.pid)).catch(function(){return[]}),api('/sensors/parcels/'+encodeURIComponent(st.pid)+'/readings?minutes='+st.minutes).catch(function(){return[]})]);
  }).then(function(r){st.alerts=r[0];st.readings=r[1];online(true);notifyNew();render()})
  .catch(function(){online(false);render()})
  .then(function(){timer=setTimeout(load,POLL_MS)});
@@ -285,26 +286,26 @@ function online(ok){if(st.online===ok)return;st.online=ok;$('cdot').className=ok
 function demo(kind){
  var p=P();if(kind!='reset'&&!p){toast('Nu există niciun teren');return}
  api(kind=='reset'?'/demo/reset':'/demo/'+kind+'/'+p.id,{method:'POST'}).then(function(r){
-  toast(kind=='replay'?'Redarea nopții de 1–2 aprilie 2020 (Chișinău) a pornit':r.message);
-  if(kind=='reset'){st.sel=null;st.done=[]}else{st.minutes=5;chips('rng','r','5')}
-  load()}).catch(function(){toast('Serverul nu răspunde')})}
+  toast(r.message);
+  if(kind=='reset'){st.sel=null;st.done=[]}else{st.minutes=kind=='replay'?720:5;chips('rng','r',String(st.minutes))}
+  load()}).catch(function(e){toast(String(e.message).indexOf('503')>-1?'Serviciul de senzori nu răspunde':'Serverul nu răspunde')})}
 
 function notifyNew(){
- var top=st.alerts.length?st.alerts[0].id:0;
- if(top<st.seen){st.seen=0;localStorage.setItem('am_seen',0)} // database was recreated
- if(st.toasted!==null&&top>st.toasted){var a=st.alerts[0];toast('❄️ '+a.title+' · '+(P()?P().name:''))}
+ var top=st.alerts.length?st.alerts[0].timestamp:'';
+ if(st.toasted!==null&&top>st.toasted){var a=st.alerts[0];toast(aicon(a)+' '+a.title+' · '+a.parcelName)}
  st.toasted=top}
+function aicon(a){return a.level=='OK'?'✅':a.level=='CRITICAL'?'❄️':'⚠️'}
 
 // ---------- render ----------
 function render(){var p=P();renderTop(p);renderHome(p);renderRecs(p);renderMaps(p);renderHist(p);renderProf(p);renderBell()}
 
 function renderTop(p){
- var sel=$('psel');sel.innerHTML=st.parcels.map(function(x){return '<option value="'+x.id+'"'+(x.id==st.pid?' selected':'')+'>🌱 '+esc(x.name)+' · '+esc(CROP[x.crop]||x.crop)+'</option>'}).join('');
+ var sel=$('psel');sel.innerHTML=st.parcels.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id==st.pid?' selected':'')+'>🌱 '+esc(x.name)+' · '+esc(CROP[x.crop]||x.crop)+'</option>'}).join('');
  sel.style.display=st.parcels.length?'':'none';
  $('tsub').textContent=!p?(st.online===false?'Nu se pot încărca datele':'Nu există terenuri'):
-  p.name+' · '+(CROP[p.crop]||p.crop)+(p.areaHa?' · '+num(p.areaHa)+' ha':'')+' · actualizat '+when(p.sensors?p.sensors.timestamp:p.updatedAt.field);
+  p.name+' · '+(CROP[p.crop]||p.crop)+(p.areaHa?' · '+num(p.areaHa)+' ha':'')+' · actualizat '+hm(new Date());
  var n=p?p.actions.filter(function(a){return a.priority!='low'&&st.done.indexOf(a.type)<0}).length:0;$('ncnt').textContent=n||'';
- var unseen=st.alerts.filter(function(a){return a.id>st.seen}).length;$('badge').textContent=unseen||''}
+ var unseen=st.alerts.filter(function(a){return a.timestamp>st.seen}).length;$('badge').textContent=unseen||''}
 
 function frostOf(p){return p&&p.sensors?p.sensors.frost:null}
 
@@ -313,7 +314,7 @@ function renderHome(p){
   ['hbanner','hair','hcrop','hsoil','hrec'].forEach(function(i){$(i).innerHTML=''});return}
  var f=frostOf(p),s=p.sensors,top=p.actions[0],more=p.actions.slice(1).filter(function(a){return a.priority!='low'}).map(function(a){return a.title});
  // frost banner
- $('hbanner').innerHTML=f&&f.frostLevel!='NONE'?'<div class="card rc fade '+(f.frostLevel=='LOW'?'w':'u')+'" onclick="openRec(\'protect_from_frost\')"><div class="row"><span class="ic">❄️</span><div class="sp"><h2>'+esc(f.title)+': '+num(s.temperature)+'°C</h2><p class="mut">Senzor pentru aer · '+when(s.timestamp)+'</p></div><button class="pri" style="width:auto">Ce trebuie făcut</button></div><p style="margin-top:8px">'+esc(f.message)+'.</p><p class="mut" style="margin-top:4px">'+f.reasons.map(function(r){return esc(r.text)}).join(' · ')+'</p></div>':'';
+ $('hbanner').innerHTML=f&&f.frostLevel!='OK'?'<div class="card rc fade '+(f.frostLevel=='WARNING'?'w':'u')+'" onclick="openRec(\'protect_from_frost\')"><div class="row"><span class="ic">❄️</span><div class="sp"><h2>'+esc(f.title)+': '+num(s.temperatureC)+'°C</h2><p class="mut">Senzor pentru aer · '+when(s.timestamp)+'</p></div><button class="pri" style="width:auto">Ce trebuie făcut</button></div><p style="margin-top:8px">'+esc(f.message)+'.</p><p class="mut" style="margin-top:4px">'+f.reasons.map(function(r){return esc(r.text)}).join(' · ')+'</p></div>':'';
  // status
  var hs=p.healthScore;
  $('hstatus').innerHTML='<div class="row">'+tag(ST[p.status])+'<span class="sp"></span><span class="mut">Starea generală</span></div>'+
@@ -325,13 +326,13 @@ function renderHome(p){
   '<div class="m"><span class="mut">Recomandări</span><b>'+p.actions.length+'</b></div></div>'+
   '<p class="mut" style="margin-top:10px">Dronă: '+when(p.updatedAt.vision)+' · Sol și vreme: '+when(p.updatedAt.field)+' · Senzor aer: '+(s?when(s.timestamp):'—')+'</p>';
  // air + frost
- if(!s)$('hair').innerHTML='<h2>Aer și îngheț</h2><p class="mut" style="margin-top:8px">Nu există citiri de la senzorul pentru aer.</p>';
- else{var rp=s.source.indexOf('replay:')==0?s.source.slice(7):null;
+ if(!s)$('hair').innerHTML='<h2>Aer și îngheț</h2><p class="mut" style="margin-top:8px">'+(p.sensorsStatus=='unavailable'?'Serviciul de senzori nu răspunde.':'Nu există citiri de la senzorul pentru aer.')+'</p>';
+ else{var dr=s.dropLastHourC;
   $('hair').innerHTML='<div class="row"><h2 class="sp">Aer și îngheț</h2>'+tag(FR[s.frostLevel])+'</div>'+
-  '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Temperatură</span><b>'+num(s.temperature)+'°C</b></div><div class="m"><span class="mut">Punct de rouă</span><b>'+num(s.dewPoint)+'°C</b></div>'+
-  '<div class="m"><span class="mut">Umiditate aer</span><b>'+num(s.humidity,0)+'<small>%</small></b></div><div class="m"><span class="mut">Vânt</span><b>'+num(s.windSpeed)+' <small>m/s</small></b></div></div>'+
-  '<p style="margin-top:12px">'+(s.trend==null?'<span class="mut">Tendința se calculează…</span>':(s.trend<0?'↘ Scade':'↗ Crește')+' cu '+num(Math.abs(s.trend))+'°C/h · peste o oră ≈ <b>'+num(s.predictedTemperature1h)+'°C</b>')+'</p>'+
-  '<p class="mut" style="margin-top:6px">Mod: '+esc(MODE[p.mode]||p.mode)+(rp?' · ora reală '+esc(new Date(rp).toLocaleString('ro-RO',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})):'')+' · '+when(s.timestamp)+'</p>'}
+  '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Temperatură</span><b>'+num(s.temperatureC)+'°C</b></div><div class="m"><span class="mut">Punct de rouă</span><b>'+num(s.dewPointC)+'°C</b></div>'+
+  '<div class="m"><span class="mut">Umiditate aer</span><b>'+num(s.humidityPct,0)+'<small>%</small></b></div><div class="m"><span class="mut">Față de acum o oră</span><b>'+(dr==null?'—':(dr>0?'−':'+')+num(Math.abs(dr))+'°C')+'</b></div></div>'+
+  '<p style="margin-top:12px">'+(dr==null?'<span class="mut">Tendința se calculează…</span>':dr>0.3?'↘ Temperatura scade':dr<-0.3?'↗ Temperatura crește':'→ Temperatura e stabilă')+'</p>'+
+  '<p class="mut" style="margin-top:6px">Mod: '+esc(MODE[s.mode]||s.mode)+' · '+(s.mode=='REPLAY'?'ora reală '+esc(new Date(s.timestamp).toLocaleString('ro-RO',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})):when(s.timestamp))+'</p>'}
  // crop
  var m=p.metrics,dz=m.disease&&['none','healthy'].indexOf(m.disease)<0;
  $('hcrop').innerHTML='<div class="row"><h2 class="sp">Starea culturii</h2><span class="tag t-a">Dronă</span></div>'+
@@ -340,9 +341,9 @@ function renderHome(p){
   '<p class="mut" style="margin-top:10px">Imagine dronă: '+when(p.updatedAt.vision)+'</p>';
  // soil
  $('hsoil').innerHTML='<div class="row"><h2 class="sp">Starea solului</h2><span class="tag t-a">Media sondelor</span></div>'+
-  '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Umiditate</span><b>'+num(m.soilMoisturePct,0)+'<small>%</small></b></div><div class="m"><span class="mut">Temperatură sol</span><b>'+(s?num(s.soilTemperature)+'°C':'—')+'</b></div><div class="m"><span class="mut">pH</span><b>6,3</b></div><div class="m"><span class="mut">EC</span><b>0,9 <small>mS/cm</small></b></div></div>'+
+  '<div class="grid" style="margin-top:12px"><div class="m"><span class="mut">Umiditate</span><b>'+num(m.soilMoisturePct,0)+'<small>%</small></b></div><div class="m"><span class="mut">Ploaie 48 h</span><b>'+num(m.rainForecastMm48h,0)+' <small>mm</small></b></div><div class="m"><span class="mut">pH</span><b>6,3</b></div><div class="m"><span class="mut">EC</span><b>0,9 <small>mS/cm</small></b></div></div>'+
   '<div class="grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px"><div class="m"><span class="mut">N</span><b>30</b></div><div class="m"><span class="mut">P</span><b>16</b></div><div class="m"><span class="mut">K</span><b>132</b></div></div>'+
-  '<p class="mut" style="margin-top:10px">Prognoză 48 h: max '+num(m.tempMaxForecastC,0)+'°C · ploaie '+num(m.rainForecastMm48h,0)+' mm<br>Actualizat '+when(p.updatedAt.field)+' · pH, EC, NPK: date demonstrative</p>';
+  '<p class="mut" style="margin-top:10px">Prognoză 48 h: max '+num(m.tempMaxForecastC,0)+'°C<br>Actualizat '+when(p.updatedAt.field)+' · pH, EC, NPK: date demonstrative</p>';
  // top recommendation
  $('hrec').innerHTML=top?'<div class="card rc '+PRI[top.priority][2]+'" style="flex:1" onclick="openRec(\''+top.type+'\')">'+tag(['t-'+(top.priority=='high'?'u':top.priority=='medium'?'w':'a')],'Prioritar')+'<h2 style="margin-top:8px">'+ICON[top.type]+' '+esc(top.title)+'</h2><p style="margin-top:4px">'+esc(top.reasons[0]?top.reasons[0].text:'')+'.</p><button class="pri" style="margin-top:12px">Vezi recomandările</button></div>':
   '<div class="card" style="flex:1"><span class="tag t-a">Totul e bine</span><h2 style="margin-top:8px">Nicio acțiune necesară</h2></div>';
@@ -352,8 +353,8 @@ function chart(){
  var rs=st.readings,el=$('chart');
  if(!rs.length){el.innerHTML='<p class="mut empty">Nu există citiri în acest interval.</p>';return}
  var step=Math.ceil(rs.length/240),pts=rs.filter(function(r,i){return i%step==0||i==rs.length-1});
- var W=480,H=320,Lp=36,Rp=46,T=12,B=28,t1=Date.now(),t0=t1-st.minutes*60000;
- var v=[];pts.forEach(function(r){v.push(r.temperature,r.dewPoint)});
+ var W=480,H=320,Lp=36,Rp=46,T=12,B=28,t1=Date.parse(rs[rs.length-1].timestamp),t0=t1-st.minutes*60000;
+ var v=[];pts.forEach(function(r){v.push(r.temperatureC,r.dewPointC)});
  var lo=Math.floor(Math.min(Math.min.apply(null,v),0)-1),hi=Math.ceil(Math.max.apply(null,v)+1);
  function x(t){return Lp+(W-Lp-Rp)*Math.max(0,Math.min(1,(t-t0)/(t1-t0)))}
  function y(c){return T+(H-T-B)*(hi-c)/(hi-lo)}
@@ -365,9 +366,9 @@ function chart(){
  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Temperatura și punctul de rouă, ultimele '+st.minutes+' minute">'+
   '<rect x="'+Lp+'" y="'+z+'" width="'+(W-Lp-Rp)+'" height="'+(H-B-z)+'" style="fill:var(--ub)" opacity=".8"/>'+g+
   '<line x1="'+Lp+'" x2="'+(W-Rp)+'" y1="'+z+'" y2="'+z+'" style="stroke:var(--ut)" stroke-dasharray="5 4" stroke-width="1.5"/>'+
-  '<path d="'+path('dewPoint')+'" fill="none" style="stroke:var(--dew)" stroke-width="2" stroke-dasharray="6 4"/>'+
-  '<path d="'+path('temperature')+'" fill="none" style="stroke:var(--g)" stroke-width="3" stroke-linejoin="round"/>'+
-  '<circle cx="'+lx+'" cy="'+y(last.temperature)+'" r="5" style="fill:var(--g)"/><text x="'+(lx+8)+'" y="'+(y(last.temperature)+4)+'" style="fill:var(--tx);font-size:13px;font-weight:700">'+num(last.temperature)+'°</text>'+xl+'</svg>'}
+  '<path d="'+path('dewPointC')+'" fill="none" style="stroke:var(--dew)" stroke-width="2" stroke-dasharray="6 4"/>'+
+  '<path d="'+path('temperatureC')+'" fill="none" style="stroke:var(--g)" stroke-width="3" stroke-linejoin="round"/>'+
+  '<circle cx="'+lx+'" cy="'+y(last.temperatureC)+'" r="5" style="fill:var(--g)"/><text x="'+(lx+8)+'" y="'+(y(last.temperatureC)+4)+'" style="fill:var(--tx);font-size:13px;font-weight:700">'+num(last.temperatureC)+'°</text>'+xl+'</svg>'}
 
 // ---------- recommendations ----------
 function recs(p){return p?p.actions.filter(function(a){return st.done.indexOf(a.type)<0}):[]}
@@ -420,20 +421,22 @@ function sensor(n){var s=S[n],h='<div class="row"><div class="sp"><h2>Sonda '+s.
  openS(h+'</div><p class="mut">Ultima citire: '+s.t+' · date demonstrative</p><p class="mut">Model sondă 7 în 1 · baterie 78%</p><button class="pri" onclick="toast(\'Se actualizează '+s.n+'…\')">Actualizează acum</button>')}
 
 // ---------- history / profile / bell ----------
-function alertCard(a){return '<div class="card rc '+(a.level=='LOW'?'w':'u')+'" style="cursor:default"><div class="row"><span class="ic">❄️</span><div class="sp">'+tag(PRI[a.priority])+'<h2>'+esc(a.title)+'</h2></div><span class="mut">'+when(a.createdAt)+'</span></div><p style="margin-top:8px">'+esc(a.message)+'.</p><ul class="mut">'+a.reasons.map(function(r){return '<li>'+esc(r.text)+'</li>'}).join('')+'</ul></div>'}
+function atag(a){return a.level=='OK'?tag(['t-a','Pericol trecut']):tag(PRI[a.priority])}
+function alertCard(a){return '<div class="card rc '+(a.level=='WARNING'?'w':a.level=='CRITICAL'?'u':'')+'" style="cursor:default"><div class="row"><span class="ic">'+aicon(a)+'</span><div class="sp">'+atag(a)+'<h2>'+esc(a.title)+' · '+esc(a.parcelName)+'</h2></div><span class="mut">'+when(a.timestamp)+'</span></div>'+
+ '<p style="margin-top:8px;white-space:pre-line">'+esc(a.message)+'</p><p class="mut" style="margin-top:6px">Temperatura '+num(a.temperatureC)+'°C · umiditate '+num(a.humidityPct,0)+'% · punct de rouă '+num(a.dewPointC)+'°C</p></div>'}
 function renderHist(p){
  $('halerts').innerHTML=st.alerts.length?st.alerts.map(alertCard).join(''):'<div class="card empty"><h2>Nicio alertă</h2><p class="mut" style="margin-top:6px">Încearcă butonul „Simulează înghețul” din meniu.</p></div>';
  $('hanal').innerHTML=(p&&p.updatedAt.vision?'<div class="card"><b>'+when(p.updatedAt.vision)+'</b><p>Analiza dronei: NDVI '+num(p.metrics.ndviMean,2)+', sănătate '+(p.healthScore==null?'—':p.healthScore+'/100')+'.</p>'+tag(ST[p.status])+'</div>':'')+
   '<div class="card"><b>28 sept.</b><p>Diferență de vegetație în zona de nord.</p><span class="tag t-w">Atenție</span></div><div class="card"><b>28 aug.</b><p>Vegetație uniformă pe toată parcela.</p><span class="tag t-a">Normal</span></div><div class="card"><b>28 iul.</b><p>Creștere bună, fără probleme.</p><span class="tag t-a">Normal</span></div>'}
 function renderProf(p){
- $('plist').innerHTML=st.parcels.map(function(x){return '<button class="row" style="width:100%;background:'+(x.id==st.pid?'var(--gl)':'none')+';padding:10px;text-align:left;color:var(--tx)" onclick="selectParcel('+x.id+')"><span class="ic">🌱</span><span class="sp"><b>'+esc(x.name)+'</b><br><span class="mut">'+esc(CROP[x.crop]||x.crop)+(x.areaHa?' · '+num(x.areaHa)+' ha':'')+'</span></span>'+tag(ST[x.status])+'</button>'}).join('')||'<p class="mut">Nu ai adăugat niciun teren.</p>';
+ $('plist').innerHTML=st.parcels.map(function(x){return '<button class="row" style="width:100%;background:'+(x.id==st.pid?'var(--gl)':'none')+';padding:10px;text-align:left;color:var(--tx)" onclick="selectParcel(\''+esc(x.id)+'\')"><span class="ic">🌱</span><span class="sp"><b>'+esc(x.name)+'</b><br><span class="mut">'+esc(CROP[x.crop]||x.crop)+(x.areaHa?' · '+num(x.areaHa)+' ha':'')+'</span></span>'+tag(ST[x.status])+'</button>'}).join('')||'<p class="mut">Nu ai adăugat niciun teren.</p>';
  var s=p&&p.sensors;$('airst').textContent=s?'Ultima citire: '+when(s.timestamp):'Fără citiri';$('airtag').className='tag '+(s?'t-a':'t-e');$('airtag').textContent=s?'Activ':'Inactiv';
  $('dronest').textContent=p&&p.updatedAt.vision?'Ultimul zbor: '+when(p.updatedAt.vision):'Nu ai adăugat o dronă. Este opțională.'}
 function renderBell(){if(!$('pop').classList.contains('on'))return;
  $('pop').innerHTML='<div class="row"><h2 class="sp">Notificări</h2><button class="lnk" onclick="bell();go(\'hist\')">Vezi toate</button></div>'+
-  (st.alerts.length?st.alerts.slice(0,6).map(function(a){return '<div class="row" style="align-items:flex-start"><span class="ic">❄️</span><div class="sp">'+tag(PRI[a.priority])+' <span class="mut">'+when(a.createdAt)+'</span><p style="margin-top:4px">'+esc(a.title)+' · '+esc(a.reasons[0]?a.reasons[0].text:'')+'</p></div></div>'}).join(''):'<p class="mut">Nu ai notificări noi.</p>')}
-function bell(){var o=$('pop').classList.toggle('on');if(o){st.seen=st.alerts.length?st.alerts[0].id:st.seen;localStorage.setItem('am_seen',st.seen);$('badge').textContent='';renderBell()}}
-function selectParcel(id){st.pid=+id;st.sel=null;st.done=[];load()}
+  (st.alerts.length?st.alerts.slice(0,6).map(function(a){return '<div class="row" style="align-items:flex-start"><span class="ic">'+aicon(a)+'</span><div class="sp">'+atag(a)+' <span class="mut">'+when(a.timestamp)+'</span><p style="margin-top:4px">'+esc(a.title)+' · '+esc(a.parcelName)+' · '+num(a.temperatureC)+'°C</p></div></div>'}).join(''):'<p class="mut">Nu ai notificări noi.</p>')}
+function bell(){var o=$('pop').classList.toggle('on');if(o){st.seen=st.alerts.length?st.alerts[0].timestamp:st.seen;localStorage.setItem('am_seen',st.seen);$('badge').textContent='';renderBell()}}
+function selectParcel(id){st.pid=id;st.sel=null;st.done=[];load()}
 function addLand(){var name=$('lname').value.trim(),area=parseFloat($('larea').value.replace(',','.'));
  if(!name){toast('Introdu denumirea terenului');return}
  api('/parcels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,crop:$('lcrop').value,areaHa:area?area/10000:null})})

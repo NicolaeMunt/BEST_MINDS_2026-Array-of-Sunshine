@@ -1,7 +1,7 @@
 """API contracts.
 
-Input:  VisionReport (Coder 1, drone analysis), FieldReport (Coder 2, soil/weather), SensorReadingIn.
-Output: ParcelOut, SensorLatestOut, SensorReadingOut, AlertOut.
+Input:  VisionReport (drone analysis), FieldReport (soil / weather).
+Output: ParcelOut, SensorLatestOut, SensorReadingOut, AlertOut (sensor data comes from the sensors-alerts service).
 All analysis fields are optional: send whatever your module can compute.
 JSON field names are camelCase (shared contract); inputs also accept snake_case.
 """
@@ -13,7 +13,7 @@ from pydantic.alias_generators import to_camel
 
 Priority = Literal["high", "medium", "low"]
 Mode = Literal["NORMAL", "FROST", "REPLAY"]
-FrostLevel = Literal["NONE", "LOW", "MEDIUM", "HIGH"]
+FrostLevel = Literal["OK", "WARNING", "CRITICAL"]
 
 
 class CamelModel(BaseModel):
@@ -23,6 +23,7 @@ class CamelModel(BaseModel):
 # ---------- input ----------
 
 class ParcelIn(CamelModel):
+    id: str | None = Field(None, description="e.g. P4; must match the sensors-alerts config. Generated if omitted")
     name: str
     crop: str = "wheat"
     area_ha: float | None = None
@@ -43,7 +44,7 @@ class Zone(CamelModel):
 
 
 class VisionReport(CamelModel):
-    """Coder 1: result of the drone image analysis for the whole parcel."""
+    """Result of the drone image analysis for the whole parcel."""
     model_config = ConfigDict(extra="allow")  # merged with CamelModel config
     captured_at: datetime | None = Field(None, description="Flight time; defaults to now")
     ndvi_mean: float | None = Field(None, ge=-1, le=1)
@@ -58,7 +59,7 @@ class VisionReport(CamelModel):
 
 
 class FieldReport(CamelModel):
-    """Coder 2: soil sensors and weather for the parcel."""
+    """Soil sensors and weather for the parcel."""
     model_config = ConfigDict(extra="allow")  # merged with CamelModel config
     measured_at: datetime | None = Field(None, description="Measurement time; defaults to now")
     soil_moisture_pct: float | None = Field(None, ge=0, le=100)
@@ -77,7 +78,7 @@ class Reason(CamelModel):
 
 
 class Action(CamelModel):
-    type: str = Field(description="protect_from_frost | irrigate | treat_disease | treat_pests | remove_weeds | harvest | fertilize | fly_drone | check_sensors")
+    type: str = Field(description="protect_from_frost | check_sensor_service | irrigate | treat_disease | treat_pests | remove_weeds | harvest | fertilize | fly_drone | check_sensors")
     title: str
     score: int = Field(ge=0, le=100)
     priority: Priority
@@ -105,26 +106,13 @@ class UpdatedAt(CamelModel):
     field: datetime | None = None
 
 
-class SensorReadingIn(CamelModel):
-    """Real sensors (or another module's simulator) post readings here."""
-    timestamp: datetime | None = Field(None, description="Defaults to now")
-    temperature: float = Field(description="Air temperature, °C")
-    humidity: float = Field(ge=0, le=100, description="Relative humidity, %")
-    wind_speed: float | None = Field(None, ge=0, description="m/s")
-    soil_temperature: float | None = Field(None, description="°C")
-
-
 class SensorReadingOut(CamelModel):
+    """Shared contract (sensors-alerts service) + dewPointC for the chart."""
+    parcel_id: str
     timestamp: datetime
-    temperature: float
-    humidity: float
-    wind_speed: float | None
-    soil_temperature: float | None
-    dew_point: float = Field(description="°C, Magnus formula")
-    frost_level: FrostLevel
-    trend: float | None = Field(description="Temperature change, °C/h")
-    predicted_temperature_1h: float | None = Field(alias="predictedTemperature1h")
-    source: str = Field(description="simulated | sensor | replay:<original time>")
+    temperature_c: float
+    humidity_pct: float
+    dew_point_c: float = Field(description="°C, Magnus formula")
 
 
 class FrostAssessment(CamelModel):
@@ -137,31 +125,35 @@ class FrostAssessment(CamelModel):
 
 
 class SensorLatestOut(SensorReadingOut):
-    parcel_id: int
-    mode: Mode
+    """Shared contract (parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel) + our additions."""
+    frost_level: FrostLevel
+    mode: Mode = Field(description="REPLAY is detected from past timestamps; FROST if switched through this API")
+    drop_last_hour_c: float | None = Field(description="How much colder than an hour ago (reading time); <0 = warming")
     frost: FrostAssessment
 
 
 class AlertOut(CamelModel):
-    id: int
-    parcel_id: int
-    created_at: datetime
-    type: str
+    """Shared contract + priority and title. Level OK is the all-clear."""
+    parcel_id: str
+    parcel_name: str
     level: FrostLevel
+    temperature_c: float
+    humidity_pct: float
+    dew_point_c: float
+    timestamp: datetime
+    message: str
     priority: Priority
     title: str
-    message: str
-    reasons: list[Reason]
 
 
 class DemoOut(CamelModel):
-    parcel_id: int | None = None
-    mode: Mode | None = None
+    parcel_id: str | None = None
+    mode: Mode
     message: str
 
 
 class ParcelOut(CamelModel):
-    id: int
+    id: str
     name: str
     crop: str
     area_ha: float | None
@@ -169,8 +161,8 @@ class ParcelOut(CamelModel):
     lat: float | None
     lon: float | None
     boundary: list[list[float]] | None
-    mode: Mode
     sensors: SensorLatestOut | None
+    sensors_status: Literal["ok", "no_readings", "unavailable"]
     status: Literal["ok", "warning", "critical", "no_data"]
     health_score: int | None = Field(description="0..100, null if no drone data")
     priority: Priority | Literal["none"]

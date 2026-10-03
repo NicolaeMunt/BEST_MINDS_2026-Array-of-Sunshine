@@ -35,9 +35,9 @@ def _parcel_path(parcel_id):
     return f"/sensors/parcels/{urllib.parse.quote(parcel_id)}"
 
 
-def register_parcel(parcel):
-    """Gives the parcel a sensor in sensors-alerts (or updates its name and crop there)."""
-    return _call("PUT", _parcel_path(parcel["id"]), body={"name": parcel["name"], "crop": parcel["crop"]})
+def parcels():
+    """[{id, name, crop}]: the sensor locations configured in sensors-alerts."""
+    return _call("GET", "/sensors/parcels") or []
 
 
 def latest(parcel_id):

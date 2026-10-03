@@ -1,8 +1,10 @@
 """Adapter over the sensors-alerts service: keeps its contract fields and adds what the frontend
-needs on top (dew point per reading, drop over the last hour, mode, priority and reasons)."""
+needs on top (dew point per reading, drop over the last hour, mode, priority and reasons).
+The readings for the chart come from the database (see collector.py)."""
 import re
 from datetime import datetime, timedelta, timezone
 
+from . import db
 from . import sensors_client as client
 from .frost import assess_frost, dew_point, drop_last_hour
 
@@ -59,9 +61,20 @@ def latest(parcel_id):
             "frost": assess_frost(reading, drop)}
 
 
-def readings(parcel_id, minutes):
-    return [{**r, "dewPointC": dew_point(r["temperatureC"], r["humidityPct"])}
-            for r in client.readings(parcel_id, minutes)]
+def readings(parcel_id, minutes, max_points=300):
+    """Stored readings of the last N minutes with the dew point, thinned out evenly to max_points for the chart."""
+    with db.get_conn() as conn:
+        rows = db.readings(conn, parcel_id, minutes)
+    step = -(-len(rows) // max_points) or 1
+    rows = rows[::step] + (rows[-1:] if (len(rows) - 1) % step else [])  # the newest reading always stays
+    return [{"parcelId": r["parcel_id"], "timestamp": r["timestamp"], "temperatureC": r["temperature_c"],
+             "humidityPct": r["humidity_pct"], "dewPointC": dew_point(r["temperature_c"], r["humidity_pct"])}
+            for r in rows]
+
+
+def parcels():
+    """Sensor locations known to sensors-alerts, each with its latest reading (None before the first one)."""
+    return [{**p, "latest": latest(p["id"])} for p in client.parcels()]
 
 
 def alerts(parcel_id=None, type_="ALL"):

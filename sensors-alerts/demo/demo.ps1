@@ -49,14 +49,14 @@ while ((Get-Date) -lt $deadline) {
     }
 
     # Alerts come newest first; print the ones we have not shown yet, oldest first.
-    $alerts = @(Call Get "/alerts?parcelId=$ParcelId" | ForEach-Object { $_ })
+    $alerts = @(Call Get "/alerts?parcelId=$ParcelId&type=ALL" | ForEach-Object { $_ })
     $allClear = $false
     for ($i = $alerts.Count - $alertsShown - 1; $i -ge 0; $i--) {
         Write-Host ""
-        Write-Host ">>> MESSAGE TO FARMER ($($alerts[$i].level))" -ForegroundColor Magenta
+        Write-Host ">>> MESSAGE TO FARMER ($($alerts[$i].type) $($alerts[$i].level))" -ForegroundColor Magenta
         Write-Host $alerts[$i].message -ForegroundColor Magenta
         Write-Host ""
-        if ($alerts[$i].level -eq "OK") { $allClear = $true }
+        if ($alerts[$i].type -eq "FROST" -and $alerts[$i].level -eq "OK") { $allClear = $true }
     }
     $alertsShown = $alerts.Count
     if ($allClear) {

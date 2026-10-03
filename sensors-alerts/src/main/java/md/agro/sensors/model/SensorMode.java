@@ -1,5 +1,5 @@
 package md.agro.sensors.model;
 
 public enum SensorMode {
-    NORMAL, FROST, REPLAY
+    NORMAL, FROST, HUMID, DRY, REPLAY
 }

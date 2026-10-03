@@ -128,7 +128,7 @@ public class TelegramNotifier implements AlertNotifier {
             case "/start" -> {
                 chats.add(chatId);
                 saveChats();
-                yield "Bun venit! Veți primi alerte de îngheț pentru toate parcelele.\n"
+                yield "Bun venit! Veți primi alerte de îngheț și de umiditate pentru toate parcelele.\n"
                         + "/parcele – lista parcelelor\n/status <parcelId> – detalii parcelă\n"
                         + "Chat ID: " + chatId;
             }
@@ -141,11 +141,13 @@ public class TelegramNotifier implements AlertNotifier {
     private String parcelList() {
         StringBuilder sb = new StringBuilder("Parcele:\n");
         for (AppProperties.Parcel p : props.parcels()) {
-            sb.append(p.id()).append(" – ").append(p.name()).append(": ");
+            sb.append(p.id()).append(" – ").append(p.name())
+                    .append(" (").append(props.cropFor(p.id()).name()).append("): ");
             Optional<SensorStore.Status> st = store.latest(p.id());
             if (st.isPresent()) {
                 sb.append(Messages.num(st.get().reading().temperatureC())).append(" °C · ")
-                        .append(Messages.status(st.get().assessment().level()));
+                        .append(Messages.status(st.get().assessment().level()))
+                        .append(" · umiditate ").append(Messages.status(st.get().humidity()));
             } else {
                 sb.append("fără date");
             }
@@ -164,9 +166,14 @@ public class TelegramNotifier implements AlertNotifier {
             return parcel.get().name() + ": fără date";
         }
         Reading r = st.get().reading();
-        return "%s (%s)\nTemperatura: %s °C\nUmiditate: %.0f%%\nPunct de rouă: %s °C\nStare: %s".formatted(
-                parcel.get().name(), parcel.get().id(), Messages.num(r.temperatureC()), r.humidityPct(),
-                Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()));
+        AppProperties.Crop crop = props.cropFor(parcel.get().id());
+        return ("%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n"
+                + "Praguri %s: îngheț %s / %s °C · umiditate %.0f–%.0f%%").formatted(
+                parcel.get().name(), parcel.get().id(), crop.name(), Messages.num(r.temperatureC()),
+                r.humidityPct(), Messages.status(st.get().humidity()),
+                Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()),
+                crop.name(), Messages.num(crop.frostWarningC()), Messages.num(crop.frostCriticalC()),
+                crop.humidityLowPct(), crop.humidityHighPct());
     }
 
     private final class Bot extends TelegramLongPollingBot {

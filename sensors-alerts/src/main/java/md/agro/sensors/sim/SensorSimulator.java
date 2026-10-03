@@ -41,11 +41,12 @@ public class SensorSimulator {
         double lastTemp = Double.NaN;
         double lastHum = Double.NaN;
 
-        Instant frostStart;
-        double frostFromTemp;
-        double frostFromHum;
-        double frostToTemp;
-        double frostToHum;
+        // FROST, HUMID and DRY move linearly from the values at the switch to a target.
+        Instant rampStart;
+        double rampFromTemp;
+        double rampFromHum;
+        double rampToTemp;
+        double rampToHum;
 
         List<ReplayData.Row> replay = List.of();
         int replayIndex;
@@ -55,6 +56,7 @@ public class SensorSimulator {
         }
     }
 
+    private final AppProperties props;
     private final AppProperties.Simulator cfg;
     private final AlertService alertService;
     private final SensorStore store;
@@ -64,6 +66,7 @@ public class SensorSimulator {
 
     public SensorSimulator(AppProperties props, AlertService alertService, SensorStore store,
             ResourceLoader resourceLoader) {
+        this.props = props;
         this.cfg = props.simulator();
         this.alertService = alertService;
         this.store = store;
@@ -113,13 +116,27 @@ public class SensorSimulator {
             }
             s.mode = mode;
             generation = ++s.generation;
-            if (mode == SensorMode.FROST) {
+            if (mode == SensorMode.FROST || mode == SensorMode.HUMID || mode == SensorMode.DRY) {
                 ThreadLocalRandom rnd = ThreadLocalRandom.current();
-                s.frostStart = Instant.now();
-                s.frostFromTemp = Double.isNaN(s.lastTemp) ? normalTemp() : s.lastTemp;
-                s.frostFromHum = Double.isNaN(s.lastHum) ? normalHumidity(s.frostFromTemp) : s.lastHum;
-                s.frostToTemp = rnd.nextDouble(-3.5, -1.5);
-                s.frostToHum = rnd.nextDouble(87, 93);
+                // Targets go past the thresholds of the parcel's crop, so the alert fires for any crop.
+                AppProperties.Crop crop = props.cropFor(parcelId);
+                s.rampStart = Instant.now();
+                s.rampFromTemp = Double.isNaN(s.lastTemp) ? normalTemp() : s.lastTemp;
+                s.rampFromHum = Double.isNaN(s.lastHum) ? normalHumidity(s.rampFromTemp) : s.lastHum;
+                switch (mode) {
+                    case FROST -> {
+                        s.rampToTemp = crop.frostCriticalC() - rnd.nextDouble(0.5, 2.0);
+                        s.rampToHum = rnd.nextDouble(87, 93);
+                    }
+                    case HUMID -> {
+                        s.rampToTemp = rnd.nextDouble(16, 19);
+                        s.rampToHum = Math.min(98, crop.humidityHighPct() + rnd.nextDouble(4, 9));
+                    }
+                    default -> {
+                        s.rampToTemp = rnd.nextDouble(30, 33);
+                        s.rampToHum = Math.max(8, crop.humidityLowPct() - rnd.nextDouble(5, 10));
+                    }
+                }
             } else if (mode == SensorMode.REPLAY) {
                 s.replay = rows;
                 s.replayIndex = 0;
@@ -142,7 +159,7 @@ public class SensorSimulator {
                     return;
                 }
                 switch (s.mode) {
-                    case FROST -> reading = frostReading(s);
+                    case FROST, HUMID, DRY -> reading = rampReading(s);
                     case REPLAY -> {
                         if (s.replayIndex >= s.replay.size()) {
                             reading = null;
@@ -183,17 +200,13 @@ public class SensorSimulator {
         return new Reading(s.parcelId, Instant.now(), round1(temp), round1(clamp(hum, 30, 98)));
     }
 
-    private Reading frostReading(Sensor s) {
+    private Reading rampReading(Sensor s) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
-        double elapsed = Duration.between(s.frostStart, Instant.now()).toMillis() / 1000.0;
+        double elapsed = Duration.between(s.rampStart, Instant.now()).toMillis() / 1000.0;
         double p = Math.min(1, elapsed / Math.max(1, cfg.frostRampSeconds()));
-        double temp = s.frostFromTemp + (s.frostToTemp - s.frostFromTemp) * p + rnd.nextDouble(-0.1, 0.1);
-        double hum = s.frostFromHum + (s.frostToHum - s.frostFromHum) * p + rnd.nextDouble(-1, 1);
-        if (p >= 1) {
-            temp = clamp(temp, -4, -1);
-            hum = clamp(hum, 85, 95);
-        }
-        return new Reading(s.parcelId, Instant.now(), round1(temp), round1(clamp(hum, 30, 98)));
+        double temp = s.rampFromTemp + (s.rampToTemp - s.rampFromTemp) * p + rnd.nextDouble(-0.1, 0.1);
+        double hum = s.rampFromHum + (s.rampToHum - s.rampFromHum) * p + rnd.nextDouble(-0.5, 0.5);
+        return new Reading(s.parcelId, Instant.now(), round1(temp), round1(clamp(hum, 5, 99)));
     }
 
     /** Spring day: coldest (6 °C) around 03:00, warmest (18 °C) around 15:00. */

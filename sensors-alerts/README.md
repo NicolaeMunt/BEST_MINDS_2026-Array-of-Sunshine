@@ -1,6 +1,7 @@
 # sensors-alerts
 
-Sensor simulator, frost rule and Telegram bot (Coder 2). One Spring Boot app, no database, no broker.
+Sensor simulator, per-crop frost and humidity rules, and Telegram bot (Coder 2). One Spring Boot app,
+no database, no broker.
 
 ## Run
 
@@ -41,9 +42,18 @@ Invoke-RestMethod -Method Post http://localhost:8081/demo/frost/P1
 # 2. Replay the frost night (14 h in ~2.5 min): WARNING, CRITICAL, then all-clear in the morning
 Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/P2
 
-# 3. Back to normal, alerts and cooldowns cleared
+# 3. Humid, warm air (disease risk) / dry, hot air (drought stress): alert after ~50 s
+Invoke-RestMethod -Method Post http://localhost:8081/demo/humid/P3
+Invoke-RestMethod -Method Post http://localhost:8081/demo/dry/P4
+
+# 4. One parcel back to normal weather: the all-clear messages are sent
+Invoke-RestMethod -Method Post http://localhost:8081/demo/normal/P3
+
+# 5. Everything back to normal, alerts and cooldowns cleared (no all-clear messages)
 Invoke-RestMethod -Method Post http://localhost:8081/demo/reset
 ```
+
+FROST, HUMID and DRY go past the thresholds of the parcel's crop, so the alert fires whatever the crop.
 
 Always call `/demo/reset` between demo runs; otherwise the cooldown (30 min by default) hides
 a repeated alert. For rehearsals set `FROST_COOLDOWN_SECONDS=30`.
@@ -68,25 +78,57 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel` |
+| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel` |
 | GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct` |
-| GET | `/alerts?parcelId={id}` | newest first: `parcelId, parcelName, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
+| GET | `/alerts?parcelId={id}&type=FROST` | newest first: `parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
 | POST | `/demo/frost/{parcelId}` | switches the parcel to FROST |
+| POST | `/demo/humid/{parcelId}` | switches the parcel to HUMID (warm and humid) |
+| POST | `/demo/dry/{parcelId}` | switches the parcel to DRY (hot and dry) |
 | POST | `/demo/replay/{parcelId}` | starts the CSV replay |
+| POST | `/demo/normal/{parcelId}` | one parcel back to NORMAL; all-clear messages are sent |
 | POST | `/demo/reset` | all parcels NORMAL, alerts and cooldowns cleared |
 
 `frostLevel` / `level` is `OK`, `WARNING` or `CRITICAL`. An alert with level `OK` is the all-clear.
+`humidityLevel` is `OK`, `LOW` or `HIGH`. `crop` is the crop key of the parcel, e.g. `wheat`.
 `/alerts` without `parcelId` returns all parcels.
+
+Alert `type` is `FROST`, `HUMIDITY_HIGH` or `HUMIDITY_LOW`; humidity alerts have level `WARNING`
+(or `OK` for the all-clear). **`/alerts` returns only frost alerts unless asked otherwise**, because
+existing clients title every alert as a frost alert: use `type=HUMIDITY` or `type=ALL` for the rest.
 
 During REPLAY the reading timestamps are those of the recorded night, and `minutes` is counted
 back from the newest reading. Switching into or out of REPLAY clears that parcel's readings.
 
 ## Configuration (`src/main/resources/application.yml`)
 
-- `app.parcels` – IDs and names; **must match Coder 3's IDs**.
-- `app.simulator` – reading interval, frost ramp time, replay file and speed.
-- `app.frost` – thresholds and cooldown. The rule itself is `ThresholdFrostRule` behind `FrostRule`.
+- `app.parcels` – IDs, names and crop; **IDs must match Coder 3's IDs**.
+- `app.crops` – per-crop thresholds and advice texts (see below).
+- `app.simulator` – reading interval, ramp time of the demo modes, replay file and speed.
+- `app.frost` – falling-fast rule, all-clear margin and cooldown. The rule is `ThresholdFrostRule` behind `FrostRule`.
+- `app.humidity` – minimum temperature for disease risk and all-clear margin. The rule is `ThresholdHumidityRule` behind `HumidityRule`.
 - `app.cors-origins` / `FRONTEND_ORIGIN` – allowed frontend origins, `*` by default.
+
+### Crops
+
+Each parcel has a crop, and each crop has its own thresholds. The crop keys are the same as in the backend.
+
+| Crop | Frost warning | Frost critical | Humidity low | Humidity high |
+|---|---|---|---|---|
+| `wheat` (grâu) | 0 °C | -3 °C | 30% | 85% |
+| `barley` (orz) | 0 °C | -3 °C | 30% | 85% |
+| `corn` (porumb) | 3 °C | 0 °C | 35% | 85% |
+| `sunflower` (floarea-soarelui) | 1 °C | -3 °C | 25% | 80% |
+| `orchard` (livadă) | 2 °C | -1 °C | 35% | 85% |
+| `vineyard` (viță-de-vie) | 2 °C | -1 °C | 30% | 80% |
+
+**These numbers are starting points for spring conditions, not verified agronomy**; the research
+teammate should check them. They are plain values in `application.yml`, as are the advice texts.
+A parcel with no crop, or a crop not listed, uses 2 °C / 0 °C and 30% / 85%.
+
+- Frost uses air temperature: WARNING at or below the crop's warning threshold (or when falling
+  fast towards it), CRITICAL at or below its critical threshold.
+- High humidity means fungal disease risk, and only counts at 10 °C or warmer, so a humid frost
+  night does not also raise a disease alert. Low humidity means drought stress.
 
 ### Replay CSV
 
@@ -98,7 +140,10 @@ The file is re-read on every replay start, so it can be swapped without a restar
 
 ## Alert behaviour
 
-- A frost episode runs from the first alert until the temperature is back above 3 °C.
+- A frost episode runs from the first alert until the temperature is more than 1 °C above the
+  crop's warning threshold.
+- A humidity episode runs from the alert until humidity is 5 points back inside the crop's range.
+  It sends one message, and the same cooldown applies.
 - Each level is sent once per episode. WARNING → CRITICAL is always sent.
 - A new episode's alert is suppressed if the same level was sent for that parcel within the cooldown.
 - The all-clear is sent only if an alert was actually sent in that episode.
@@ -106,4 +151,4 @@ The file is re-read on every replay start, so it can be swapped without a restar
 
 ## Tests
 
-`mvn test` – unit tests for the frost rule.
+`mvn test` – unit tests for the frost and humidity rules.

@@ -28,7 +28,7 @@ public class ThresholdFrostRule implements FrostRule {
     }
 
     @Override
-    public FrostAssessment evaluate(Reading current, List<Reading> history) {
+    public FrostAssessment evaluate(Reading current, List<Reading> history, AppProperties.Crop crop) {
         double temp = current.temperatureC();
         Instant from = current.timestamp().minus(WINDOW);
 
@@ -45,14 +45,14 @@ public class ThresholdFrostRule implements FrostRule {
             min = Math.min(min, r.temperatureC());
         }
         double drop = oldest == null ? 0 : oldest - temp;
-        boolean fallingFast = temp < cfg.fallingBelowC()
+        boolean fallingFast = temp < crop.frostWarningC() + cfg.fallingMarginC()
                 && drop > cfg.fallingDropC()
                 && temp <= min + NEAR_MIN_C;
 
         FrostLevel level;
-        if (temp <= cfg.criticalTempC()) {
+        if (temp <= crop.frostCriticalC()) {
             level = FrostLevel.CRITICAL;
-        } else if (temp <= cfg.warningTempC() || fallingFast) {
+        } else if (temp <= crop.frostWarningC() || fallingFast) {
             level = FrostLevel.WARNING;
         } else {
             level = FrostLevel.OK;

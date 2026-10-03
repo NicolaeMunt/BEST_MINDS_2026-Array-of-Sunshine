@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import md.agro.sensors.config.AppProperties;
 import md.agro.sensors.frost.FrostAssessment;
+import md.agro.sensors.humidity.HumidityLevel;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.Reading;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class SensorStore {
 
     private static final int MAX_ALERTS_PER_PARCEL = 50;
 
-    public record Status(Reading reading, FrostAssessment assessment) {
+    public record Status(Reading reading, FrostAssessment assessment, HumidityLevel humidity) {
     }
 
     private final int maxReadings;
@@ -35,7 +36,7 @@ public class SensorStore {
         this.maxReadings = props.simulator().maxReadingsPerParcel();
     }
 
-    public void addReading(Reading reading, FrostAssessment assessment) {
+    public void addReading(Reading reading, FrostAssessment assessment, HumidityLevel humidity) {
         Deque<Reading> q = readings.computeIfAbsent(reading.parcelId(), k -> new ArrayDeque<>());
         synchronized (q) {
             q.addLast(reading);
@@ -43,7 +44,7 @@ public class SensorStore {
                 q.removeFirst();
             }
         }
-        latest.put(reading.parcelId(), new Status(reading, assessment));
+        latest.put(reading.parcelId(), new Status(reading, assessment, humidity));
     }
 
     /** All stored readings of a parcel, oldest first. */

@@ -1,11 +1,11 @@
-# Crop Monitor API (Coder 3)
+# Agronomicon API (Coder 3)
 
 Берёт показания датчиков, уровень заморозка и оповещения из сервиса **sensors-alerts** (Coder 2,
 `../sensors-alerts`), сохраняет показания с метками времени в SQLite и отдаёт всё веб-приложению.
 Участки, отчёты дрона и почвы и оценка приоритетов пока убраны: они вернутся вместе с экраном участка.
 
 ```
-frontend ──> Crop Monitor API :8000 ──> sensors-alerts :8081  (показания, OK/WARNING/CRITICAL, оповещения, демо)
+frontend ──> Agronomicon API :8000 ──> sensors-alerts :8081  (показания, OK/WARNING/CRITICAL, оповещения, демо)
                     │
                     └── SQLite (sensors.db): показания датчиков с метками времени
 ```

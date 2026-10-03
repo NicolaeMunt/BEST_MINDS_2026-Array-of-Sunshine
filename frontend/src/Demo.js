@@ -7,7 +7,7 @@ const SCENARIOS = [['frost', 'Îngheț'], ['replay', 'O noapte reală de înghe�
 export function DemoMenu({ sensorName, onRun }) {
   return html`<details className="demo">
     <summary>Scenarii pentru prezentare</summary>
-    <p className="note">${sensorName ? `Se aplică pe ${sensorName}.` : 'Alege întâi un senzor.'}</p>
+    <p className="note">${sensorName ? `Se aplică pe ${sensorName}.` : 'Alege întâi un teren.'}</p>
     <div className="demo-buttons">
       ${SCENARIOS.map(([kind, label]) => html`<button key=${kind} className="btn btn-small" onClick=${() => onRun(kind)}>${label}</button>`)}
     </div>

@@ -1,4 +1,4 @@
-# AgroMonitor
+# Agronomicon
 
 Crop monitoring for farmers. For now the app shows the air sensors: per-crop frost and humidity alerts
 on Telegram, the readings stored with their timestamps, and a web app that says in plain words what
@@ -22,7 +22,7 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 
 ```
                        ┌────────────────────────────┐
- web app (frontend/) ─>│ Crop Monitor API  :8000    │──> sensors-alerts :8081 ──> Telegram
+ web app (frontend/) ─>│ Agronomicon API  :8000     │──> sensors-alerts :8081 ──> Telegram
                        │ backend/, SQLite           │     simulator, frost + humidity rules
                        └────────────────────────────┘
 ```
@@ -78,10 +78,11 @@ and the components from `frontend/src/` as plain ES modules, so it needs neither
 Components are written with htm templates (`html\`<div>...</div>\``) instead of JSX. The fonts
 (Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
 
-The left column lists the sensors, those that need attention first. The selected sensor's sheet says
-what its readings mean right now (frost, air too humid or too dry, or all fine), shows the current
-numbers, and a timeline: the temperature for the last 15 minutes, 24 hours, 7 days or since May, with
-every alert marked on it and listed underneath for the same period.
+Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
+each), those with a problem first. The selected field opens with one coloured block that says what is
+happening and what to do (frost, air too humid or too dry, or all fine), then the temperature and
+humidity now, then the temperature over time (now, a day, a week or since May) with every alert marked
+on it and listed underneath, one line each.
 
 ## Folders
 

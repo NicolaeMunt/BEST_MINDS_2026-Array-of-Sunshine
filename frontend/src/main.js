@@ -35,10 +35,10 @@ function useLiveData(selected, minutes, reload) {
 }
 
 const TROUBLE = {
-  loading: ['Se încarcă senzorii', ''],
+  loading: ['Se încarcă terenurile', ''],
   down: ['Serverul nu răspunde', 'Pornește aplicația cu start.ps1. Pagina se reîncarcă singură când serverul răspunde.'],
-  'no-sensors': ['Serviciul de senzori nu răspunde', 'Pornește sensors-alerts cu start.ps1. Citirile apar singure când revine.'],
-  up: ['Niciun senzor încă', 'Senzorii apar aici imediat ce sunt configurați în sensors-alerts.'],
+  'no-sensors': ['Senzorii nu răspund', 'Pornește sensors-alerts cu start.ps1. Măsurătorile apar singure când revine.'],
+  up: ['Niciun teren încă', 'Terenurile apar aici imediat ce au un senzor configurat în sensors-alerts.'],
 };
 
 function App() {
@@ -70,7 +70,7 @@ function App() {
   useEffect(() => {
     if (!own) return;
     const newest = data.alerts.length ? data.alerts[0].timestamp : '';
-    if (lastAlert.current !== null && newest > lastAlert.current) setToast(`${data.alerts[0].title}, ${data.alerts[0].parcelName}`);
+    if (lastAlert.current !== null && newest > lastAlert.current) setToast(`${data.alerts[0].title}: ${data.alerts[0].parcelName}`);
     lastAlert.current = newest;
   }, [data.alerts, own]);
 
@@ -80,7 +80,7 @@ function App() {
   }
 
   async function runDemo(kind) {
-    if (kind !== 'reset' && !sensor) { setToast('Alege întâi un senzor.'); return; }
+    if (kind !== 'reset' && !sensor) { setToast('Alege întâi un teren.'); return; }
     try {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
@@ -94,14 +94,14 @@ function App() {
   const up = data.state === 'up';
   return html`<div className="shell">
     <aside className="side">
-      <p className="wordmark">AgroMonitor</p>
-      <h2 className="side-title">Senzorii tăi</h2>
-      <p className="note">Cei care cer atenție sunt primii.</p>
+      <p className="wordmark">Agronomicon</p>
+      <h2 className="side-title">Terenurile tale</h2>
+      <p className="note">Cele cu probleme sunt primele.</p>
       <${SensorList} sensors=${sensors} selected=${selected} onSelect=${select} />
       <div className="side-foot">
         <${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />
         <p className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
-          ${up ? 'Conectat, se actualizează singur' : TROUBLE[data.state][0]}</p>
+          ${up ? 'Se actualizează singur' : TROUBLE[data.state][0]}</p>
       </div>
     </aside>
 
@@ -110,7 +110,7 @@ function App() {
       : html`
         <header className="sheet-head">
           <h1>${sensor.name}</h1>
-          <p className="sheet-meta">Senzor de aer, ${(CROP[sensor.crop] || sensor.crop || 'cultură nespecificată').toLowerCase()}</p>
+          <p className="sheet-meta">${CROP[sensor.crop] || sensor.crop || ''}</p>
         </header>
         <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
                         alerts=${own ? data.alerts : []} />`}

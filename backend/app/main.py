@@ -38,7 +38,7 @@ async def lifespan(app):
     collector.stop()
 
 
-app = FastAPI(title="Crop Monitor API", lifespan=lifespan)
+app = FastAPI(title="Agronomicon API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in CORS_ORIGINS],
                    allow_methods=["*"], allow_headers=["*"])
 

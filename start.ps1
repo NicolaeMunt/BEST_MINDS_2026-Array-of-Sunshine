@@ -1,4 +1,4 @@
-# Starts the whole app: sensors-alerts (8081) -> Crop Monitor API + web app (8000).
+# Starts the whole app: sensors-alerts (8081) -> Agronomicon API + web app (8000).
 # Run from the repo root:  powershell -ExecutionPolicy Bypass -File start.ps1
 # Needs JDK 21+, Maven and Python 3.11+. Each service gets its own window; close the windows to stop.
 param(
@@ -61,7 +61,7 @@ if (Test-Port 8000) {
     }
     Start-Process $py -ArgumentList "-m", "uvicorn", "app.main:app", "--port", "8000" -WorkingDirectory $backend
 }
-Wait-Http "http://127.0.0.1:8000/sensors/parcels" "Crop Monitor API" 60
+Wait-Http "http://127.0.0.1:8000/sensors/parcels" "Agronomicon API" 60
 
 Write-Host ""
 Write-Host "Web app:  http://localhost:8000/"

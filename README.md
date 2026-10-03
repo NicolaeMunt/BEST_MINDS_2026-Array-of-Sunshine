@@ -1,7 +1,8 @@
 # AgroMonitor
 
-Crop monitoring for farmers: air sensors with per-crop frost and humidity alerts on Telegram,
-satellite imagery of weak vegetation zones, and a web app that turns it all into prioritised actions.
+Crop monitoring for farmers. For now the app shows the air sensors: per-crop frost and humidity alerts
+on Telegram, the readings stored with their timestamps, and a web app that says in plain words what
+each sensor means. The parcel view and the satellite analytics are being built separately.
 
 ## Start everything
 
@@ -11,9 +12,9 @@ Needs JDK 21+, Maven and Python 3.11+.
 powershell -ExecutionPolicy Bypass -File start.ps1
 ```
 
-This builds and starts `sensors-alerts`, creates the backend's virtual environment and demo database,
-starts the API, loads the satellite results and opens http://localhost:8000/. Each service runs in its
-own window; close the windows to stop. `-Reseed` recreates the demo database, `-NoBrowser` skips the browser.
+This builds and starts `sensors-alerts`, creates the backend's virtual environment, starts the API and
+opens http://localhost:8000/. Each service runs in its own window; close the windows to stop.
+`-NoBrowser` skips the browser.
 
 For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `sensors-alerts/README.md`).
 
@@ -24,55 +25,58 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
  web app (frontend/) ─>│ Crop Monitor API  :8000    │──> sensors-alerts :8081 ──> Telegram
                        │ backend/, SQLite           │     simulator, frost + humidity rules
                        └────────────────────────────┘
-                          ^                  ^
-        imagery/push.py ──┘                  └── imagery/out/overlays/*.png (served at /overlays)
-        (out/imagery.json)
 ```
 
 | From → to | What flows | Where |
 |---|---|---|
-| Web app → API | Everything the page shows; the page only talks to the API | `frontend/AgroMonitorWeb.html` |
-| API → sensors-alerts | Readings, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
-| API → sensors-alerts | **Parcels**: every API parcel is registered there, so it gets a sensor and its crop's thresholds | `PUT /sensors/parcels/{id}` |
-| Imagery → API | Analysed satellite scenes, newest shown per parcel; weak zones become an action | `imagery/push.py` → `POST /parcels/{id}/imagery` |
+| Web app → API | Everything the page shows; the page only talks to the API | `frontend/src/` |
+| API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
+| sensors-alerts → API → SQLite | Every reading, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
 | sensors-alerts → Telegram | Frost and humidity alerts with crop-specific advice | `sensors-alerts/.env` |
 
-### One parcel list
+### Stored readings
 
-The API's database is the list of parcels. `sensors-alerts` starts with the parcels in its
-`application.yml` and accepts more at runtime: the API registers a parcel when it is created and again
-whenever the sensors service does not know it (for example after that service restarts). A parcel added
-in the web app therefore gets a sensor within a few seconds.
+`sensors-alerts` keeps only the last readings in memory. The API copies them into
+`backend/sensors.db` (created on first start, not in git):
 
-Demo parcels (`backend/seed.py`): P1 orchard, P2 vineyard, P3 wheat, P4 corn, P5 sunflower.
-**P4 is the real field analysed by the satellite pipeline** (`demo1` in `imagery/parcels.geojson`);
-`imagery/push.py` maps `demo1` to `P4`.
+```sql
+CREATE TABLE sensor_readings (
+    parcel_id     TEXT NOT NULL,   -- sensor location, same IDs as sensors-alerts (P1, P2, ...)
+    timestamp     TEXT NOT NULL,   -- when the sensor measured, UTC
+    temperature_c REAL NOT NULL,
+    humidity_pct  REAL NOT NULL,
+    received_at   TEXT NOT NULL,   -- when the API stored it
+    PRIMARY KEY (parcel_id, timestamp)
+);
+```
 
-### What the API adds on top of each module
+`GET /sensors/parcels/{id}/readings?minutes=N` serves the chart from this table, so the history survives
+a restart of `sensors-alerts` and goes back further than its memory. The sensor locations themselves
+(ID, name, crop) are configured in `sensors-alerts/src/main/resources/application.yml`.
 
-- Sensor readings keep the sensors-alerts field names and gain `crop`, `humidityLevel` and `mode`
-  from that service, plus the API's own frost priority and reasons.
-- `GET /alerts` returns frost and humidity alerts (`type`: `FROST`, `HUMIDITY_HIGH`, `HUMIDITY_LOW`)
-  with a title per type; `?type=FROST` or `?type=HUMIDITY` filters.
-- `POST /demo/{frost|humid|dry|replay|normal}/{parcelId}` and `POST /demo/reset` drive the simulator.
-- `GET /parcels` includes `imagery` (latest scene) and, when the scene has weak zones, an
-  `inspect_weak_zone` action. Without a drone report the satellite NDVI is used for the health score.
-- The disease action uses the live air sensor's humidity level for the crop when there is one.
+### The web app
+
+React without a build step: `frontend/index.html` loads React, ReactDOM and htm from `frontend/vendor/`
+and the components from `frontend/src/` as plain ES modules, so it needs neither Node nor internet.
+Components are written with htm templates (`html\`<div>...</div>\``) instead of JSX. The fonts
+(Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
+
+The left column lists the sensors, those that need attention first. The selected sensor's sheet says
+what its readings mean right now (frost, air too humid or too dry, or all fine), shows the current
+numbers, the temperature over time from the stored readings, and the alerts that were sent.
 
 ## Folders
 
 | Folder | What | Docs |
 |---|---|---|
 | `sensors-alerts/` | Java / Spring Boot: sensor simulator, per-crop rules, Telegram bot | `sensors-alerts/README.md` |
-| `backend/` | Python / FastAPI: parcels, scoring, API for the web app | `backend/README.md` |
-| `frontend/` | The web app (served by the API at `/app/`) | |
+| `backend/` | Python / FastAPI: stores the readings, API for the web app | `backend/README.md` |
+| `frontend/` | The web app, in React (served by the API at `/app/`) | above |
 | `imagery/` | Sentinel-2 pipeline: weak vegetation zones and map overlays | `imagery/README.md` |
 
 ## Not wired yet
 
-- Thresholds per crop live in two places: frost and air humidity in `sensors-alerts/application.yml`,
-  soil moisture and NDVI in `backend/app/scoring.py`.
-- The web app's map is a zone grid; the satellite photo and overlay are shown as an image in the
-  "Starea culturii" card, not on a geographic map.
-- Telegram only carries sensor alerts, not the API's other actions (irrigation, disease, harvest).
-- Sensor readings and alerts are in memory and are lost when `sensors-alerts` restarts.
+- Parcels, the drone and soil reports and the priority score were removed from the API for now; they
+  come back with the parcel view. `imagery/push.py` has no endpoint to post to until then.
+- Alerts are still only in the memory of `sensors-alerts` and are lost when it restarts.
+- `frontend/AgroMonitor.html` is the earlier static mobile prototype; it does not use the API.

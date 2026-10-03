@@ -1,8 +1,7 @@
-# Starts the whole app: sensors-alerts (8081) -> Crop Monitor API + web app (8000) -> satellite results.
+# Starts the whole app: sensors-alerts (8081) -> Crop Monitor API + web app (8000).
 # Run from the repo root:  powershell -ExecutionPolicy Bypass -File start.ps1
 # Needs JDK 21+, Maven and Python 3.11+. Each service gets its own window; close the windows to stop.
 param(
-    [switch]$Reseed,      # recreate the demo database even if it exists
     [switch]$NoBrowser
 )
 
@@ -43,31 +42,20 @@ if (Test-Port 8081) {
 }
 Wait-Http "http://127.0.0.1:8081/sensors/parcels" "sensors-alerts" 90
 
-# 2. Backend: virtual environment, demo data, API.
+# 2. Backend: virtual environment, API.
 if (-not (Test-Path $py)) {
     Write-Host "Creating the backend virtual environment ..."
     & python -m venv (Join-Path $backend ".venv")
     & $py -m pip install -q -r (Join-Path $backend "requirements.txt")
     if ($LASTEXITCODE -ne 0) { throw "pip install failed" }
 }
-$seeded = $false
 if (Test-Port 8000) {
     Write-Host "Port 8000 is already in use: assuming the API is running."
 } else {
-    if ($Reseed -or -not (Test-Path (Join-Path $backend "agro.db"))) {
-        Push-Location $backend
-        try { & $py seed.py; if ($LASTEXITCODE -ne 0) { throw "seed.py failed" } }
-        finally { Pop-Location }
-        $seeded = $true
-    }
+    # The API creates backend\sensors.db itself and fills it with the sensor readings as they arrive.
     Start-Process $py -ArgumentList "-m", "uvicorn", "app.main:app", "--port", "8000" -WorkingDirectory $backend
 }
-Wait-Http "http://127.0.0.1:8000/parcels" "Crop Monitor API" 60
-
-# 3. Satellite results into the API (only into a fresh database, so scenes are not stored twice).
-if ($seeded) {
-    & $py (Join-Path $root "imagery\push.py")
-}
+Wait-Http "http://127.0.0.1:8000/sensors/parcels" "Crop Monitor API" 60
 
 Write-Host ""
 Write-Host "Web app:  http://localhost:8000/"

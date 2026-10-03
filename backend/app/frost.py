@@ -3,7 +3,6 @@ The frost level itself (OK / WARNING / CRITICAL) comes from the sensors-alerts s
 import math
 from datetime import timedelta
 
-from .scoring import priority_for, reason
 
 LEVEL_SCORE = {"OK": 0, "WARNING": 60, "CRITICAL": 95}
 LEVEL_TITLE = {"OK": "Fără risc de îngheț", "WARNING": "Risc de îngheț", "CRITICAL": "Îngheț"}
@@ -14,6 +13,14 @@ LEVEL_MESSAGE = {
 }
 FAST_DROP_C = 1.0     # °C colder than an hour ago
 WINDOW = timedelta(hours=1)
+
+
+def priority_for(score):
+    return "high" if score >= 70 else "medium" if score >= 40 else "low"
+
+
+def reason(code, text, source):
+    return {"code": code, "text": text, "source": source}
 
 
 def dew_point(temperature, humidity):

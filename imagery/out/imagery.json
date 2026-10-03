@@ -1,0 +1,75 @@
+{
+  "results": [
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-28",
+      "ndvi_median": 0.783,
+      "affected_pct": 0.9,
+      "affected_sector": "NW",
+      "zone_count": 2,
+      "zone_center": [
+        28.864101,
+        47.405433
+      ],
+      "valid_pct": 100.0,
+      "overlay_path": "/overlays/demo1_2026-06-28.png",
+      "photo_path": "/overlays/demo1_2026-06-28_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-06-30",
+      "ndvi_median": 0.752,
+      "affected_pct": 0.9,
+      "affected_sector": "N",
+      "zone_count": 2,
+      "zone_center": [
+        28.867756,
+        47.403848
+      ],
+      "valid_pct": 100.0,
+      "overlay_path": "/overlays/demo1_2026-06-30.png",
+      "photo_path": "/overlays/demo1_2026-06-30_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    },
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-18",
+      "ndvi_median": 0.744,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
+      "valid_pct": 100.0,
+      "overlay_path": "/overlays/demo1_2026-07-18.png",
+      "photo_path": "/overlays/demo1_2026-07-18_rgb.png",
+      "overlay_bounds": [
+        47.396738,
+        28.860386,
+        47.407506,
+        28.873028
+      ],
+      "warnings": []
+    }
+  ],
+  "skipped": [
+    {
+      "parcel_id": "demo1",
+      "scene_date": "2026-07-28",
+      "valid_pct": 24.6,
+      "reason": "only 24.6% of the parcel is cloud-free (minimum 50%)"
+    }
+  ]
+}

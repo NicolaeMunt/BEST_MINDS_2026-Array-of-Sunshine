@@ -1,0 +1,86 @@
+{
+  "region": "demo1",
+  "bbox_lonlat": [
+    28.860917,
+    47.397103,
+    28.872487,
+    47.407147
+  ],
+  "scenes": [
+    {
+      "date": "2026-06-28",
+      "item_id": "S2C_35TPN_20260628_0_L2A",
+      "datetime": "2026-06-28T09:17:09.367000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.000389,
+      "usable_pct": 100.0,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260628_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "item_id": "S2A_35TPN_20260630_2_L2A",
+      "datetime": "2026-06-30T09:17:26.917000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.000281,
+      "usable_pct": 100.0,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260630_2_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260630_1_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-18",
+      "item_id": "S2C_35TPN_20260718_0_L2A",
+      "datetime": "2026-07-18T09:17:11.843000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 1.360747,
+      "usable_pct": 100.0,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260718_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-28",
+      "item_id": "S2C_35TPN_20260728_0_L2A",
+      "datetime": "2026-07-28T09:17:12.073000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 20.188783,
+      "usable_pct": 15.5,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260728_0_L2A",
+          "usable_pct": 15.5
+        }
+      ]
+    }
+  ],
+  "bounds_utm": [
+    640280.0,
+    5250860.0,
+    641400.0,
+    5252220.0
+  ],
+  "crs": "EPSG:32635"
+}

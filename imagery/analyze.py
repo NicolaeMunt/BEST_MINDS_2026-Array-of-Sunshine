@@ -1,6 +1,6 @@
 """Parcel analysis from the cache only; no network.
 
-For every parcel in parcels.geojson and every scene cached for it (fetch.py --parcels):
+For every parcel of the parcels file (common.PARCELS) and every scene cached for it (fetch.py --parcels):
   1. shrink the polygon: keep pixels whose centre is more than SHRINK_M inside the outline
   2. cloud mask from SCL: keep only the classes in SCL_KEEP, widen the rest by WIDEN_M
   3. valid_pct = share of the shrunken parcel left after the mask; below MIN_VALID_PCT the
@@ -14,12 +14,15 @@ For every parcel in parcels.geojson and every scene cached for it (fetch.py --pa
   7. overlay and photo for the map, reprojected to Web Mercator (the web map's projection) on a
      DISPLAY_RES_M grid by copying pixels, so they line up with the map and stay sharp
 
-Writes out/imagery.json ({"results": [...], "skipped": [...]}), out/overlays/<parcel>_<date>.png
-and <parcel>_<date>_rgb.png, and check images in out/<parcel>/ (mask.png, weak.png).
+Writes out/imagery.json ({"rules_version", "results": [...], "skipped": [...]}), out/overlays/<parcel>_<date>.png
+and <parcel>_<date>_rgb.png; with --check-images also out/<parcel>/mask.png and weak.png, every date side by side.
 The decisions behind every constant are in LOGIC.md.
 
-    python analyze.py
+    python analyze.py                  # what the daily job runs
+    python analyze.py --check-images   # plus the check images, for a person to look at
 """
+import argparse
+import hashlib
 import json
 from datetime import date as Date
 
@@ -30,8 +33,8 @@ from rasterio.transform import Affine, from_origin
 from rasterio.warp import Resampling, reproject, transform, transform_bounds, transform_geom
 from scipy.ndimage import binary_dilation, distance_transform_edt, label
 
-from common import OUT, load_index, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, reflectance, \
-    to_10m
+from common import HERE, OUT, load_index, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, \
+    reflectance, to_10m
 
 SCL_KEEP = [4, 5, 6]     # vegetation, bare soil, water; any other class is suspicious in a field
 WIDEN_M = 20             # the mask grows by one 20 m SCL pixel around everything thrown away
@@ -61,6 +64,8 @@ CLOUD_NEAR_M = 100        # a declined zone this close to masked pixels may be a
 PIXEL_M = 10
 
 OUTPUT = OUT / "imagery.json"
+# The files whose code decides the results; their fingerprint is the rules_version of every result.
+RULES_FILES = ["analyze.py", "common.py"]
 OVERLAYS = OUT / "overlays"
 
 
@@ -350,7 +355,18 @@ def render_masks(parcel_id, panels):
     return sheet(images, legend, OUT / parcel_id / "mask.png")
 
 
+def rules_version():
+    """Short fingerprint of the analysis code: it changes whenever a rule changes."""
+    digest = hashlib.sha1()
+    for name in RULES_FILES:
+        digest.update((HERE / name).read_bytes())
+    return digest.hexdigest()[:10]
+
+
 def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--check-images", action="store_true", help="also write out/<parcel>/mask.png and weak.png")
+    args = ap.parse_args()
     results, skipped = [], []
     OVERLAYS.mkdir(parents=True, exist_ok=True)
     for parcel_id, parcel in load_parcels().items():
@@ -366,7 +382,8 @@ def main():
                 valid_pct = scl_only_valid_pct(parcel_id, parcel, scene)
                 reason = (f"only {valid_pct}% of the parcel is cloud-free (minimum {MIN_VALID_PCT}%); "
                           f"bands not downloaded")
-                skipped.append({"parcel_id": parcel_id, "scene_date": date, "valid_pct": valid_pct, "reason": reason})
+                skipped.append({"parcel_id": parcel_id, "scene_date": date, "scene_id": scene["item_id"],
+                                "valid_pct": valid_pct, "reason": reason})
                 print(f"  {date:10s} {scene['item_id']:26s} {'':10s} {'':12s} {'':6s} {valid_pct:8.1f}%  "
                       f"{'':6s} {'':8s} {'':8s} {'':5s} {'':9s}  {'':16s}  SKIPPED: {reason}")
                 continue
@@ -384,8 +401,8 @@ def main():
 
             numbers = f"{'':6s} {'':8s} {'':8s} {'':5s} {'':9s}  {'':16s}"
             if reason:
-                skipped.append({"parcel_id": parcel_id, "scene_date": date, "valid_pct": a["valid_pct"],
-                                "reason": reason})
+                skipped.append({"parcel_id": parcel_id, "scene_date": date, "scene_id": scene["item_id"],
+                                "valid_pct": a["valid_pct"], "reason": reason})
                 status = "SKIPPED: " + reason
             else:
                 median, a["weak_raw"], a["weak"] = weak_zones(a["ndvi"], a["valid"])
@@ -414,7 +431,8 @@ def main():
                 overlay_name, photo_name = f"{parcel_id}_{date}.png", f"{parcel_id}_{date}_rgb.png"
                 write_overlay(a, grid, OVERLAYS / overlay_name)
                 write_photo(a, grid, OVERLAYS / photo_name)
-                results.append({"parcel_id": parcel_id, "scene_date": date, "ndvi_median": round(median, 3),
+                results.append({"parcel_id": parcel_id, "scene_date": date, "scene_id": scene["item_id"],
+                                "ndvi_median": round(median, 3),
                                 "ndmi_median": ndmi_median,
                                 "affected_pct": affected_pct, "affected_sector": sector, "zone_count": n_zones,
                                 "zone_center": center, "valid_pct": a["valid_pct"], **change,
@@ -428,12 +446,14 @@ def main():
             print(f"  {date:10s} {scene['item_id']:26s} {a['n_inside']:10d} {a['n_inner']:12d} {a['n_valid']:6d} "
                   f"{a['valid_pct']:8.1f}%  {numbers}  {status}")
             panels.append(([f"{date}", f"valid {a['valid_pct']}%", "accepted" if not reason else "SKIPPED"], a))
-        print(f"  mask image: {render_masks(parcel_id, panels)}")
-        if weak_panels:
-            print(f"  weak zones image: {render_weak(parcel_id, weak_panels)}")
+        if args.check_images:
+            print(f"  mask image: {render_masks(parcel_id, panels)}")
+            if weak_panels:
+                print(f"  weak zones image: {render_weak(parcel_id, weak_panels)}")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps({"results": results, "skipped": skipped}, indent=2, ensure_ascii=False))
+    OUTPUT.write_text(json.dumps({"rules_version": rules_version(), "results": results, "skipped": skipped},
+                                 indent=2, ensure_ascii=False))
     print(f"written {OUTPUT}: {len(results)} results, {len(skipped)} skipped")
 
 

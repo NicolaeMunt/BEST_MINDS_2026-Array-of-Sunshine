@@ -3,7 +3,7 @@
 For every cached date: true colour, the SCL class map and raw NDVI, each with the parcel outline.
 Also prints the share of each SCL class inside the polygon.
 
-    python parcel_preview.py demo1     ->  out/<parcel>/preview.png
+    python parcel_preview.py 6401307.101     ->  out/<parcel>/preview.png
 """
 import argparse
 

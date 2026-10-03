@@ -20,6 +20,8 @@ Pentru fiecare parcelă și fiecare scenă Sentinel-2:
 6. NDMI (apa din frunze) e raportat doar ca context, fără etichetă de stres de apă;
 7. overlay-ul și poza sunt reproiectate în proiecția hărții, ca să nu fie deplasate cu 30 m;
 8. orice motiv de prudență apare în `warnings`, cu un cod fix.
+9. totul rulează singur o dată pe zi pe server, iar rezultatele rămân în baza de date ca istoric, pe
+   fiecare parcelă identificată prin numărul ei cadastral.
 
 ## Cadrul pentru hackathon
 
@@ -487,3 +489,120 @@ zonele curbate ajunge pe zonă. Sectorul se calculează în continuare din centr
 - Cultura e presupusă (porumb), nu confirmată; NDMI nu spune nimic despre sol.
 - Pe demo1 nu există o problemă reală mare: e o parcelă sănătoasă cu variație minoră, iar acesta e
   rezultatul pe care îl arătăm.
+
+## Identificatorii parcelelor: numărul cadastral
+
+**Ales:** fiecare parcelă e identificată prin **numărul ei cadastral**: 10 cifre, codul zonei cadastrale
+plus numărul terenului, scris de obicei cu punct după a 7-a cifră (`6401307.101`). În demo numerele sunt
+**fictive** și marcate ca atare (`ids_fictive`), ca să nu arătăm proprietatea unor oameni reali.
+`demo1`, cum apare mai sus în acest fișier, e J4, adică `6401307.101`. Aceleași numere le folosesc și
+senzorii (`sensors-alerts`), deci senzorii și satelitul vorbesc despre același câmp.
+**Respins:** `P1`–`P5`, care nu spun nimic, și „conturul SIPA”. În Moldova, SIPA e **Sistemul Informațional
+al Piețelor Agricole** (piață, prețuri). Sistemul pentru parcele și subvenții e **LPIS**, încă în
+dezvoltare și fără un format public de identificator; câmpul `lpis_parcel` rămâne gol până atunci.
+**Limită:** un lan cultivat nu e mereu un singur teren cadastral, pentru că pământul e fragmentat în
+fâșii (vezi K10). Pentru un produs real, cheia ar trebui să fie parcela LPIS, cu o listă de numere
+cadastrale atașată.
+
+## J4 e probabil floarea-soarelui, nu porumb
+
+Am adăugat pentru zona de 12 km încă 7 date senine (16.05 – 3.10). În zonă, câmpurile de vară se împart
+în două grupuri, la ~3 săptămâni distanță:
+
+| Data | J4 | grupul timpuriu | grupul târziu |
+|---|---|---|---|
+| 5 iunie | 0,52 | 0,52 | 0,37 |
+| 28 iunie | **0,78** (vârf) | **0,80** (vârf) | 0,71 |
+| 18 iulie | 0,74 | 0,77 | **0,81** (vârf) |
+| 22 august | **0,29** (uscat) | 0,36 | **0,59** (verde) |
+
+J4 se comportă identic cu grupul timpuriu, adică floarea-soarelui (vârf la sfârșit de iunie, uscată în
+august, recoltată la început de septembrie). Grupul târziu e porumbul.
+**Argument împotrivă:** în pozele color din iulie J4 nu arată galbenul înfloririi. Nu e decisiv, pentru că
+de sus și la 10 m florile nu se văd mereu. Cultura rămâne **presupusă** (`crop_confirmed: false`), dar
+acum din curba sezonului, nu din calendar.
+
+## Cele cinci parcele
+
+Fiecare dintre cele 5 culturi din `sensors-alerts` are o parcelă. Am ales câmpuri al căror comportament
+pe satelit se potrivește cu cultura; altfel juriul ar vedea o „livadă” recoltată în iulie.
+**Metoda:** pe zona de 12 km am clasificat fiecare pixel după curba lui pe sezon:
+- grâu: verde la 5.06, recoltat la 18.07;
+- floarea-soarelui: verde la 28.06, uscată la 22.08;
+- porumb: verde la 22.08, gol la 3.10;
+- verde tot sezonul: livezi, vii, păduri.
+
+Am găsit câmpurile întregi din fiecare clasă și le-am ordonat după mărime și distanța până la J4. Livada
+și via le-am confirmat după textură (rânduri), pentru că NDVI singur nu le deosebește de pădure.
+**Respinși:** un „candidat de livadă” de 28,7 ha era un sat cu grădini (case vizibile), cercul verde de
+lângă J4 e pădure, iar un „candidat de vie” era râpa cu iarbă de la est de J4.
+
+| Număr cadastral (fictiv) | Nume | Cultură | Unde | Curba NDVI pe sezon |
+|---|---|---|---|---|
+| `6401307.101` | Lotul de Floarea-soarelui | floarea-soarelui | J4, NE de Orhei | vârf 0,78 la 28.06 → 0,29 la 22.08 |
+| `6401307.102` | Câmpul Mare | grâu | lipit de J4, la NV | 0,77 în mai–iunie → 0,24 la 18.07 |
+| `6401204.045` | Via Nord | viță-de-vie | ~4,7 km N | 0,46–0,69 tot sezonul |
+| `6401512.033` | Lanul de Porumb | porumb | ~5 km S | vârf 0,87–0,89 iunie–august, 0,63 la 22.08 |
+| `6401512.058` | Livada Sud | livadă | ~6 km S | 0,66–0,85 tot sezonul |
+
+**Două corecturi după analiza pe tot sezonul:**
+- **Grâul:** primul contur prindea **două loturi**. O linie dreaptă tăia triunghiul, iar toate „zonele
+  slabe” (până la 27%) stăteau doar deasupra ei: e lecția de la K10. Am păstrat doar lotul de jos
+  (~12,7 ha), iar „zonele slabe” au dispărut.
+- **Livada:** marginea de est era prea aproape de iarba vecină, așa că apărea o fâșie dreaptă „slabă” de
+  1–2 pixeli de-a lungul marginii. Am retras marginea cu 50 m, iar fâșia a dispărut.
+
+În ambele cazuri semnul a fost același: **o „zonă slabă” cu margine dreaptă e aproape mereu un hotar,
+nu o problemă a culturii.**
+
+## Descărcarea pentru mai multe parcele
+
+**Ales:** o singură căutare în catalog pentru toate parcelele, apoi descărcarea dată cu dată, cu toate
+parcelele odată, ținând în memorie (cache GDAL, 512 MB) bucățile de fișier deja aduse.
+**De ce:** parcelele vecine stau în aceleași bucăți de 10 km ale imaginii. Măsurat: prima parcelă dintr-o
+zi durează 6–9 s, iar următoarele 0–2 s. Tot sezonul (1 mai – 3 octombrie) pentru 5 parcele s-a descărcat
+în ~9 minute, iar cache-ul are ~13 MB.
+
+## Rularea zilnică pe server
+
+**Ales:** un fir de execuție din API, ca firul care colectează senzorii. El pornește jobul de satelit:
+- în fiecare seară la 21:00 (Sentinel-2 trece peste Moldova pe la prânz, iar scena apare în catalog
+  după câteva ore);
+- la pornirea API-ului, dacă ultima rulare bună e mai veche de o zi;
+- la `POST /imagery/refresh`.
+
+Jobul (`fetch.py`, apoi `analyze.py`) rulează ca **proces separat**, cu Python-ul lui (`imagery/.venv`).
+API-ul exportă înainte parcelele din bază, iar după rulare citește `out/imagery.json` și îl salvează.
+**Respins:** jobul în interiorul procesului API, pentru că ar fi adus în backend dependențe grele (GDAL),
+minute de descărcare în procesul care servește pagina și riscul ca o eroare GDAL să dărâme API-ul. Am
+respins și un cron separat de API, care ar fi cerut ca serverul să fie pornit pentru primire și două
+locuri de configurat.
+
+**Baza de date:**
+- tabelele noi sunt în aceeași bază ca senzorii: `users`, `parcels`, `imagery_results`,
+  `imagery_warnings`, `imagery_skipped` și `imagery_runs`;
+- imaginile rămân fișiere, iar baza păstrează doar calea;
+- importul e idempotent: pentru fiecare (parcelă, dată) primită șterge ce exista, ca rezultat sau ca scenă
+  sărită, apoi scrie din nou;
+- fiecare rând păstrează `rules_version`, amprenta codului de analiză, ca să se știe cu ce reguli a fost
+  calculat.
+
+**Verificat:**
+- **o rulare pornită din API** (cu o bază de test) a pus în bază 390 de perechi (parcelă, dată) în ~1 minut;
+- **pentru 15 iulie** API-ul dă poza din 5 iulie („de acum 10 zile”), plus cele 5 scene sărite din cauza
+  norilor între 7 și 15 iulie;
+- **același fișier importat a doua oară** n-a adăugat nimic;
+- **următoarea rulare** e programată corect la 21:00.
+
+## Ce a arătat sezonul complet: de rezolvat cu regulile pe culturi
+
+- **Via:** mediana NDVI a unei vii stă sub 0,6 toată vara, deci `low_vegetation` apare în 38 din 44 de
+  scene. Pragul de 0,6 e pentru culturi de câmp, nu pentru vie.
+- **Livada:** în iulie–august apar zone „slabe” de 10–13% care formează o rețea între blocurile de pomi.
+  E iarba dintre rânduri, care se usucă vara, nu pomii. Livezile și viile au nevoie de o regulă proprie,
+  de exemplu la o scară mai mare decât rândurile.
+- **Floarea-soarelui:** uscarea din august e treptată, iar fiecare pas e sub 0,10, deci `whole_field_drop`
+  nu apare. E corect după definiție (avertismentul e pentru căderi bruște), dar o uscare mai devreme
+  decât normal pentru cultură s-ar putea semnala doar cu o curbă așteptată pe cultură.
+- **Grâul, 5 iunie:** o zonă slabă la marginea unui nor e marcată corect cu `possible_cloud`.
+- **Porumbul:** sănătos tot sezonul, cel mult 2,3% slab.

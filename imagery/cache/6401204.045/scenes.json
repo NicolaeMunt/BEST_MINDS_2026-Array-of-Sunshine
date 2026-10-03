@@ -1,0 +1,1412 @@
+{
+  "region": "6401204.045",
+  "bbox_lonlat": [
+    28.827,
+    47.433213,
+    28.829876,
+    47.43973
+  ],
+  "scenes": [
+    {
+      "date": "2026-05-01",
+      "item_id": "S2B_35TPN_20260501_0_L2A",
+      "datetime": "2026-05-01T09:07:11.044000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 74.782407,
+      "usable_pct": 29.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260501_1_L2A",
+          "usable_pct": 0.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260501_0_L2A",
+          "usable_pct": 29.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-04",
+      "item_id": "S2B_35TPN_20260504_0_L2A",
+      "datetime": "2026-05-04T09:17:07.542000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 5.757732,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260504_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-06",
+      "item_id": "S2C_35TPN_20260506_0_L2A",
+      "datetime": "2026-05-06T09:07:14.869000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 1e-05,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260506_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-08",
+      "item_id": "S2A_35TPN_20260508_0_L2A",
+      "datetime": "2026-05-08T09:07:27.035000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 96.396834,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260508_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "item_id": "S2C_35TPN_20260509_0_L2A",
+      "datetime": "2026-05-09T09:17:10.877000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.236232,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260509_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-11",
+      "item_id": "S2B_35TPN_20260511_1_L2A",
+      "datetime": "2026-05-11T09:07:11.017000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 50.997579,
+      "usable_pct": 99.2,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260511_2_L2A",
+          "usable_pct": 55.1
+        },
+        {
+          "item_id": "S2B_35TPN_20260511_1_L2A",
+          "usable_pct": 99.2
+        }
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "item_id": "S2B_35TPN_20260514_0_L2A",
+      "datetime": "2026-05-14T09:17:07.171000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 49.198496,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260514_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-16",
+      "item_id": "S2C_35TPN_20260516_0_L2A",
+      "datetime": "2026-05-16T09:07:13.845000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 3.640287,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260516_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "item_id": "S2A_35TPN_20260518_0_L2A",
+      "datetime": "2026-05-18T09:07:29.634000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 80.127496,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260518_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-19",
+      "item_id": "S2C_35TPN_20260519_0_L2A",
+      "datetime": "2026-05-19T09:17:09.597000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 92.726696,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260519_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-21",
+      "item_id": "S2A_35TPN_20260521_1_L2A",
+      "datetime": "2026-05-21T09:17:26.412000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 78.833193,
+      "usable_pct": 9.2,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260521_1_L2A",
+          "usable_pct": 9.2
+        },
+        {
+          "item_id": "S2B_35TPN_20260521_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-24",
+      "item_id": "S2B_35TPN_20260524_0_L2A",
+      "datetime": "2026-05-24T09:17:05.905000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 24.916297,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260524_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-26",
+      "item_id": "S2C_35TPN_20260526_0_L2A",
+      "datetime": "2026-05-26T09:07:11.621000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 2.0714,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260526_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-28",
+      "item_id": "S2A_35TPN_20260528_0_L2A",
+      "datetime": "2026-05-28T09:07:30.778000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 21.991368,
+      "usable_pct": 42.2,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260528_0_L2A",
+          "usable_pct": 42.2
+        }
+      ]
+    },
+    {
+      "date": "2026-05-29",
+      "item_id": "S2C_35TPN_20260529_0_L2A",
+      "datetime": "2026-05-29T09:17:07.351000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 65.210563,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260529_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-05-31",
+      "item_id": "S2A_35TPN_20260531_1_L2A",
+      "datetime": "2026-05-31T09:17:26.993000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 51.46786,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260531_1_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260531_0_L2A",
+          "usable_pct": 34.6
+        }
+      ]
+    },
+    {
+      "date": "2026-06-03",
+      "item_id": "S2B_35TPN_20260603_0_L2A",
+      "datetime": "2026-06-03T09:17:06.803000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.975747,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260603_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-05",
+      "item_id": "S2C_35TPN_20260605_0_L2A",
+      "datetime": "2026-06-05T09:07:12.952000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 6.326389,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260605_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-07",
+      "item_id": "S2A_35TPN_20260607_0_L2A",
+      "datetime": "2026-06-07T09:07:29.800000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 94.627982,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260607_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-08",
+      "item_id": "S2C_35TPN_20260608_0_L2A",
+      "datetime": "2026-06-08T09:17:09.690000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 16.315943,
+      "usable_pct": 96.2,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260608_0_L2A",
+          "usable_pct": 96.2
+        }
+      ]
+    },
+    {
+      "date": "2026-06-10",
+      "item_id": "S2B_35TPN_20260610_0_L2A",
+      "datetime": "2026-06-10T09:07:11.971000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 22.633816,
+      "usable_pct": 68.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260610_1_L2A",
+          "usable_pct": 0.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260610_0_L2A",
+          "usable_pct": 68.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-13",
+      "item_id": "S2B_35TPN_20260613_0_L2A",
+      "datetime": "2026-06-13T09:17:08.612000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 39.94821,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260613_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-15",
+      "item_id": "S2C_35TPN_20260615_0_L2A",
+      "datetime": "2026-06-15T09:07:14.016000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 80.899572,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260615_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-17",
+      "item_id": "S2A_35TPN_20260617_0_L2A",
+      "datetime": "2026-06-17T09:07:30.256000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 65.075296,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260617_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-18",
+      "item_id": "S2C_35TPN_20260618_0_L2A",
+      "datetime": "2026-06-18T09:17:10.289000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 22.478469,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260618_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-20",
+      "item_id": "S2A_35TPN_20260620_2_L2A",
+      "datetime": "2026-06-20T09:17:26.838000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 48.114234,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260620_2_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260620_1_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-23",
+      "item_id": "S2B_35TPN_20260623_0_L2A",
+      "datetime": "2026-06-23T09:17:08.780000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 66.157973,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260623_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-25",
+      "item_id": "S2C_35TPN_20260625_0_L2A",
+      "datetime": "2026-06-25T09:07:13.552000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 3.764035,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260625_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-27",
+      "item_id": "S2A_35TPN_20260627_0_L2A",
+      "datetime": "2026-06-27T09:07:30.807000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 42.435697,
+      "usable_pct": 54.2,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260627_0_L2A",
+          "usable_pct": 54.2
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "item_id": "S2C_35TPN_20260628_0_L2A",
+      "datetime": "2026-06-28T09:17:09.367000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.000389,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260628_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "item_id": "S2A_35TPN_20260630_2_L2A",
+      "datetime": "2026-06-30T09:17:26.917000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.000281,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260630_2_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260630_1_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "item_id": "S2B_35TPN_20260703_0_L2A",
+      "datetime": "2026-07-03T09:17:07.750000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 28.925923,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260703_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-05",
+      "item_id": "S2C_35TPN_20260705_0_L2A",
+      "datetime": "2026-07-05T09:07:13.503000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 42.022264,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260705_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-07",
+      "item_id": "S2A_35TPN_20260707_0_L2A",
+      "datetime": "2026-07-07T09:07:29.573000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 36.298832,
+      "usable_pct": 54.5,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260707_0_L2A",
+          "usable_pct": 54.5
+        }
+      ]
+    },
+    {
+      "date": "2026-07-08",
+      "item_id": "S2C_35TPN_20260708_0_L2A",
+      "datetime": "2026-07-08T09:17:10.386000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.082381,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260708_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-10",
+      "item_id": "S2A_35TPN_20260710_2_L2A",
+      "datetime": "2026-07-10T09:17:25.961000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 56.456381,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260710_2_L2A",
+          "usable_pct": 0.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260710_1_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-13",
+      "item_id": "S2B_35TPN_20260713_0_L2A",
+      "datetime": "2026-07-13T09:17:09.990000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 90.787154,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260713_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-15",
+      "item_id": "S2C_35TPN_20260715_0_L2A",
+      "datetime": "2026-07-15T09:07:15.261000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 18.444076,
+      "usable_pct": 96.2,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260715_0_L2A",
+          "usable_pct": 96.2
+        }
+      ]
+    },
+    {
+      "date": "2026-07-17",
+      "item_id": "S2A_35TPN_20260717_0_L2A",
+      "datetime": "2026-07-17T09:07:31.138000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 26.75024,
+      "usable_pct": 94.9,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260717_0_L2A",
+          "usable_pct": 94.9
+        }
+      ]
+    },
+    {
+      "date": "2026-07-18",
+      "item_id": "S2C_35TPN_20260718_0_L2A",
+      "datetime": "2026-07-18T09:17:11.843000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 1.360747,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260718_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-20",
+      "item_id": "S2B_35TPN_20260720_2_L2A",
+      "datetime": "2026-07-20T09:07:14.914000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 30.976629,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260720_1_L2A",
+          "usable_pct": 0.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260720_2_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-23",
+      "item_id": "S2B_35TPN_20260723_0_L2A",
+      "datetime": "2026-07-23T09:17:11.090000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 24.602833,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260723_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-25",
+      "item_id": "S2C_35TPN_20260725_0_L2A",
+      "datetime": "2026-07-25T09:07:15.897000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 30.578494,
+      "usable_pct": 27.8,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260725_0_L2A",
+          "usable_pct": 27.8
+        }
+      ]
+    },
+    {
+      "date": "2026-07-27",
+      "item_id": "S2A_35TPN_20260727_0_L2A",
+      "datetime": "2026-07-27T09:07:32.119000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 88.01809,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260727_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-28",
+      "item_id": "S2C_35TPN_20260728_0_L2A",
+      "datetime": "2026-07-28T09:17:12.073000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 20.188783,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260728_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-07-30",
+      "item_id": "S2B_35TPN_20260730_0_L2A",
+      "datetime": "2026-07-30T09:07:14.728000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 16.618508,
+      "usable_pct": 97.4,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260730_1_L2A",
+          "usable_pct": 31.6
+        },
+        {
+          "item_id": "S2B_35TPN_20260730_0_L2A",
+          "usable_pct": 97.4
+        }
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "item_id": "S2B_35TPN_20260802_0_L2A",
+      "datetime": "2026-08-02T09:17:10.701000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.000447,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260802_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "item_id": "S2C_35TPN_20260804_0_L2A",
+      "datetime": "2026-08-04T09:07:15.018000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 2.82659,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260804_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-06",
+      "item_id": "S2A_35TPN_20260806_0_L2A",
+      "datetime": "2026-08-06T09:07:31.466000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 43.513951,
+      "usable_pct": 0.2,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260806_0_L2A",
+          "usable_pct": 0.2
+        }
+      ]
+    },
+    {
+      "date": "2026-08-07",
+      "item_id": "S2C_35TPN_20260807_0_L2A",
+      "datetime": "2026-08-07T09:17:10.713000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.915134,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260807_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "item_id": "S2A_35TPN_20260809_2_L2A",
+      "datetime": "2026-08-09T09:17:27.276000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 2.075376,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260809_2_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260809_0_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260809_1_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
+      "item_id": "S2B_35TPN_20260812_0_L2A",
+      "datetime": "2026-08-12T09:17:08.853000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 34.333113,
+      "usable_pct": 84.7,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260812_0_L2A",
+          "usable_pct": 84.7
+        }
+      ]
+    },
+    {
+      "date": "2026-08-14",
+      "item_id": "S2C_35TPN_20260814_0_L2A",
+      "datetime": "2026-08-14T09:07:12.874000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 35.773417,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260814_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-16",
+      "item_id": "S2A_35TPN_20260816_0_L2A",
+      "datetime": "2026-08-16T09:07:29.656000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.005833,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260816_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-17",
+      "item_id": "S2C_35TPN_20260817_0_L2A",
+      "datetime": "2026-08-17T09:17:08.296000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 21.038872,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260817_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-19",
+      "item_id": "S2A_35TPN_20260819_1_L2A",
+      "datetime": "2026-08-19T09:17:25.168000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 48.847365,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260819_1_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260819_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-22",
+      "item_id": "S2B_35TPN_20260822_0_L2A",
+      "datetime": "2026-08-22T09:17:06.845000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 9.1e-05,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260822_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-24",
+      "item_id": "S2C_35TPN_20260824_0_L2A",
+      "datetime": "2026-08-24T09:07:11.543000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.321926,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260824_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-26",
+      "item_id": "S2A_35TPN_20260826_0_L2A",
+      "datetime": "2026-08-26T09:07:29.174000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.997097,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260826_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-27",
+      "item_id": "S2C_35TPN_20260827_0_L2A",
+      "datetime": "2026-08-27T09:17:08.112000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 97.747976,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260827_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-08-29",
+      "item_id": "S2A_35TPN_20260829_1_L2A",
+      "datetime": "2026-08-29T09:17:25.539000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 9.2e-05,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260829_1_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260829_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "item_id": "S2B_35TPN_20260901_0_L2A",
+      "datetime": "2026-09-01T09:17:07.757000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 97.545534,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260901_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-03",
+      "item_id": "S2C_35TPN_20260903_0_L2A",
+      "datetime": "2026-09-03T09:07:12.065000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 39.988133,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260903_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-05",
+      "item_id": "S2A_35TPN_20260905_0_L2A",
+      "datetime": "2026-09-05T09:07:28.957000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 2.673226,
+      "usable_pct": 57.5,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260905_0_L2A",
+          "usable_pct": 57.5
+        }
+      ]
+    },
+    {
+      "date": "2026-09-06",
+      "item_id": "S2C_35TPN_20260906_0_L2A",
+      "datetime": "2026-09-06T09:17:08.248000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 32.913345,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260906_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "item_id": "S2A_35TPN_20260908_1_L2A",
+      "datetime": "2026-09-08T09:17:24.948000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 1.089214,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260908_1_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260908_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "item_id": "S2B_35TPN_20260911_0_L2A",
+      "datetime": "2026-09-11T09:17:07.648000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 14.533325,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260911_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "item_id": "S2C_35TPN_20260913_0_L2A",
+      "datetime": "2026-09-13T09:07:12.537000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 100,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260913_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-15",
+      "item_id": "S2A_35TPN_20260915_0_L2A",
+      "datetime": "2026-09-15T09:07:27.595000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 20.685463,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260915_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-16",
+      "item_id": "S2C_35TPN_20260916_0_L2A",
+      "datetime": "2026-09-16T09:17:09.548000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 11.325235,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260916_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "item_id": "S2A_35TPN_20260918_0_L2A",
+      "datetime": "2026-09-18T09:17:23.740000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.12",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 0.016941,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260918_0_L2A",
+          "usable_pct": 100.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260918_1_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "item_id": "S2B_35TPN_20260921_0_L2A",
+      "datetime": "2026-09-21T09:17:09.511000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 99.943012,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20260921_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "item_id": "S2C_35TPN_20260923_0_L2A",
+      "datetime": "2026-09-23T09:07:14.666000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 100,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260923_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-25",
+      "item_id": "S2A_35TPN_20260925_0_L2A",
+      "datetime": "2026-09-25T09:07:27.788000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 54.349345,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260925_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-26",
+      "item_id": "S2C_35TPN_20260926_0_L2A",
+      "datetime": "2026-09-26T09:17:11.367000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 89.809138,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20260926_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-09-28",
+      "item_id": "S2A_35TPN_20260928_1_L2A",
+      "datetime": "2026-09-28T09:17:24.007000Z",
+      "platform": "sentinel-2a",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 92.222679,
+      "usable_pct": 0.0,
+      "bands_downloaded": false,
+      "candidates": [
+        {
+          "item_id": "S2A_35TPN_20260928_1_L2A",
+          "usable_pct": 0.0
+        },
+        {
+          "item_id": "S2B_35TPN_20260928_0_L2A",
+          "usable_pct": 0.0
+        }
+      ]
+    },
+    {
+      "date": "2026-10-01",
+      "item_id": "S2B_35TPN_20261001_0_L2A",
+      "datetime": "2026-10-01T09:17:10.214000Z",
+      "platform": "sentinel-2b",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 1.246573,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2B_35TPN_20261001_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    },
+    {
+      "date": "2026-10-03",
+      "item_id": "S2C_35TPN_20261003_0_L2A",
+      "datetime": "2026-10-03T09:07:15.671000Z",
+      "platform": "sentinel-2c",
+      "processing_baseline": "05.13",
+      "boa_offset_applied": true,
+      "scene_cloud_pct": 4.3e-05,
+      "usable_pct": 100.0,
+      "bands_downloaded": true,
+      "candidates": [
+        {
+          "item_id": "S2C_35TPN_20261003_0_L2A",
+          "usable_pct": 100.0
+        }
+      ]
+    }
+  ],
+  "bounds_utm": [
+    637640.0,
+    5254820.0,
+    638100.0,
+    5255760.0
+  ],
+  "crs": "EPSG:32635"
+}

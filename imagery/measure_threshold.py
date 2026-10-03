@@ -8,7 +8,7 @@ Uses the same mask and shrink as analyze.py, on the parcel's accepted scenes.
      north-east). For each rule: how much of the patch is found, how much is flagged outside it.
      The patch exists only here; nothing synthetic reaches out/imagery.json.
 
-    python measure_threshold.py demo1
+    python measure_threshold.py 6401307.101
 Writes out/<parcel>/threshold_hist.png, threshold_rules.png, threshold_cleanup.png, threshold_planted.png.
 """
 import argparse

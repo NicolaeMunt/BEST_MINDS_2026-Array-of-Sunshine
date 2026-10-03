@@ -11,7 +11,7 @@ Writes to out/<parcel>/:
   overlay_sharpness.png  what the browser does to a 10 m PNG it has to enlarge, vs our reprojection
   photo_variants.png     the ESA true-colour image as is, and with one fixed brightening
 
-    python measure_overlay.py demo1
+    python measure_overlay.py 6401307.101
 """
 import argparse
 

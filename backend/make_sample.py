@@ -24,11 +24,11 @@ SEED = 2026
 # Same IDs, names and crops as app.parcels in sensors-alerts/src/main/resources/application.yml.
 # temp/hum: how this spot differs from the others (an orchard in a hollow is colder and damper).
 SENSORS = [
-    {"id": "P1", "name": "Livada Nord", "crop": "orchard", "temp": -0.5, "hum": 2},
-    {"id": "P2", "name": "Via Sud", "crop": "vineyard", "temp": 0.4, "hum": -2},
-    {"id": "P3", "name": "Câmpul Mare", "crop": "wheat", "temp": 0.0, "hum": 0},
-    {"id": "P4", "name": "Lanul de Porumb", "crop": "corn", "temp": 0.2, "hum": 1},
-    {"id": "P5", "name": "Lotul de Floarea-soarelui", "crop": "sunflower", "temp": -0.1, "hum": -1},
+    {"id": "6401512.058", "name": "Livada Sud", "crop": "orchard", "temp": -0.5, "hum": 2},
+    {"id": "6401204.045", "name": "Via Nord", "crop": "vineyard", "temp": 0.4, "hum": -2},
+    {"id": "6401307.102", "name": "Câmpul Mare", "crop": "wheat", "temp": 0.0, "hum": 0},
+    {"id": "6401512.033", "name": "Lanul de Porumb", "crop": "corn", "temp": 0.2, "hum": 1},
+    {"id": "6401307.101", "name": "Lotul de Floarea-soarelui", "crop": "sunflower", "temp": -0.1, "hum": -1},
 ]
 # Thresholds and advice copied from app.crops in the same application.yml.
 CROPS = {

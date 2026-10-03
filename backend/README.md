@@ -26,7 +26,7 @@ frontend ──> Agronomicon API :8000 ──> sensors-alerts :8081  (показ
    uvicorn app.main:app --port 8000      # sensors.db создаётся сам
    ```
 
-Веб-приложение: http://localhost:8000/ (→ `/app/`, `?parcel=P2` открывает датчик P2),
+Веб-приложение: http://localhost:8000/ (→ `/app/`, `?parcel=6401204.045` открывает датчик 6401204.045),
 мобильный прототип — `/app/AgroMonitor.html`. Swagger: http://localhost:8000/docs
 
 | Переменная | По умолчанию | |
@@ -37,7 +37,7 @@ frontend ──> Agronomicon API :8000 ──> sensors-alerts :8081  (показ
 | `COLLECT_INTERVAL_SEC` | `5` | как часто показания копируются в базу |
 | `CORS_ORIGINS` | `localhost` / `127.0.0.1` на портах 5173, 3000, 5500 | origin фронтенда через запятую, `*` — любой |
 
-Список датчиков (ID `P1`, `P2`, …, название, культура) задаётся в `app.parcels` в
+Список датчиков (ID `6401512.058`, `6401204.045`, …, название, культура) задаётся в `app.parcels` в
 `sensors-alerts/src/main/resources/application.yml`.
 JSON-поля в camelCase, поля датчиков — как в общем контракте (`temperatureC`, `humidityPct`, `dewPointC`, `frostLevel`).
 Тексты для пользователя — на румынском.
@@ -87,9 +87,9 @@ sensors-alerts держит в памяти только последние по
 Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
 `readings` и `/alerts` продолжают отдавать то, что уже сохранено.
 
-`GET /sensors/parcels/P1/latest`:
+`GET /sensors/parcels/6401512.058/latest`:
 ```jsonc
-{ "parcelId": "P1", "timestamp": "2026-10-03T14:24:41.6Z", "temperatureC": -2.8, "humidityPct": 57,
+{ "parcelId": "6401512.058", "timestamp": "2026-10-03T14:24:41.6Z", "temperatureC": -2.8, "humidityPct": 57,
   "dewPointC": -10.1, "frostLevel": "CRITICAL",          // OK | WARNING | CRITICAL (из sensors-alerts)
   "crop": "orchard", "humidityLevel": "OK",              // OK | LOW | HIGH для культуры
   "mode": "REPLAY",                                       // NORMAL | FROST | HUMID | DRY | REPLAY
@@ -98,6 +98,21 @@ sensors-alerts держит в памяти только последние по
              "message": "Pornește imediat protecția ...",
              "reasons": [{ "code": "black_frost", "text": "Aer uscat (punct de rouă -10.1°C) — ...", "source": "sensor" }] } }
 ```
+
+## Участки и спутник
+
+Участки (кадастровый номер, название, культура, полигон) берутся из `data/parcels.geojson` и при старте
+записываются в базу (`users`, `parcels`). Модуль `app/imagery.py` раз в день запускает спутниковый
+конвейер `imagery/` отдельным процессом (своё окружение `imagery/.venv` с rasterio) и сохраняет его
+результат в `imagery_results`, `imagery_warnings`, `imagery_skipped`; каждый запуск записывается в
+`imagery_runs`. Эндпоинты `/parcels`, `/parcels/{id}/imagery?date=`, `/parcels/{id}/imagery/history`,
+`/imagery/refresh`, `/imagery/status`, `/imagery/import` и PNG в `/overlays/` описаны в корневом `README.md`.
+
+| Переменная | По умолчанию | |
+|---|---|---|
+| `IMAGERY_RUN_AT` | `21:00` | время ежедневного запуска (Кишинёв, летнее время) |
+| `IMAGERY_AUTO` | `1` | `0`: только ручной запуск через `POST /imagery/refresh` |
+| `IMAGERY_SEASON_START` | `1 мая текущего года` | с какого дня брать снимки |
 
 ## Логика заморозка
 

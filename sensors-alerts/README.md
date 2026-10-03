@@ -37,17 +37,17 @@ Commands: `/start`, `/parcele`, `/status <parcelId>`.
 
 ```powershell
 # 1. Frost on one parcel: WARNING after ~40 s, CRITICAL after ~50 s
-Invoke-RestMethod -Method Post http://localhost:8081/demo/frost/P1
+Invoke-RestMethod -Method Post http://localhost:8081/demo/frost/6401512.058
 
 # 2. Replay the frost night (14 h in ~2.5 min): WARNING, CRITICAL, then all-clear in the morning
-Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/P2
+Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/6401204.045
 
 # 3. Humid, warm air (disease risk) / dry, hot air (drought stress): alert after ~50 s
-Invoke-RestMethod -Method Post http://localhost:8081/demo/humid/P3
-Invoke-RestMethod -Method Post http://localhost:8081/demo/dry/P4
+Invoke-RestMethod -Method Post http://localhost:8081/demo/humid/6401307.102
+Invoke-RestMethod -Method Post http://localhost:8081/demo/dry/6401512.033
 
 # 4. One parcel back to normal weather: the all-clear messages are sent
-Invoke-RestMethod -Method Post http://localhost:8081/demo/normal/P3
+Invoke-RestMethod -Method Post http://localhost:8081/demo/normal/6401307.102
 
 # 5. Everything back to normal, alerts and cooldowns cleared (no all-clear messages)
 Invoke-RestMethod -Method Post http://localhost:8081/demo/reset
@@ -72,7 +72,7 @@ mvn spring-boot:run
 powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 ```
 
-`-ParcelId P2` picks another parcel.
+`-ParcelId 6401204.045` picks another parcel.
 
 ## Endpoints
 

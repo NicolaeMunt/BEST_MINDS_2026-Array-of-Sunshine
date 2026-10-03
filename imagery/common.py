@@ -1,5 +1,6 @@
 """Reading the cached windows written by fetch.py. No network here."""
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -10,7 +11,11 @@ from rasterio.warp import transform_geom
 HERE = Path(__file__).resolve().parent
 CACHE = HERE / "cache"
 OUT = HERE / "out"
-PARCELS = HERE / "parcels.geojson"
+# The parcels come from the database: the API exports them to parcels.geojson before it runs the
+# satellite job. Without that file (a run by hand), the seed the database is loaded from is used.
+EXPORTED_PARCELS = HERE / "parcels.geojson"
+SEED_PARCELS = HERE.parent / "backend" / "data" / "parcels.geojson"
+PARCELS = Path(os.getenv("PARCELS_FILE") or (EXPORTED_PARCELS if EXPORTED_PARCELS.exists() else SEED_PARCELS))
 
 # NDVI colour ramp for looking at images: grey (water, roads) -> brown (bare soil) -> yellow -> green.
 NDVI_STOPS = [
@@ -36,7 +41,7 @@ def study_scenes(region):
 
 
 def load_parcels():
-    """{parcel_id: GeoJSON feature} from parcels.geojson (lon/lat)."""
+    """{parcel_id: GeoJSON feature} from the parcels file (lon/lat); parcel_id is the cadastral number."""
     features = json.loads(PARCELS.read_text(encoding="utf-8"))["features"]
     return {f["properties"]["parcel_id"]: f for f in features}
 

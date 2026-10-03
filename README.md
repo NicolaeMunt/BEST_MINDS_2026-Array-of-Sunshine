@@ -1,8 +1,9 @@
 # Agronomicon
 
-Crop monitoring for farmers. For now the app shows the air sensors: per-crop frost and humidity alerts
-on Telegram, the readings stored with their timestamps, and a web app that says in plain words what
-each sensor means. The parcel view and the satellite analytics are being built separately.
+Crop monitoring for farmers. The app shows the air sensors (per-crop frost and humidity alerts on
+Telegram, the readings stored with their timestamps, a web app that says in plain words what each sensor
+means) and, for every parcel, what the Sentinel-2 satellite saw since May: weak vegetation zones, the
+picture of the field and how it changed, refreshed once a day. The map in the web app is still to come.
 
 ## Start everything
 
@@ -12,9 +13,9 @@ Needs JDK 21+, Maven and Python 3.11+.
 powershell -ExecutionPolicy Bypass -File start.ps1
 ```
 
-This builds and starts `sensors-alerts`, creates the backend's virtual environment, starts the API and
-opens http://localhost:8000/. Each service runs in its own window; close the windows to stop.
-`-NoBrowser` skips the browser.
+This builds and starts `sensors-alerts`, creates the virtual environments of the backend and of the
+satellite job (`imagery/.venv`, with rasterio), starts the API and opens http://localhost:8000/. Each
+service runs in its own window; close the windows to stop. `-NoBrowser` skips the browser.
 
 For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `sensors-alerts/README.md`).
 
@@ -24,7 +25,10 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
                        ┌────────────────────────────┐
  web app (frontend/) ─>│ Agronomicon API  :8000     │──> sensors-alerts :8081 ──> Telegram
                        │ backend/, SQLite           │     simulator, frost + humidity rules
-                       └────────────────────────────┘
+                       └─────────────┬──────────────┘
+                                     │ once a day: starts the job, then stores its results
+                                     ▼
+                       satellite job (imagery/) ──> Earth Search: Sentinel-2 scenes
 ```
 
 | From → to | What flows | Where |
@@ -33,6 +37,9 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 | API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
 | sensors-alerts → API → SQLite | Every reading and alert, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
 | sensors-alerts → Telegram | Frost and humidity alerts with crop-specific advice | `sensors-alerts/.env` |
+| API → satellite job | The parcels (polygons) as `imagery/parcels.geojson`; the job runs as its own process | `backend/app/imagery.py` |
+| satellite job → API → SQLite | `imagery/out/imagery.json`: one result per parcel and scene, and the scenes skipped for clouds | `backend/app/imagery.py` |
+| API → web app | Parcels, the satellite result as of any day, the season history, the PNGs at `/overlays/` | `backend/app/main.py` |
 
 ### Stored readings
 
@@ -41,7 +48,7 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 
 ```sql
 CREATE TABLE sensor_readings (
-    parcel_id     TEXT NOT NULL,   -- sensor location, same IDs as sensors-alerts (P1, P2, ...)
+    parcel_id     TEXT NOT NULL,   -- sensor location, the parcel's cadastral number, as in sensors-alerts
     timestamp     TEXT NOT NULL,   -- when the sensor measured, UTC
     temperature_c REAL NOT NULL,
     humidity_pct  REAL NOT NULL,
@@ -84,6 +91,43 @@ happening and what to do (frost, air too humid or too dry, or all fine), then th
 humidity now, then the temperature over time (now, a day, a week or since May) with every alert marked
 on it and listed underneath, one line each.
 
+## Parcels and satellite results
+
+**Parcels.** Each parcel is identified by its **cadastral number**; the five demo parcels near Orhei have
+**fictive** numbers (`idsFictive: true`). Developers add parcels in `backend/data/parcels.geojson` (polygon
+in lon/lat, name, crop); the API loads that file into the database at start-up. The same IDs are used by
+`sensors-alerts` (`application.yml`), so sensors and satellite talk about the same field.
+
+| Cadastral number (fictive) | Name | Crop (assumed from the satellite season curve) |
+|---|---|---|
+| `6401307.101` | Lotul de Floarea-soarelui | sunflower |
+| `6401307.102` | Câmpul Mare | wheat |
+| `6401204.045` | Via Nord | vineyard |
+| `6401512.033` | Lanul de Porumb | corn |
+| `6401512.058` | Livada Sud | orchard |
+
+**Daily run.** A thread in the API starts the satellite job every evening at 21:00 (Sentinel-2 passes over
+Moldova around noon), at start-up when the last good run is older than a day, and on
+`POST /imagery/refresh`. The job downloads only the new scenes since 1 May, analyses every parcel and the API
+stores the output; a parcel added later gets its whole season on the next run. The job runs with its own
+Python (`imagery/.venv`), so the API needs neither rasterio nor GDAL.
+
+**Tables** (same `backend/sensors.db`): `users`, `parcels`, `imagery_results` (one row per parcel and scene,
+key `(parcel_id, scene_date)`), `imagery_warnings` (fixed codes), `imagery_skipped` (scenes with clouds over
+the parcel) and `imagery_runs` (every run of the job). The PNGs are files in `imagery/out/overlays`, served
+at `/overlays/`; the database keeps only their paths. Field meanings: `imagery/README.md`; why each rule is
+what it is: `imagery/LOGIC.md`.
+
+| Method | Path | What |
+|---|---|---|
+| GET | `/parcels`, `/parcels/{id}` | Parcels with cadastral number, crop and polygon |
+| GET | `/parcels/{id}/imagery?date=2026-07-15` | The newest scene taken on that day or before, how old it is, and the scenes skipped for clouds since |
+| GET | `/parcels/{id}/imagery/history?from=&to=` | Every result and skipped scene of the season, oldest first |
+| GET | `/overlays/{file}` | Overlay (weak zones) and photo PNGs; `overlayBounds` = [S, W, N, E] |
+| POST | `/imagery/refresh` | Run the satellite job now (202; 409 if running) |
+| GET | `/imagery/status` | Last run, last good run, next daily run |
+| POST | `/imagery/import` | Store an `imagery/out/imagery.json` by hand (`imagery/push.py`); repeating it changes nothing |
+
 ## Folders
 
 | Folder | What | Docs |
@@ -95,6 +139,9 @@ on it and listed underneath, one line each.
 
 ## Not wired yet
 
-- Parcels, the drone and soil reports and the priority score were removed from the API for now; they
-  come back with the parcel view. `imagery/push.py` has no endpoint to post to until then.
+- The map (Leaflet) with the satellite overlay is not in the web app yet; the API already serves everything
+  it needs.
+- The drone and soil reports and the priority score were removed from the API for now.
+- The satellite rules are validated on field crops; for the orchard and the vineyard the per-crop rules are
+  still to be written (see `imagery/LOGIC.md`).
 - `frontend/AgroMonitor.html` is the earlier static mobile prototype; it does not use the API.

@@ -9,7 +9,7 @@
    NDVI is than on the last clear date, grouped by distance to the nearest masked pixel. If pixels
    next to a cloud are darker than those far from it, the cloud reaches further than SCL says.
 
-    python measure_mask.py demo1 --cloudy 2026-07-28 --clear 2026-07-18
+    python measure_mask.py 6401307.101 --cloudy 2026-07-28 --clear 2026-07-18
 """
 import argparse
 

@@ -1,5 +1,6 @@
 import os
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -7,9 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, sensors, sensors_client
+from . import db, imagery, sensors, sensors_client
 from .collector import Collector
-from .models import AlertOut, DemoOut, SensorLatestOut, SensorParcelOut, SensorReadingOut
+from .models import (AlertOut, DemoOut, ImageryAtDateOut, ImageryFileIn, ImageryHistoryOut, ImageryImportOut,
+                     ImageryStatusOut, ParcelOut, SensorLatestOut, SensorParcelOut, SensorReadingOut)
 from .sensors_client import SensorsUnavailable
 
 # Comma-separated frontend origins; "*" allows any.
@@ -32,9 +34,13 @@ DEMO_MESSAGES = {
 @asynccontextmanager
 async def lifespan(app):
     db.init_db()
+    imagery.load_seed()
     collector = Collector()
     collector.start()
+    app.state.updater = imagery.Updater()
+    app.state.updater.start()
     yield
+    app.state.updater.stop()
     collector.stop()
 
 
@@ -49,6 +55,9 @@ if FRONTEND_DIR.is_dir():
     @app.get("/", include_in_schema=False)
     def root():
         return RedirectResponse("/app/")
+
+# Overlay and photo PNGs written by the satellite job; the results refer to them as /overlays/<file>.
+app.mount("/overlays", StaticFiles(directory=imagery.OVERLAYS_DIR, check_dir=False), name="overlays")
 
 
 @app.exception_handler(SensorsUnavailable)
@@ -106,3 +115,67 @@ def demo_reset():
     sensors_client.demo_reset()
     sensors.reset_modes()
     return {"mode": "NORMAL", "message": "Toți senzorii au revenit la vremea normală"}
+
+
+# ---------- parcels and satellite imagery ----------
+
+def _require_parcel(parcel_id):
+    with db.get_conn() as conn:
+        row = db.parcel(conn, parcel_id)
+    if not row:
+        raise HTTPException(404, f"Parcel {parcel_id} not found")
+    return row
+
+
+@app.get("/parcels", response_model=list[ParcelOut])
+def list_parcels():
+    """Parcels with their cadastral number, crop and polygon (developers add them in backend/data/parcels.geojson)."""
+    with db.get_conn() as conn:
+        return [imagery.parcel_out(row) for row in db.parcels(conn)]
+
+
+@app.get("/parcels/{parcel_id}", response_model=ParcelOut)
+def get_parcel(parcel_id: str):
+    return imagery.parcel_out(_require_parcel(parcel_id))
+
+
+@app.get("/parcels/{parcel_id}/imagery", response_model=ImageryAtDateOut)
+def imagery_at_date(parcel_id: str, day: date | None = Query(None, alias="date",
+                                                             description="YYYY-MM-DD; default today")):
+    """The satellite picture of the parcel as it was on that day: the newest scene taken on the day or before it,
+    how many days old it is, and the scenes skipped for clouds since."""
+    _require_parcel(parcel_id)
+    return imagery.at_date(parcel_id, day or imagery.today())
+
+
+@app.get("/parcels/{parcel_id}/imagery/history", response_model=ImageryHistoryOut)
+def imagery_history(parcel_id: str, start: date | None = Query(None, alias="from", description="default: season start"),
+                    end: date | None = Query(None, alias="to", description="default: today")):
+    """Every analysed scene and every scene skipped for clouds, oldest first: the season chart and the timeline."""
+    _require_parcel(parcel_id)
+    return imagery.history(parcel_id, start or date.fromisoformat(imagery.SEASON_START), end or imagery.today())
+
+
+@app.post("/imagery/import", response_model=ImageryImportOut)
+def imagery_import(body: ImageryFileIn):
+    """Stores an imagery/out/imagery.json (imagery/push.py sends it). Sending the same file again changes nothing."""
+    data = body.model_dump(mode="json")
+    unknown = imagery.unknown_parcels(data)
+    if unknown:
+        raise HTTPException(422, f"Unknown parcels: {', '.join(unknown)}")
+    return {"new_scenes": imagery.import_data(data)}
+
+
+@app.post("/imagery/refresh", response_model=ImageryStatusOut, status_code=202)
+def imagery_refresh(request: Request):
+    """Starts the satellite job now (new scenes since the last run, analysis, database); 409 if it is running."""
+    updater = request.app.state.updater
+    if not updater.trigger():
+        raise HTTPException(409, "The satellite job is already running")
+    return imagery.status(updater)
+
+
+@app.get("/imagery/status", response_model=ImageryStatusOut)
+def imagery_status(request: Request):
+    """Whether the satellite job is running, how its last runs went and when the next daily run is."""
+    return imagery.status(request.app.state.updater)

@@ -10,21 +10,22 @@ app:
   # Frontend origin(s), comma separated. "*" allows everything (fine for the demo).
   cors-origins: ${FRONTEND_ORIGIN:*}
 
-  # IDs must match Coder 3's parcel IDs; crop is a key of app.crops below.
+  # IDs are the parcels' cadastral numbers (fictive for the demo), the same as in
+  # backend/data/parcels.geojson; crop is a key of app.crops below.
   parcels:
-    - id: P1
-      name: Livada Nord
+    - id: 6401512.058
+      name: Livada Sud
       crop: orchard
-    - id: P2
-      name: Via Sud
+    - id: 6401204.045
+      name: Via Nord
       crop: vineyard
-    - id: P3
+    - id: 6401307.102
       name: Câmpul Mare
       crop: wheat
-    - id: P4
+    - id: 6401512.033
       name: Lanul de Porumb
       crop: corn
-    - id: P5
+    - id: 6401307.101
       name: Lotul de Floarea-soarelui
       crop: sunflower
 

@@ -1,602 +1,602 @@
 # Sample data, invented (not measured): 2026-05-01 to 2026-10-03, hourly, UTC. Written by make_sample.py.
 parcelId,parcelName,crop,type,level,timestamp,temperatureC,humidityPct,dewPointC,message
-P1,Livada Nord,orchard,FROST,WARNING,2026-05-04T21:00:00Z,-0.7,75.0,-4.6,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-05-04T21:00:00Z,-0.7,75.0,-4.6,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: -0.7 °C
 Umiditate: 75% · Punct de rouă: -4.6 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,CRITICAL,2026-05-04T22:00:00Z,-1.8,76.0,-5.5,"❄️ ÎNGHEȚ – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,CRITICAL,2026-05-04T22:00:00Z,-1.8,76.0,-5.5,"❄️ ÎNGHEȚ – Livada Sud (livadă)
 Temperatura: -1.8 °C (prag critic livadă: -1.0 °C)"
-P1,Livada Nord,orchard,FROST,OK,2026-05-05T06:00:00Z,3.3,66.1,-2.4,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-05-05T06:00:00Z,3.3,66.1,-2.4,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.3 °C"
-P1,Livada Nord,orchard,FROST,WARNING,2026-05-05T20:00:00Z,1.6,70.1,-3.3,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-05-05T20:00:00Z,1.6,70.1,-3.3,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.6 °C
 Umiditate: 70% · Punct de rouă: -3.3 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,CRITICAL,2026-05-05T22:00:00Z,-1.0,81.4,-3.8,"❄️ ÎNGHEȚ – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,CRITICAL,2026-05-05T22:00:00Z,-1.0,81.4,-3.8,"❄️ ÎNGHEȚ – Livada Sud (livadă)
 Temperatura: -1.0 °C (prag critic livadă: -1.0 °C)"
-P1,Livada Nord,orchard,FROST,OK,2026-05-06T05:00:00Z,3.1,66.9,-2.5,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-05-06T05:00:00Z,3.1,66.9,-2.5,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.1 °C"
-P1,Livada Nord,orchard,FROST,WARNING,2026-05-06T19:00:00Z,1.6,67.7,-3.7,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-05-06T19:00:00Z,1.6,67.7,-3.7,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.6 °C
 Umiditate: 68% · Punct de rouă: -3.7 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.9,73.8,-6.0,"❄️ ÎNGHEȚ – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.9,73.8,-6.0,"❄️ ÎNGHEȚ – Livada Sud (livadă)
 Temperatura: -1.9 °C (prag critic livadă: -1.0 °C)"
-P1,Livada Nord,orchard,FROST,OK,2026-05-07T06:00:00Z,3.7,64.6,-2.4,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-05-07T06:00:00Z,3.7,64.6,-2.4,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.7 °C"
-P1,Livada Nord,orchard,FROST,WARNING,2026-05-07T19:00:00Z,0.6,72.4,-3.8,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-05-07T19:00:00Z,0.6,72.4,-3.8,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 0.6 °C
 Umiditate: 72% · Punct de rouă: -3.8 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,OK,2026-05-07T21:00:00Z,6.8,72.2,2.1,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-05-07T21:00:00Z,6.8,72.2,2.1,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 6.8 °C"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.2,89.7,8.6,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.2,89.7,8.6,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 90% (prag livadă: 85%) · Temperatura: 10.2 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,14.4,72.4,9.5,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,14.4,72.4,9.5,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 72%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-07-15T09:00:00Z,31.0,33.3,13.0,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-07-15T09:00:00Z,31.0,33.3,13.0,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 33% (prag livadă: 35%) · Temperatura: 31.0 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,28.5,40.9,13.9,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,28.5,40.9,13.9,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 41%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-07-16T08:00:00Z,30.0,32.6,11.8,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-07-16T08:00:00Z,30.0,32.6,11.8,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 33% (prag livadă: 35%) · Temperatura: 30.0 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,27.7,40.8,13.2,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,27.7,40.8,13.2,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 41%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-07-17T11:00:00Z,30.2,32.6,12.0,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-07-17T11:00:00Z,30.2,32.6,12.0,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 33% (prag livadă: 35%) · Temperatura: 30.2 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-07-17T17:00:00Z,26.0,43.9,12.8,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-07-17T17:00:00Z,26.0,43.9,12.8,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 44%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-07-18T10:00:00Z,29.7,34.8,12.5,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-07-18T10:00:00Z,29.7,34.8,12.5,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 35% (prag livadă: 35%) · Temperatura: 29.7 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-07-18T18:00:00Z,25.3,45.6,12.7,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-07-18T18:00:00Z,25.3,45.6,12.7,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 46%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-08-09T07:00:00Z,32.4,33.5,14.3,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-08-09T07:00:00Z,32.4,33.5,14.3,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 34% (prag livadă: 35%) · Temperatura: 32.4 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,27.7,40.1,12.9,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,27.7,40.1,12.9,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 40%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-08-10T07:00:00Z,32.2,34.7,14.7,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-08-10T07:00:00Z,32.2,34.7,14.7,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 35% (prag livadă: 35%) · Temperatura: 32.2 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,27.8,43.9,14.4,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,27.8,43.9,14.4,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 44%"
-P1,Livada Nord,orchard,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,30.4,33.3,12.5,"🌵 Umiditate scăzută – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,30.4,33.3,12.5,"🌵 Umiditate scăzută – Livada Sud (livadă)
 Umiditate: 33% (prag livadă: 35%) · Temperatura: 30.4 °C
 Risc de stres hidric și cădere a fructelor. Irigați livada."
-P1,Livada Nord,orchard,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,27.7,42.9,13.9,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,27.7,42.9,13.9,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 43%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,12.3,86.3,10.1,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,12.3,86.3,10.1,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 86% (prag livadă: 85%) · Temperatura: 12.3 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-08-24T07:00:00Z,19.8,78.9,16.0,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-08-24T07:00:00Z,19.8,78.9,16.0,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 79%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,11.4,87.5,9.4,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,11.4,87.5,9.4,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 88% (prag livadă: 85%) · Temperatura: 11.4 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-08-25T06:00:00Z,17.6,79.8,14.1,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-08-25T06:00:00Z,17.6,79.8,14.1,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 80%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-08-25T22:00:00Z,11.5,85.6,9.2,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-08-25T22:00:00Z,11.5,85.6,9.2,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 86% (prag livadă: 85%) · Temperatura: 11.5 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.5,72.6,7.7,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.5,72.6,7.7,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 73%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-09-17T01:00:00Z,10.0,85.1,7.6,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-09-17T01:00:00Z,10.0,85.1,7.6,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 85% (prag livadă: 85%) · Temperatura: 10.0 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-09-17T05:00:00Z,14.5,78.2,10.7,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-09-17T05:00:00Z,14.5,78.2,10.7,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 78%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.0,86.0,9.7,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.0,86.0,9.7,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 86% (prag livadă: 85%) · Temperatura: 12.0 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-09-18T07:00:00Z,16.7,80.0,13.2,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-09-18T07:00:00Z,16.7,80.0,13.2,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 80%"
-P1,Livada Nord,orchard,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,16.7,85.1,14.2,"💧 Umiditate ridicată – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,16.7,85.1,14.2,"💧 Umiditate ridicată – Livada Sud (livadă)
 Umiditate: 85% (prag livadă: 85%) · Temperatura: 16.7 °C
 Risc de rapăn și monilioză. Pregătiți tratamentul fungicid."
-P1,Livada Nord,orchard,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,12.7,67.8,6.9,"✅ Umiditate revenită la normal – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,12.7,67.8,6.9,"✅ Umiditate revenită la normal – Livada Sud (livadă)
 Umiditate: 68%"
-P1,Livada Nord,orchard,FROST,WARNING,2026-09-29T21:00:00Z,1.3,69.7,-3.6,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-09-29T21:00:00Z,1.3,69.7,-3.6,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.3 °C
 Umiditate: 70% · Punct de rouă: -3.6 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,CRITICAL,2026-09-29T23:00:00Z,-1.0,72.7,-5.3,"❄️ ÎNGHEȚ – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,CRITICAL,2026-09-29T23:00:00Z,-1.0,72.7,-5.3,"❄️ ÎNGHEȚ – Livada Sud (livadă)
 Temperatura: -1.0 °C (prag critic livadă: -1.0 °C)"
-P1,Livada Nord,orchard,FROST,OK,2026-09-30T04:00:00Z,3.2,68.9,-2.0,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-09-30T04:00:00Z,3.2,68.9,-2.0,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.2 °C"
-P1,Livada Nord,orchard,FROST,WARNING,2026-09-30T22:00:00Z,1.3,73.2,-3.0,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-09-30T22:00:00Z,1.3,73.2,-3.0,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.3 °C
 Umiditate: 73% · Punct de rouă: -3.0 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,OK,2026-10-01T04:00:00Z,3.9,60.3,-3.1,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-10-01T04:00:00Z,3.9,60.3,-3.1,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.9 °C"
-P1,Livada Nord,orchard,FROST,WARNING,2026-10-01T22:00:00Z,1.1,66.8,-4.4,"⚠️ Risc de îngheț – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-10-01T22:00:00Z,1.1,66.8,-4.4,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.1 °C
 Umiditate: 67% · Punct de rouă: -4.4 °C
 Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
-P1,Livada Nord,orchard,FROST,OK,2026-10-02T04:00:00Z,3.8,63.6,-2.5,"✅ Pericol trecut – Livada Nord (livadă)
+6401512.058,Livada Sud,orchard,FROST,OK,2026-10-02T04:00:00Z,3.8,63.6,-2.5,"✅ Pericol trecut – Livada Sud (livadă)
 Temperatura: 3.8 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-05-04T21:00:00Z,0.3,70.4,-4.5,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-05-04T21:00:00Z,0.3,70.4,-4.5,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 0.3 °C
 Umiditate: 70% · Punct de rouă: -4.5 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,CRITICAL,2026-05-04T22:00:00Z,-1.1,71.8,-5.5,"❄️ ÎNGHEȚ – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,CRITICAL,2026-05-04T22:00:00Z,-1.1,71.8,-5.5,"❄️ ÎNGHEȚ – Via Nord (viță-de-vie)
 Temperatura: -1.1 °C (prag critic viță-de-vie: -1.0 °C)"
-P2,Via Sud,vineyard,FROST,OK,2026-05-05T05:00:00Z,3.1,63.0,-3.3,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-05-05T05:00:00Z,3.1,63.0,-3.3,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 3.1 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-05-05T21:00:00Z,1.2,70.0,-3.7,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-05-05T21:00:00Z,1.2,70.0,-3.7,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 1.2 °C
 Umiditate: 70% · Punct de rouă: -3.7 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,OK,2026-05-06T05:00:00Z,4.0,63.2,-2.4,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-05-06T05:00:00Z,4.0,63.2,-2.4,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 4.0 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-05-06T20:00:00Z,1.4,69.1,-3.7,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-05-06T20:00:00Z,1.4,69.1,-3.7,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 1.4 °C
 Umiditate: 69% · Punct de rouă: -3.7 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.0,72.2,-5.4,"❄️ ÎNGHEȚ – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.0,72.2,-5.4,"❄️ ÎNGHEȚ – Via Nord (viță-de-vie)
 Temperatura: -1.0 °C (prag critic viță-de-vie: -1.0 °C)"
-P2,Via Sud,vineyard,FROST,OK,2026-05-07T06:00:00Z,4.4,62.6,-2.1,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-05-07T06:00:00Z,4.4,62.6,-2.1,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 4.4 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-05-07T19:00:00Z,1.4,67.7,-3.9,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-05-07T19:00:00Z,1.4,67.7,-3.9,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 1.4 °C
 Umiditate: 68% · Punct de rouă: -3.9 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,OK,2026-05-07T21:00:00Z,7.8,68.3,2.3,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-05-07T21:00:00Z,7.8,68.3,2.3,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 7.8 °C"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,11.1,87.3,9.1,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,11.1,87.3,9.1,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 87% (prag viță-de-vie: 80%) · Temperatura: 11.1 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.9,75.0,15.3,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.9,75.0,15.3,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 75%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-06-10T15:00:00Z,19.9,82.7,16.9,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-06-10T15:00:00Z,19.9,82.7,16.9,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 83% (prag viță-de-vie: 80%) · Temperatura: 19.9 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,15.2,68.7,9.5,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,15.2,68.7,9.5,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 69%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-07-15T10:00:00Z,33.1,27.9,12.1,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-07-15T10:00:00Z,33.1,27.9,12.1,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 28% (prag viță-de-vie: 30%) · Temperatura: 33.1 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.6,37.6,13.6,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.6,37.6,13.6,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 38%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,33.2,24.9,10.5,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,33.2,24.9,10.5,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 25% (prag viță-de-vie: 30%) · Temperatura: 33.2 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,28.7,35.6,12.0,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,28.7,35.6,12.0,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 36%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-07-17T11:00:00Z,31.6,27.9,10.8,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-07-17T11:00:00Z,31.6,27.9,10.8,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 28% (prag viță-de-vie: 30%) · Temperatura: 31.6 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-07-17T16:00:00Z,27.9,36.5,11.7,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-07-17T16:00:00Z,27.9,36.5,11.7,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 36%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-07-18T13:00:00Z,31.3,29.1,11.2,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-07-18T13:00:00Z,31.3,29.1,11.2,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 29% (prag viță-de-vie: 30%) · Temperatura: 31.3 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-07-18T17:00:00Z,27.4,35.6,10.8,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-07-18T17:00:00Z,27.4,35.6,10.8,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 36%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-08-09T08:00:00Z,34.2,25.7,11.8,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-08-09T08:00:00Z,34.2,25.7,11.8,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 26% (prag viță-de-vie: 30%) · Temperatura: 34.2 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,28.8,37.0,12.7,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,28.8,37.0,12.7,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 37%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,34.3,21.4,9.1,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,34.3,21.4,9.1,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 21% (prag viță-de-vie: 30%) · Temperatura: 34.3 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,28.8,38.1,13.1,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,28.8,38.1,13.1,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 38%"
-P2,Via Sud,vineyard,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,31.2,28.2,10.6,"🌵 Umiditate scăzută – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,31.2,28.2,10.6,"🌵 Umiditate scăzută – Via Nord (viță-de-vie)
 Umiditate: 28% (prag viță-de-vie: 30%) · Temperatura: 31.2 °C
 Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere."
-P2,Via Sud,vineyard,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,28.3,39.7,13.3,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,28.3,39.7,13.3,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 40%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,13.1,81.5,10.0,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,13.1,81.5,10.0,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 82% (prag viță-de-vie: 80%) · Temperatura: 13.1 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-08-24T09:00:00Z,23.8,73.4,18.8,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-08-24T09:00:00Z,23.8,73.4,18.8,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 73%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-08-24T19:00:00Z,16.7,82.5,13.7,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-08-24T19:00:00Z,16.7,82.5,13.7,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 82% (prag viță-de-vie: 80%) · Temperatura: 16.7 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-08-25T11:00:00Z,25.0,73.3,19.9,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-08-25T11:00:00Z,25.0,73.3,19.9,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 73%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-08-25T19:00:00Z,17.1,81.1,13.8,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-08-25T19:00:00Z,17.1,81.1,13.8,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 81% (prag viță-de-vie: 80%) · Temperatura: 17.1 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-08-26T13:00:00Z,22.3,74.6,17.6,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-08-26T13:00:00Z,22.3,74.6,17.6,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 75%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.5,81.6,15.3,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.5,81.6,15.3,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 82% (prag viță-de-vie: 80%) · Temperatura: 18.5 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,13.0,67.9,7.2,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,13.0,67.9,7.2,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 68%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-09-17T00:00:00Z,11.7,80.2,8.4,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-09-17T00:00:00Z,11.7,80.2,8.4,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 80% (prag viță-de-vie: 80%) · Temperatura: 11.7 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-09-17T10:00:00Z,22.1,72.7,17.0,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-09-17T10:00:00Z,22.1,72.7,17.0,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 73%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.9,81.0,9.7,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.9,81.0,9.7,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 81% (prag viță-de-vie: 80%) · Temperatura: 12.9 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,19.0,71.9,13.8,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,19.0,71.9,13.8,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 72%"
-P2,Via Sud,vineyard,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,17.5,80.3,14.1,"💧 Umiditate ridicată – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,17.5,80.3,14.1,"💧 Umiditate ridicată – Via Nord (viță-de-vie)
 Umiditate: 80% (prag viță-de-vie: 80%) · Temperatura: 17.5 °C
 Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid."
-P2,Via Sud,vineyard,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.5,66.8,7.4,"✅ Umiditate revenită la normal – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.5,66.8,7.4,"✅ Umiditate revenită la normal – Via Nord (viță-de-vie)
 Umiditate: 67%"
-P2,Via Sud,vineyard,FROST,WARNING,2026-09-29T22:00:00Z,1.2,70.2,-3.6,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-09-29T22:00:00Z,1.2,70.2,-3.6,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 1.2 °C
 Umiditate: 70% · Punct de rouă: -3.6 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,OK,2026-09-30T04:00:00Z,3.9,62.0,-2.7,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-09-30T04:00:00Z,3.9,62.0,-2.7,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 3.9 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-09-30T22:00:00Z,2.0,70.1,-2.9,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-09-30T22:00:00Z,2.0,70.1,-2.9,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 2.0 °C
 Umiditate: 70% · Punct de rouă: -2.9 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,OK,2026-10-01T03:00:00Z,4.2,63.5,-2.1,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-10-01T03:00:00Z,4.2,63.5,-2.1,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 4.2 °C"
-P2,Via Sud,vineyard,FROST,WARNING,2026-10-01T22:00:00Z,2.0,63.4,-4.2,"⚠️ Risc de îngheț – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-10-01T22:00:00Z,2.0,63.4,-4.2,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 2.0 °C
 Umiditate: 63% · Punct de rouă: -4.2 °C
 Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
-P2,Via Sud,vineyard,FROST,OK,2026-10-02T04:00:00Z,4.7,60.9,-2.2,"✅ Pericol trecut – Via Sud (viță-de-vie)
+6401204.045,Via Nord,vineyard,FROST,OK,2026-10-02T04:00:00Z,4.7,60.9,-2.2,"✅ Pericol trecut – Via Nord (viță-de-vie)
 Temperatura: 4.7 °C"
-P3,Câmpul Mare,wheat,FROST,WARNING,2026-05-04T21:00:00Z,-0.2,72.9,-4.5,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,WARNING,2026-05-04T21:00:00Z,-0.2,72.9,-4.5,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
 Temperatura: -0.2 °C
 Umiditate: 73% · Punct de rouă: -4.5 °C
 Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața."
-P3,Câmpul Mare,wheat,FROST,OK,2026-05-05T04:00:00Z,1.7,69.6,-3.3,"✅ Pericol trecut – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,OK,2026-05-05T04:00:00Z,1.7,69.6,-3.3,"✅ Pericol trecut – Câmpul Mare (grâu)
 Temperatura: 1.7 °C"
-P3,Câmpul Mare,wheat,FROST,WARNING,2026-05-05T22:00:00Z,-1.0,77.2,-4.5,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,WARNING,2026-05-05T22:00:00Z,-1.0,77.2,-4.5,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
 Temperatura: -1.0 °C
 Umiditate: 77% · Punct de rouă: -4.5 °C
 Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața."
-P3,Câmpul Mare,wheat,FROST,OK,2026-05-06T04:00:00Z,1.8,69.1,-3.3,"✅ Pericol trecut – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,OK,2026-05-06T04:00:00Z,1.8,69.1,-3.3,"✅ Pericol trecut – Câmpul Mare (grâu)
 Temperatura: 1.8 °C"
-P3,Câmpul Mare,wheat,FROST,WARNING,2026-05-06T21:00:00Z,-1.2,74.1,-5.2,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,WARNING,2026-05-06T21:00:00Z,-1.2,74.1,-5.2,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
 Temperatura: -1.2 °C
 Umiditate: 74% · Punct de rouă: -5.2 °C
 Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața."
-P3,Câmpul Mare,wheat,FROST,CRITICAL,2026-05-07T00:00:00Z,-3.0,78.5,-6.2,"❄️ ÎNGHEȚ – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,CRITICAL,2026-05-07T00:00:00Z,-3.0,78.5,-6.2,"❄️ ÎNGHEȚ – Câmpul Mare (grâu)
 Temperatura: -3.0 °C (prag critic grâu: -3.0 °C)"
-P3,Câmpul Mare,wheat,FROST,OK,2026-05-07T05:00:00Z,2.4,67.1,-3.1,"✅ Pericol trecut – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,OK,2026-05-07T05:00:00Z,2.4,67.1,-3.1,"✅ Pericol trecut – Câmpul Mare (grâu)
 Temperatura: 2.4 °C"
-P3,Câmpul Mare,wheat,FROST,WARNING,2026-05-07T20:00:00Z,-0.3,71.8,-4.8,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,WARNING,2026-05-07T20:00:00Z,-0.3,71.8,-4.8,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
 Temperatura: -0.3 °C
 Umiditate: 72% · Punct de rouă: -4.8 °C
 Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața."
-P3,Câmpul Mare,wheat,FROST,OK,2026-05-07T21:00:00Z,7.5,70.6,2.5,"✅ Pericol trecut – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,OK,2026-05-07T21:00:00Z,7.5,70.6,2.5,"✅ Pericol trecut – Câmpul Mare (grâu)
 Temperatura: 7.5 °C"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.6,85.9,8.3,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.6,85.9,8.3,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 10.6 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.7,78.3,15.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.7,78.3,15.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 78%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-10T16:00:00Z,17.4,85.6,15.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-10T16:00:00Z,17.4,85.6,15.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 17.4 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-11T08:00:00Z,17.6,79.8,14.1,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-11T08:00:00Z,17.6,79.8,14.1,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 80%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-11T17:00:00Z,15.5,85.3,13.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-11T17:00:00Z,15.5,85.3,13.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 85% (prag grâu: 85%) · Temperatura: 15.5 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-12T15:00:00Z,17.9,79.8,14.4,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-12T15:00:00Z,17.9,79.8,14.4,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 80%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-12T19:00:00Z,12.4,86.3,10.2,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-06-12T19:00:00Z,12.4,86.3,10.2,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 12.4 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-13T14:00:00Z,21.3,79.2,17.5,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-13T14:00:00Z,21.3,79.2,17.5,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 79%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-15T10:00:00Z,32.8,29.5,12.7,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-15T10:00:00Z,32.8,29.5,12.7,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 30% (prag grâu: 30%) · Temperatura: 32.8 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.1,36.0,12.5,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.1,36.0,12.5,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 36%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,32.5,26.5,10.8,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,32.5,26.5,10.8,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 26% (prag grâu: 30%) · Temperatura: 32.5 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,28.1,37.5,12.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-16T17:00:00Z,28.1,37.5,12.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 38%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-17T12:00:00Z,31.3,29.9,11.6,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-17T12:00:00Z,31.3,29.9,11.6,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 30% (prag grâu: 30%) · Temperatura: 31.3 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-17T15:00:00Z,29.0,35.6,12.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-17T15:00:00Z,29.0,35.6,12.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 36%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-18T14:00:00Z,30.7,29.6,10.9,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-07-18T14:00:00Z,30.7,29.6,10.9,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 30% (prag grâu: 30%) · Temperatura: 30.7 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-18T16:00:00Z,28.6,35.5,11.9,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-07-18T16:00:00Z,28.6,35.5,11.9,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 36%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-09T08:00:00Z,34.0,28.6,13.2,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-09T08:00:00Z,34.0,28.6,13.2,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 29% (prag grâu: 30%) · Temperatura: 34.0 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-09T18:00:00Z,30.9,37.6,14.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-09T18:00:00Z,30.9,37.6,14.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 38%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,33.8,24.0,10.4,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,33.8,24.0,10.4,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 24% (prag grâu: 30%) · Temperatura: 33.8 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-10T18:00:00Z,30.4,35.5,13.4,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-10T18:00:00Z,30.4,35.5,13.4,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 36%"
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-11T08:00:00Z,32.0,29.3,11.9,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,WARNING,2026-08-11T08:00:00Z,32.0,29.3,11.9,"🌵 Umiditate scăzută – Câmpul Mare (grâu)
 Umiditate: 29% (prag grâu: 30%) · Temperatura: 32.0 °C
 Risc de șiștăvire a boabelor. Irigați dacă este posibil."
-P3,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-11T17:00:00Z,29.3,35.7,12.6,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_LOW,OK,2026-08-11T17:00:00Z,29.3,35.7,12.6,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 36%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-24T01:00:00Z,12.5,85.2,10.1,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-24T01:00:00Z,12.5,85.2,10.1,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 85% (prag grâu: 85%) · Temperatura: 12.5 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-24T05:00:00Z,17.1,77.8,13.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-24T05:00:00Z,17.1,77.8,13.2,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 78%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,12.3,86.0,10.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,12.3,86.0,10.0,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 12.3 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-25T04:00:00Z,15.2,79.9,11.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-25T04:00:00Z,15.2,79.9,11.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 80%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-25T23:00:00Z,11.0,86.1,8.8,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-25T23:00:00Z,11.0,86.1,8.8,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 11.0 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-26T08:00:00Z,19.5,80.0,16.0,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-26T08:00:00Z,19.5,80.0,16.0,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 80%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.4,85.5,15.9,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.4,85.5,15.9,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 18.4 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.2,70.2,6.9,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.2,70.2,6.9,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 70%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-17T01:00:00Z,10.4,86.3,8.2,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-17T01:00:00Z,10.4,86.3,8.2,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 10.4 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-17T05:00:00Z,15.3,76.9,11.3,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-17T05:00:00Z,15.3,76.9,11.3,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 77%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-18T02:00:00Z,10.0,85.5,7.7,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-18T02:00:00Z,10.0,85.5,7.7,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 10.0 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-18T05:00:00Z,13.5,78.1,9.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-18T05:00:00Z,13.5,78.1,9.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 78%"
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-18T20:00:00Z,12.0,86.1,9.7,"💧 Umiditate ridicată – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,WARNING,2026-09-18T20:00:00Z,12.0,86.1,9.7,"💧 Umiditate ridicată – Câmpul Mare (grâu)
 Umiditate: 86% (prag grâu: 85%) · Temperatura: 12.0 °C
 Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid."
-P3,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.2,69.9,7.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.2,69.9,7.8,"✅ Umiditate revenită la normal – Câmpul Mare (grâu)
 Umiditate: 70%"
-P3,Câmpul Mare,wheat,FROST,WARNING,2026-09-29T23:00:00Z,-0.4,70.0,-5.2,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,WARNING,2026-09-29T23:00:00Z,-0.4,70.0,-5.2,"⚠️ Risc de îngheț – Câmpul Mare (grâu)
 Temperatura: -0.4 °C
 Umiditate: 70% · Punct de rouă: -5.2 °C
 Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața."
-P3,Câmpul Mare,wheat,FROST,OK,2026-09-30T03:00:00Z,2.2,69.9,-2.7,"✅ Pericol trecut – Câmpul Mare (grâu)
+6401307.102,Câmpul Mare,wheat,FROST,OK,2026-09-30T03:00:00Z,2.2,69.9,-2.7,"✅ Pericol trecut – Câmpul Mare (grâu)
 Temperatura: 2.2 °C"
-P4,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-04T21:00:00Z,-0.0,72.4,-4.4,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-04T21:00:00Z,-0.0,72.4,-4.4,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
 Temperatura: -0.0 °C (prag critic porumb: 0.0 °C)"
-P4,Lanul de Porumb,corn,FROST,OK,2026-05-05T07:00:00Z,6.9,59.5,-0.5,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-05-05T07:00:00Z,6.9,59.5,-0.5,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 6.9 °C"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-05-05T20:00:00Z,2.1,67.6,-3.3,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-05-05T20:00:00Z,2.1,67.6,-3.3,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 2.1 °C
 Umiditate: 68% · Punct de rouă: -3.3 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-05T22:00:00Z,-0.7,79.2,-3.9,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-05T22:00:00Z,-0.7,79.2,-3.9,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
 Temperatura: -0.7 °C (prag critic porumb: 0.0 °C)"
-P4,Lanul de Porumb,corn,FROST,OK,2026-05-06T06:00:00Z,5.0,61.3,-1.8,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-05-06T06:00:00Z,5.0,61.3,-1.8,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 5.0 °C"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-05-06T19:00:00Z,2.6,66.4,-3.0,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-05-06T19:00:00Z,2.6,66.4,-3.0,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 2.6 °C
 Umiditate: 66% · Punct de rouă: -3.0 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.0,75.0,-4.9,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-06T21:00:00Z,-1.0,75.0,-4.9,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
 Temperatura: -1.0 °C (prag critic porumb: 0.0 °C)"
-P4,Lanul de Porumb,corn,FROST,OK,2026-05-07T06:00:00Z,4.1,62.8,-2.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-05-07T06:00:00Z,4.1,62.8,-2.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 4.1 °C"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-05-07T19:00:00Z,1.4,71.5,-3.2,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-05-07T19:00:00Z,1.4,71.5,-3.2,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 1.4 °C
 Umiditate: 72% · Punct de rouă: -3.2 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-07T20:00:00Z,-0.0,71.9,-4.5,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,CRITICAL,2026-05-07T20:00:00Z,-0.0,71.9,-4.5,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
 Temperatura: -0.0 °C (prag critic porumb: 0.0 °C)"
-P4,Lanul de Porumb,corn,FROST,OK,2026-05-07T21:00:00Z,7.3,70.9,2.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-05-07T21:00:00Z,7.3,70.9,2.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 7.3 °C"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.7,88.9,8.9,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.7,88.9,8.9,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 89% (prag porumb: 85%) · Temperatura: 10.7 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.8,79.5,16.1,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-06-10T10:00:00Z,19.8,79.5,16.1,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 80%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-06-10T16:00:00Z,17.6,85.2,15.1,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-06-10T16:00:00Z,17.6,85.2,15.1,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 85% (prag porumb: 85%) · Temperatura: 17.6 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,15.3,72.3,10.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,15.3,72.3,10.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 72%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-15T08:00:00Z,30.3,33.9,12.6,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-15T08:00:00Z,30.3,33.9,12.6,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 34% (prag porumb: 35%) · Temperatura: 30.3 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.2,40.0,14.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-15T17:00:00Z,29.2,40.0,14.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 40%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-16T08:00:00Z,30.6,32.0,12.0,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-16T08:00:00Z,30.6,32.0,12.0,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 32% (prag porumb: 35%) · Temperatura: 30.6 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-16T18:00:00Z,26.4,44.3,13.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-16T18:00:00Z,26.4,44.3,13.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 44%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-17T10:00:00Z,30.8,33.6,12.9,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-17T10:00:00Z,30.8,33.6,12.9,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 34% (prag porumb: 35%) · Temperatura: 30.8 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-17T17:00:00Z,26.6,42.5,12.8,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-17T17:00:00Z,26.6,42.5,12.8,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 42%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-18T10:00:00Z,30.4,33.8,12.7,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-07-18T10:00:00Z,30.4,33.8,12.7,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 34% (prag porumb: 35%) · Temperatura: 30.4 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-18T18:00:00Z,25.6,46.6,13.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-07-18T18:00:00Z,25.6,46.6,13.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 47%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-09T06:00:00Z,31.2,34.9,13.9,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-09T06:00:00Z,31.2,34.9,13.9,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 35% (prag porumb: 35%) · Temperatura: 31.2 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,28.6,40.8,14.0,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-09T20:00:00Z,28.6,40.8,14.0,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 41%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-10T07:00:00Z,33.2,34.8,15.6,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-10T07:00:00Z,33.2,34.8,15.6,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 35% (prag porumb: 35%) · Temperatura: 33.2 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,28.7,41.1,14.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-10T19:00:00Z,28.7,41.1,14.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 41%"
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,30.9,31.5,12.0,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,WARNING,2026-08-11T07:00:00Z,30.9,31.5,12.0,"🌵 Umiditate scăzută – Lanul de Porumb (porumb)
 Umiditate: 32% (prag porumb: 35%) · Temperatura: 30.9 °C
 Risc de polenizare slabă. Irigați dacă este posibil."
-P4,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,28.2,44.4,14.9,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_LOW,OK,2026-08-11T18:00:00Z,28.2,44.4,14.9,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 44%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,12.8,85.9,10.5,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-23T22:00:00Z,12.8,85.9,10.5,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 86% (prag porumb: 85%) · Temperatura: 12.8 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-24T08:00:00Z,22.2,78.9,18.4,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-24T08:00:00Z,22.2,78.9,18.4,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 79%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,12.6,85.7,10.3,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-24T23:00:00Z,12.6,85.7,10.3,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 86% (prag porumb: 85%) · Temperatura: 12.6 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-25T06:00:00Z,18.3,79.5,14.7,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-25T06:00:00Z,18.3,79.5,14.7,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 80%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-26T00:00:00Z,11.7,86.3,9.5,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-26T00:00:00Z,11.7,86.3,9.5,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 86% (prag porumb: 85%) · Temperatura: 11.7 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-26T10:00:00Z,22.1,79.2,18.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-26T10:00:00Z,22.1,79.2,18.3,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 79%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.2,85.4,15.7,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-08-26T16:00:00Z,18.2,85.4,15.7,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 85% (prag porumb: 85%) · Temperatura: 18.2 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.9,72.4,8.1,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.9,72.4,8.1,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 72%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.6,85.6,10.2,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.6,85.6,10.2,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 86% (prag porumb: 85%) · Temperatura: 12.6 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,18.7,78.0,14.8,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,18.7,78.0,14.8,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 78%"
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,17.3,85.0,14.8,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,17.3,85.0,14.8,"💧 Umiditate ridicată – Lanul de Porumb (porumb)
 Umiditate: 85% (prag porumb: 85%) · Temperatura: 17.3 °C
 Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții."
-P4,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.4,70.6,8.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.4,70.6,8.2,"✅ Umiditate revenită la normal – Lanul de Porumb (porumb)
 Umiditate: 71%"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-09-29T21:00:00Z,2.1,65.1,-3.8,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-09-29T21:00:00Z,2.1,65.1,-3.8,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 2.1 °C
 Umiditate: 65% · Punct de rouă: -3.8 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,CRITICAL,2026-09-29T23:00:00Z,-0.4,72.2,-4.8,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,CRITICAL,2026-09-29T23:00:00Z,-0.4,72.2,-4.8,"❄️ ÎNGHEȚ – Lanul de Porumb (porumb)
 Temperatura: -0.4 °C (prag critic porumb: 0.0 °C)"
-P4,Lanul de Porumb,corn,FROST,OK,2026-09-30T05:00:00Z,5.7,63.6,-0.7,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-09-30T05:00:00Z,5.7,63.6,-0.7,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 5.7 °C"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-09-30T22:00:00Z,2.1,71.3,-2.6,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-09-30T22:00:00Z,2.1,71.3,-2.6,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 2.1 °C
 Umiditate: 71% · Punct de rouă: -2.6 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,OK,2026-10-01T04:00:00Z,4.6,61.3,-2.2,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-10-01T04:00:00Z,4.6,61.3,-2.2,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 4.6 °C"
-P4,Lanul de Porumb,corn,FROST,WARNING,2026-10-01T22:00:00Z,1.9,64.2,-4.2,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,WARNING,2026-10-01T22:00:00Z,1.9,64.2,-4.2,"⚠️ Risc de îngheț – Lanul de Porumb (porumb)
 Temperatura: 1.9 °C
 Umiditate: 64% · Punct de rouă: -4.2 °C
 Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție."
-P4,Lanul de Porumb,corn,FROST,OK,2026-10-02T04:00:00Z,4.4,66.1,-1.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
+6401512.033,Lanul de Porumb,corn,FROST,OK,2026-10-02T04:00:00Z,4.4,66.1,-1.4,"✅ Pericol trecut – Lanul de Porumb (porumb)
 Temperatura: 4.4 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-04T21:00:00Z,-0.3,69.8,-5.1,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-04T21:00:00Z,-0.3,69.8,-5.1,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: -0.3 °C
 Umiditate: 70% · Punct de rouă: -5.1 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-05T05:00:00Z,3.0,63.8,-3.2,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-05T05:00:00Z,3.0,63.8,-3.2,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 3.0 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-05T21:00:00Z,0.3,70.4,-4.5,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-05T21:00:00Z,0.3,70.4,-4.5,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 0.3 °C
 Umiditate: 70% · Punct de rouă: -4.5 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-06T05:00:00Z,3.1,64.9,-2.9,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-06T05:00:00Z,3.1,64.9,-2.9,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 3.1 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-06T20:00:00Z,0.7,68.4,-4.5,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-06T20:00:00Z,0.7,68.4,-4.5,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 0.7 °C
 Umiditate: 68% · Punct de rouă: -4.5 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,CRITICAL,2026-05-07T00:00:00Z,-3.0,77.6,-6.4,"❄️ ÎNGHEȚ – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,CRITICAL,2026-05-07T00:00:00Z,-3.0,77.6,-6.4,"❄️ ÎNGHEȚ – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: -3.0 °C (prag critic floarea-soarelui: -3.0 °C)"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-07T05:00:00Z,2.5,65.4,-3.3,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-07T05:00:00Z,2.5,65.4,-3.3,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 2.5 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-07T19:00:00Z,1.0,69.4,-4.0,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-05-07T19:00:00Z,1.0,69.4,-4.0,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 1.0 °C
 Umiditate: 69% · Punct de rouă: -4.0 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-07T21:00:00Z,7.1,69.0,1.8,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-05-07T21:00:00Z,7.1,69.0,1.8,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 7.1 °C"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.3,85.9,8.0,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-06-10T04:00:00Z,10.3,85.9,8.0,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 86% (prag floarea-soarelui: 80%) · Temperatura: 10.3 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,14.8,67.8,8.9,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-06-13T21:00:00Z,14.8,67.8,8.9,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 68%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-07-15T13:00:00Z,33.6,23.0,9.6,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-07-15T13:00:00Z,33.6,23.0,9.6,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 23% (prag floarea-soarelui: 25%) · Temperatura: 33.6 °C
 Risc de stres hidric. Urmăriți umiditatea solului."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-07-15T15:00:00Z,31.7,31.0,12.5,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-07-15T15:00:00Z,31.7,31.0,12.5,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 31%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,32.4,23.6,9.0,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-07-16T10:00:00Z,32.4,23.6,9.0,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 24% (prag floarea-soarelui: 25%) · Temperatura: 32.4 °C
 Risc de stres hidric. Urmăriți umiditatea solului."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-07-16T16:00:00Z,29.3,31.2,10.5,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-07-16T16:00:00Z,29.3,31.2,10.5,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 31%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-09T09:00:00Z,34.9,23.0,10.7,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-09T09:00:00Z,34.9,23.0,10.7,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 23% (prag floarea-soarelui: 25%) · Temperatura: 34.9 °C
 Risc de stres hidric. Urmăriți umiditatea solului."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-09T18:00:00Z,30.8,37.0,14.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-09T18:00:00Z,30.8,37.0,14.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 37%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,33.8,24.8,10.9,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-10T08:00:00Z,33.8,24.8,10.9,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 25% (prag floarea-soarelui: 25%) · Temperatura: 33.8 °C
 Risc de stres hidric. Urmăriți umiditatea solului."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-10T17:00:00Z,31.6,30.8,12.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-10T17:00:00Z,31.6,30.8,12.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 31%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-11T12:00:00Z,34.5,24.7,11.4,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-11T12:00:00Z,34.5,24.7,11.4,"🌵 Umiditate scăzută – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 25% (prag floarea-soarelui: 25%) · Temperatura: 34.5 °C
 Risc de stres hidric. Urmăriți umiditatea solului."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-11T16:00:00Z,30.9,31.1,11.9,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,OK,2026-08-11T16:00:00Z,30.9,31.1,11.9,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 31%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-23T21:00:00Z,14.1,80.8,10.8,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-23T21:00:00Z,14.1,80.8,10.8,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 81% (prag floarea-soarelui: 80%) · Temperatura: 14.1 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-24T12:00:00Z,25.4,73.5,20.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-24T12:00:00Z,25.4,73.5,20.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 74%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-24T18:00:00Z,18.3,80.2,14.8,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-24T18:00:00Z,18.3,80.2,14.8,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 80% (prag floarea-soarelui: 80%) · Temperatura: 18.3 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-25T11:00:00Z,25.0,75.0,20.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-25T11:00:00Z,25.0,75.0,20.3,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 75%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-25T19:00:00Z,16.8,81.1,13.5,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-08-25T19:00:00Z,16.8,81.1,13.5,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 81% (prag floarea-soarelui: 80%) · Temperatura: 16.8 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.1,68.0,6.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-08-26T21:00:00Z,12.1,68.0,6.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 68%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-15T21:00:00Z,14.1,80.2,10.7,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-15T21:00:00Z,14.1,80.2,10.7,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 80% (prag floarea-soarelui: 80%) · Temperatura: 14.1 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-16T08:00:00Z,21.8,71.5,16.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-16T08:00:00Z,21.8,71.5,16.4,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 72%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-16T21:00:00Z,12.3,80.6,9.1,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-16T21:00:00Z,12.3,80.6,9.1,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 81% (prag floarea-soarelui: 80%) · Temperatura: 12.3 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-17T10:00:00Z,21.7,75.0,17.1,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-17T10:00:00Z,21.7,75.0,17.1,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 75%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.5,82.1,9.5,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-17T20:00:00Z,12.5,82.1,9.5,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 82% (prag floarea-soarelui: 80%) · Temperatura: 12.5 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,18.6,74.7,14.0,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-18T08:00:00Z,18.6,74.7,14.0,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 75%"
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,16.7,82.4,13.7,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,WARNING,2026-09-18T17:00:00Z,16.7,82.4,13.7,"💧 Umiditate ridicată – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 82% (prag floarea-soarelui: 80%) · Temperatura: 16.7 °C
 Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile."
-P5,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.0,65.4,6.7,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_HIGH,OK,2026-09-18T21:00:00Z,13.0,65.4,6.7,"✅ Umiditate revenită la normal – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 65%"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-09-29T22:00:00Z,0.2,69.6,-4.7,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-09-29T22:00:00Z,0.2,69.6,-4.7,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 0.2 °C
 Umiditate: 70% · Punct de rouă: -4.7 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-09-30T03:00:00Z,2.1,66.2,-3.6,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-09-30T03:00:00Z,2.1,66.2,-3.6,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 2.1 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-10-01T00:00:00Z,1.0,67.5,-4.3,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-10-01T00:00:00Z,1.0,67.5,-4.3,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 1.0 °C
 Umiditate: 68% · Punct de rouă: -4.3 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-10-01T03:00:00Z,3.2,65.2,-2.7,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-10-01T03:00:00Z,3.2,65.2,-2.7,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 3.2 °C"
-P5,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-10-01T23:00:00Z,0.6,71.9,-3.9,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-10-01T23:00:00Z,0.6,71.9,-3.9,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 0.6 °C
 Umiditate: 72% · Punct de rouă: -3.9 °C
 Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
-P5,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-10-02T03:00:00Z,2.4,62.5,-4.0,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-10-02T03:00:00Z,2.4,62.5,-4.0,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
 Temperatura: 2.4 °C"

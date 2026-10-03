@@ -10,6 +10,8 @@ $root = $PSScriptRoot
 $sensors = Join-Path $root "sensors-alerts"
 $backend = Join-Path $root "backend"
 $py = Join-Path $backend ".venv\Scripts\python.exe"
+$imagery = Join-Path $root "imagery"
+$imageryPy = Join-Path $imagery ".venv\Scripts\python.exe"
 
 # 127.0.0.1, not localhost: Windows PowerShell tries IPv6 first and the API listens on IPv4 only.
 function Wait-Http($url, $what, $seconds) {
@@ -48,6 +50,13 @@ if (-not (Test-Path $py)) {
     & python -m venv (Join-Path $backend ".venv")
     & $py -m pip install -q -r (Join-Path $backend "requirements.txt")
     if ($LASTEXITCODE -ne 0) { throw "pip install failed" }
+}
+# The API runs the satellite job (imagery/) once a day with this separate Python, which has rasterio and GDAL.
+if (-not (Test-Path $imageryPy)) {
+    Write-Host "Creating the satellite virtual environment (rasterio, about 1 minute) ..."
+    & python -m venv (Join-Path $imagery ".venv")
+    & $imageryPy -m pip install -q -r (Join-Path $imagery "requirements.txt")
+    if ($LASTEXITCODE -ne 0) { throw "pip install for imagery failed" }
 }
 if (Test-Port 8000) {
     Write-Host "Port 8000 is already in use: assuming the API is running."

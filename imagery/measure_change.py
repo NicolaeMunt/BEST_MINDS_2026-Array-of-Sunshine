@@ -11,7 +11,7 @@ difference of the two medians.
 Real pairs first, then changes planted on the second scene of the first pair (2 days apart, so
 nothing real changed): a new zone, uniform ripening, ripening plus a new zone, uniform growth.
 
-    python measure_change.py demo1      ->  out/<parcel>/change_study.png
+    python measure_change.py 6401307.101      ->  out/<parcel>/change_study.png
 """
 import argparse
 

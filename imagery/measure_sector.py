@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy.ndimage import label
 
 from analyze import MIN_VALID_PCT, analyze_scene, direction_of, weak_zones
-from common import OUT, load_index, load_parcels
+from common import OUT, load_parcels, study_scenes
 
 NAMES = [["NW", "N", "NE"], ["W", "C", "E"], ["SW", "S", "SE"]]
 DEFICIT = 0.20
@@ -107,7 +107,7 @@ def main():
     args = ap.parse_args()
     parcel = load_parcels()[args.parcel]
     accepted = []
-    for scene in load_index(args.parcel)["scenes"]:
+    for scene in study_scenes(args.parcel):
         a = analyze_scene(args.parcel, parcel, scene)
         if a["valid_pct"] >= MIN_VALID_PCT:
             accepted.append((scene["date"], a))

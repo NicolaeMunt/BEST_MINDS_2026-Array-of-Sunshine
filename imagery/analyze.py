@@ -21,13 +21,14 @@ The decisions behind every constant are in LOGIC.md.
     python analyze.py
 """
 import json
+from datetime import date as Date
 
 import numpy as np
 import rasterio.transform
 from PIL import Image, ImageDraw, ImageFont
-from rasterio.transform import from_origin
+from rasterio.transform import Affine, from_origin
 from rasterio.warp import Resampling, reproject, transform, transform_bounds, transform_geom
-from scipy.ndimage import binary_dilation, label
+from scipy.ndimage import binary_dilation, distance_transform_edt, label
 
 from common import OUT, load_index, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, reflectance, \
     to_10m
@@ -52,6 +53,12 @@ OUTLINE_RGBA = (255, 255, 255, 230)
 OUTLINE_PX = 2                     # white ring just outside every weak zone, 2.5 m wide
 PHOTO_GAIN, PHOTO_GAMMA = 1.6, 0.8 # one fixed brightening of ESA's true-colour image, same for every date
 OUTSIDE, NORMAL, WEAK, HIDDEN = 0, 1, 2, 3
+
+LOW_VEGETATION_NDVI = 0.6 # below this median the canopy is incomplete; the weak rule was validated at ~0.75
+WHOLE_PARCEL_DROP = 0.10  # parcel median fell by more than this since the previous scene
+MAX_GAP_DAYS = 30         # an older previous scene says little about what changed
+CLOUD_NEAR_M = 100        # a declined zone this close to masked pixels may be a cloud the mask missed
+PIXEL_M = 10
 
 OUTPUT = OUT / "imagery.json"
 OVERLAYS = OUT / "overlays"
@@ -86,15 +93,38 @@ def parcel_masks(geometry, transform, crs, shape):
     return inside, inner
 
 
-def invalid_pixels(scl20, red, nir):
+def invalid_pixels(scl20, red=None, nir=None):
     """Pixels not to be used, on the 10 m grid: unwanted SCL classes widened by WIDEN_M, and no data."""
     bad = ~np.isin(scl20, SCL_KEEP)
     radius = WIDEN_M // SCL_RES_M
     if radius:
         bad = binary_dilation(bad, structure=disk(radius))
     bad = to_10m(bad)
+    if red is None:
+        return bad
     assert bad.shape == red.shape, (bad.shape, red.shape)
     return bad | np.isnan(red) | np.isnan(nir)
+
+
+def scl_only_valid_pct(parcel_id, parcel, scene):
+    """valid_pct of a scene whose bands were not downloaded, from SCL alone (no data is an SCL class too)."""
+    scl, t20, crs = read_asset(parcel_id, scene, "scl")
+    invalid = invalid_pixels(scl[0])
+    _, inner = parcel_masks(parcel["geometry"], t20 * Affine.scale(0.5), crs, invalid.shape)
+    return round(100 * (inner & ~invalid).sum() / inner.sum(), 1) if inner.any() else 0.0
+
+
+def sheet(images, legend, path, cols=6):
+    """Images in rows of `cols`, with a one-line legend under them."""
+    w, h = images[0].size
+    n_rows = (len(images) + cols - 1) // cols
+    out = Image.new("RGB", (max(min(len(images), cols) * (w + 6), 900), n_rows * (h + 6) + 26), "white")
+    for i, img in enumerate(images):
+        out.paste(img, ((i % cols) * (w + 6), (i // cols) * (h + 6)))
+    ImageDraw.Draw(out).text((6, n_rows * (h + 6) + 4), legend, font=ImageFont.load_default(size=15), fill="black")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    out.save(path)
+    return path
 
 
 def analyze_scene(parcel_id, parcel, scene):
@@ -106,8 +136,12 @@ def analyze_scene(parcel_id, parcel, scene):
     invalid = invalid_pixels(scl20, red, nir)
     valid = inner & ~invalid
     n_inner = int(inner.sum())
+    # NDMI = (B8A - B11) / (B8A + B11): water in the leaves, at 20 m, copied onto the 10 m grid.
+    nir08 = reflectance(read_asset(parcel_id, scene, "nir08")[0][0], scene)
+    swir16 = reflectance(read_asset(parcel_id, scene, "swir16")[0][0], scene)
+    ndmi = to_10m(ndvi(swir16, nir08))
     return {
-        "inside": inside, "inner": inner, "invalid": invalid, "valid": valid, "ndvi": ndvi(red, nir),
+        "inside": inside, "inner": inner, "invalid": invalid, "valid": valid, "ndvi": ndvi(red, nir), "ndmi": ndmi,
         "rgb": np.moveaxis(visual, 0, -1), "ring": polygon_pixels(parcel["geometry"], transform, crs),
         "transform": transform, "crs": crs,
         "n_inside": int(inside.sum()), "n_inner": n_inner, "n_valid": int(valid.sum()),
@@ -143,20 +177,25 @@ def direction_of(row, col, centre, radius_px):
 
 
 def zone_location(weak, inner, grid_transform, crs):
-    """affected_sector, zone_count and zone_center ([lon, lat] of the largest zone's centre)."""
+    """affected_sector, zone_count, zone_center ([lon, lat] of the largest zone's centre) and the
+    pixels of that main zone (None when there is no zone or the zones are scattered)."""
     labels, n = label(weak, structure=np.ones((3, 3), bool))
     if n == 0:
-        return None, 0, None
+        return None, 0, None, None
     sizes = np.bincount(labels.ravel())[1:]
     if 100 * sizes.max() / sizes.sum() < SCATTERED_BELOW_PCT:
-        return "scattered", n, None
-    rows, cols = np.nonzero(labels == np.argmax(sizes) + 1)
+        return "scattered", n, None, None
+    main_zone = labels == np.argmax(sizes) + 1
+    rows, cols = np.nonzero(main_zone)
     zr, zc = rows.mean(), cols.mean()
     pr, pc = np.nonzero(inner)
     sector = direction_of(zr, zc, (pr.mean(), pc.mean()), np.sqrt(len(pr) / np.pi))
-    x, y = grid_transform * (zc + 0.5, zr + 0.5)  # centre of the pixel at (zr, zc)
+    # The map marker must sit on the zone; a curved zone's centroid can fall outside it, so the
+    # marker is the zone pixel nearest to the centroid.
+    k = np.argmin((rows - zr) ** 2 + (cols - zc) ** 2)
+    x, y = grid_transform * (cols[k] + 0.5, rows[k] + 0.5)  # centre of that pixel
     lon, lat = transform(crs, "EPSG:4326", [x], [y])
-    return sector, n, [round(lon[0], 6), round(lat[0], 6)]
+    return sector, n, [round(lon[0], 6), round(lat[0], 6)], main_zone
 
 
 def display_grid(geometry):
@@ -208,6 +247,64 @@ def write_photo(a, grid, path):
     Image.fromarray(rgb, "RGB").save(path, optimize=True)
 
 
+def compare_with_previous(prev, cur):
+    """Change since the previous accepted scene, on pixels valid in both.
+
+    A pixel declined if its NDVI fell more than DROP_NDVI MORE than the parcel median did, so a
+    change of the whole field (ripening, growth, the offset between satellites) cancels out.
+    Returns the median change, the declined pixels (small zones removed) and the pixels compared.
+    """
+    both = prev["valid"] & cur["valid"]
+    relative = (cur["ndvi"] - cur["median"]) - (prev["ndvi"] - prev["median"])
+    declined = remove_small_zones(both & (relative < -DROP_NDVI), MIN_ZONE_PX)
+    return cur["median"] - prev["median"], declined, both
+
+
+def zones_near_mask(zones, invalid):
+    """How many zones have a pixel within CLOUD_NEAR_M of a pixel thrown away by the cloud mask."""
+    if not invalid.any() or not zones.any():
+        return 0
+    near = PIXEL_M * distance_transform_edt(~invalid) <= CLOUD_NEAR_M
+    labels, _ = label(zones, structure=np.ones((3, 3), bool))
+    return len(np.setdiff1d(np.unique(labels[near & zones]), [0]))
+
+
+def warning(code, text):
+    """A warning has a fixed code for programs (the priority score) and a text for people."""
+    return {"code": code, "text": text}
+
+
+def change_since(prev, cur, date):
+    """prev_scene_date, median_change and declined_pct for the result, the warnings they raise
+    (stale_previous, whole_field_drop) and the declined pixels (None for the first scene)."""
+    if prev is None:
+        return {"prev_scene_date": None, "median_change": None, "declined_pct": None}, [], None
+    median_change, declined, both = compare_with_previous(prev, cur)
+    warnings = []
+    gap = (Date.fromisoformat(date) - Date.fromisoformat(prev["date"])).days
+    if gap > MAX_GAP_DAYS:
+        warnings.append(warning("stale_previous",
+                                f"previous scene is {gap} days older ({prev['date']}): the comparison says little"))
+    if median_change < -WHOLE_PARCEL_DROP:
+        warnings.append(warning("whole_field_drop",
+                                f"the whole parcel dropped by {-median_change:.2f} NDVI since {prev['date']} "
+                                f"(ripening, harvest or drought; the image alone cannot tell)"))
+    change = {"prev_scene_date": prev["date"], "median_change": round(median_change, 3),
+              "declined_pct": round(100 * declined.sum() / both.sum(), 1)}
+    return change, warnings, declined
+
+
+def possible_cloud(weak, declined, invalid):
+    """possible_cloud warning when weak or declined zones touch the cloud mask's surroundings, else None."""
+    counts = [(zones_near_mask(weak, invalid), "weak"),
+              (zones_near_mask(declined, invalid) if declined is not None else 0, "declined")]
+    found = [f"{n} {kind} zone(s)" for n, kind in counts if n]
+    if not found:
+        return None
+    return warning("possible_cloud", f"{' and '.join(found)} within {CLOUD_NEAR_M} m of cloud-masked pixels: "
+                                     f"possibly a cloud the mask missed")
+
+
 def render_weak(parcel_id, panels):
     """One panel per accepted date: NDVI in grey, weak zones kept in red, small zones dropped in yellow."""
     scale = 4
@@ -227,16 +324,9 @@ def render_weak(parcel_id, panels):
         for k, line in enumerate(title):
             draw.text((6, 4 + 22 * k), line, font=font, fill="white", stroke_width=3, stroke_fill="black")
         images.append(img)
-    w, h = images[0].size
     legend = (f"red: weak (more than {DROP_NDVI} below the median), in zones of {MIN_ZONE_PX}+ px   "
               f"yellow: weak but in zones under {MIN_ZONE_PX} px, dropped   grey: NDVI, light = denser")
-    out = Image.new("RGB", (max(len(images) * (w + 6), 900), h + 30), "white")
-    for i, img in enumerate(images):
-        out.paste(img, (i * (w + 6), 0))
-    ImageDraw.Draw(out).text((6, h + 6), legend, font=ImageFont.load_default(size=15), fill="black")
-    path = OUT / parcel_id / "weak.png"
-    out.save(path)
-    return path
+    return sheet(images, legend, OUT / parcel_id / "weak.png")
 
 
 def render_masks(parcel_id, panels):
@@ -256,16 +346,8 @@ def render_masks(parcel_id, panels):
         for k, line in enumerate(title):
             draw.text((6, 4 + 22 * k), line, font=font, fill="white", stroke_width=3, stroke_fill="black")
         images.append(img)
-    w, h = images[0].size
     legend = "white: thrown away by the cloud mask   orange: border removed by the 20 m shrink   magenta: outline"
-    out = Image.new("RGB", (len(images) * (w + 6), h + 30), "white")
-    for i, img in enumerate(images):
-        out.paste(img, (i * (w + 6), 0))
-    ImageDraw.Draw(out).text((6, h + 6), legend, font=ImageFont.load_default(size=16), fill="black")
-    path = OUT / parcel_id / "mask.png"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    out.save(path)
-    return path
+    return sheet(images, legend, OUT / parcel_id / "mask.png")
 
 
 def main():
@@ -274,16 +356,25 @@ def main():
     for parcel_id, parcel in load_parcels().items():
         panels, weak_panels = [], []
         grid = display_grid(parcel["geometry"])
+        prev = None  # previous accepted scene of this parcel
         print(f"{parcel_id}:")
         print(f"  {'date':10s} {'scene':26s} {'in polygon':>10s} {'after shrink':>12s} {'valid':>6s} {'valid_pct':>9s}  "
               f"{'median':>6s} {'weak raw':>8s} {'affected':>8s} {'zones':>5s} {'sector':>9s}  zone_center      status")
         for scene in load_index(parcel_id)["scenes"]:
-            a = analyze_scene(parcel_id, parcel, scene)
             date = scene["date"]
+            if not scene.get("bands_downloaded", True):
+                valid_pct = scl_only_valid_pct(parcel_id, parcel, scene)
+                reason = (f"only {valid_pct}% of the parcel is cloud-free (minimum {MIN_VALID_PCT}%); "
+                          f"bands not downloaded")
+                skipped.append({"parcel_id": parcel_id, "scene_date": date, "valid_pct": valid_pct, "reason": reason})
+                print(f"  {date:10s} {scene['item_id']:26s} {'':10s} {'':12s} {'':6s} {valid_pct:8.1f}%  "
+                      f"{'':6s} {'':8s} {'':8s} {'':5s} {'':9s}  {'':16s}  SKIPPED: {reason}")
+                continue
+            a = analyze_scene(parcel_id, parcel, scene)
             warnings = []
             if a["n_inner"] < LOW_CONFIDENCE_PX:
-                warnings.append(f"low confidence: only {a['n_inner']} pixels after the {SHRINK_M} m shrink "
-                                f"(fewer than {LOW_CONFIDENCE_PX})")
+                warnings.append(warning("low_pixel_count", f"low confidence: only {a['n_inner']} pixels after the "
+                                                           f"{SHRINK_M} m shrink (fewer than {LOW_CONFIDENCE_PX})"))
             if a["n_inner"] == 0:
                 reason = f"no pixel left after the {SHRINK_M} m shrink"
             elif a["valid_pct"] < MIN_VALID_PCT:
@@ -298,18 +389,38 @@ def main():
                 status = "SKIPPED: " + reason
             else:
                 median, a["weak_raw"], a["weak"] = weak_zones(a["ndvi"], a["valid"])
+                a["median"] = median
                 raw_pct = 100 * a["weak_raw"].sum() / a["n_valid"]
                 affected_pct = round(100 * a["weak"].sum() / a["n_valid"], 1)
-                sector, n_zones, center = zone_location(a["weak"], a["inner"], a["transform"], a["crs"])
+                sector, n_zones, center, main_zone = zone_location(a["weak"], a["inner"], a["transform"], a["crs"])
+                if median < LOW_VEGETATION_NDVI:
+                    warnings.append(warning("low_vegetation",
+                                            f"parcel NDVI median {median:.2f} is below {LOW_VEGETATION_NDVI}: the "
+                                            f"canopy is incomplete, weak zones may be uneven emergence or bare soil; "
+                                            f"the weak-pixel rule was validated at NDVI ~0.75"))
+
+                ndmi_median = round(float(np.nanmedian(a["ndmi"][a["valid"]])), 3)
+                change, change_warnings, declined = change_since(prev, a, date)
+                change["ndmi_change"] = None if prev is None else round(ndmi_median - prev["ndmi_median"], 3)
+                # The main zone is confirmed when it overlaps weak pixels of the previous accepted scene.
+                change["zone_confirmed"] = (None if prev is None or main_zone is None
+                                            else bool((main_zone & prev["weak"]).any()))
+                warnings += change_warnings
+                cloud = possible_cloud(a["weak"], declined, a["invalid"])
+                if cloud:
+                    warnings.append(cloud)
+                prev = {"date": date, "ndvi": a["ndvi"], "valid": a["valid"], "median": median,
+                        "ndmi_median": ndmi_median, "weak": a["weak"]}
                 overlay_name, photo_name = f"{parcel_id}_{date}.png", f"{parcel_id}_{date}_rgb.png"
                 write_overlay(a, grid, OVERLAYS / overlay_name)
                 write_photo(a, grid, OVERLAYS / photo_name)
                 results.append({"parcel_id": parcel_id, "scene_date": date, "ndvi_median": round(median, 3),
+                                "ndmi_median": ndmi_median,
                                 "affected_pct": affected_pct, "affected_sector": sector, "zone_count": n_zones,
-                                "zone_center": center, "valid_pct": a["valid_pct"],
+                                "zone_center": center, "valid_pct": a["valid_pct"], **change,
                                 "overlay_path": f"/overlays/{overlay_name}", "photo_path": f"/overlays/{photo_name}",
                                 "overlay_bounds": grid[3], "warnings": warnings})
-                status = "accepted" + ("; " + "; ".join(warnings) if warnings else "")
+                status = "accepted" + ("; " + ", ".join(w["code"] for w in warnings) if warnings else "")
                 numbers = (f"{median:6.3f} {raw_pct:7.1f}% {affected_pct:7.1f}% {n_zones:5d} {str(sector):>9s}  "
                            f"{str(center):16s}")
                 weak_panels.append(([date, f"median {median:.3f}", f"affected {affected_pct}%, sector {sector}",

@@ -22,8 +22,17 @@ NDVI_STOPS = [
 ]
 
 
+# The dates the decisions in LOGIC.md were measured on. The measure_*.py studies stay on them, so their
+# numbers can still be reproduced after the rest of the season was added to the cache.
+STUDY_DATES = ["2026-06-28", "2026-06-30", "2026-07-18", "2026-07-28"]
+
+
 def load_index(region):
     return json.loads((CACHE / region / "scenes.json").read_text())
+
+
+def study_scenes(region):
+    return [s for s in load_index(region)["scenes"] if s["date"] in STUDY_DATES]
 
 
 def load_parcels():

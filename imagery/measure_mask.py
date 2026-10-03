@@ -17,8 +17,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from scipy.ndimage import binary_dilation, distance_transform_edt
 
-from common import OUT, colorize_ndvi, load_index, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, \
-    reflectance, to_10m
+from common import OUT, colorize_ndvi, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, reflectance, \
+    study_scenes, to_10m
 
 # A: throw away only what is known to be bad. B: keep only what is known to be good.
 DENY = [0, 1, 3, 8, 9, 10, 11]  # no data, saturated, shadow, cloud medium/high, cirrus, snow
@@ -57,7 +57,7 @@ def main():
     args = ap.parse_args()
 
     parcel = load_parcels()[args.parcel]
-    scenes = {s["date"]: s for s in load_index(args.parcel)["scenes"]}
+    scenes = {s["date"]: s for s in study_scenes(args.parcel)}
     data = {d: load(args.parcel, s) for d, s in scenes.items()}
     any_d = data[args.clear]
     mask = polygon_mask(parcel["geometry"], any_d["transform"], any_d["crs"], any_d["ndvi"].shape)

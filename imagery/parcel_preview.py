@@ -54,6 +54,8 @@ def main():
     parcel = load_parcels()[args.parcel]
     rows = []
     for scene in load_index(args.parcel)["scenes"]:
+        if not scene.get("bands_downloaded", True):
+            continue  # too cloudy over the parcel, only SCL was downloaded
         visual, transform, crs = read_asset(args.parcel, scene, "visual")
         red = reflectance(read_asset(args.parcel, scene, "red")[0][0], scene)
         nir = reflectance(read_asset(args.parcel, scene, "nir")[0][0], scene)

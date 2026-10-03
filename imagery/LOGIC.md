@@ -1,12 +1,32 @@
 # Logica pipeline-ului de imagini
 
 Pentru fiecare decizie: ce am ales, ce am respins și de ce. Scris pentru cineva care nu a văzut codul.
+Deciziile sunt în ordinea în care le-am luat. Fiecare se sprijină pe o măsurătoare pe date reale sau pe
+un test cu răspuns cunoscut (o problemă plantată pe o copie a imaginii), iar scripturile `measure_*.py`
+refac cifrele.
+
+## Pe scurt
+
+Pentru fiecare parcelă și fiecare scenă Sentinel-2:
+1. luăm doar fereastra parcelei; scenele în care norii acoperă sigur peste jumătate din parcelă nu se
+   descarcă deloc;
+2. micșorăm parcela cu 20 m de la margine și aruncăm tot ce nu e sigur vegetație, sol gol sau apă,
+   cu încă 20 m în jur; dacă rămâne sub 50% din parcelă, scena e sărită și listată separat;
+3. un pixel e slab dacă NDVI-ul lui e cu peste 0,10 sub mediana parcelei; petele sub 0,1 ha se ignoră;
+4. sectorul e direcția de la centrul parcelei spre zona cea mai mare, sau „împrăștiat” dacă nu există
+   una dominantă;
+5. ne comparăm cu scena acceptată anterioară relativ la mediana parcelei, deci maturarea, creșterea și
+   diferențele dintre sateliți se anulează; scăderea întregii parcele se raportează separat;
+6. NDMI (apa din frunze) e raportat doar ca context, fără etichetă de stres de apă;
+7. overlay-ul și poza sunt reproiectate în proiecția hărții, ca să nu fie deplasate cu 30 m;
+8. orice motiv de prudență apare în `warnings`, cu un cod fix.
 
 ## Cadrul pentru hackathon
 
-Lucrăm pe o singură parcelă (`demo1`) și pe trei date aproape fără nori: 28.06, 30.06 și 18.07.2026.
-Rezultatele se scriu doar pe disc (`out/`); trimiterea la server (`push.py`) vine mai târziu, când există
-serverul. Restul scenelor din mai–iulie le adăugăm după ce merge totul cap-coadă.
+Lucrăm pe o singură parcelă (`demo1`). Deciziile s-au luat pe trei date aproape fără nori (28.06, 30.06
+și 18.07.2026) plus una înnorată pentru testul măștii (28.07). După ce a mers totul cap-coadă, am rulat
+același cod pe tot sezonul, 1 mai – 31 iulie. Rezultatele se scriu doar pe disc (`out/`); trimiterea la
+server (`push.py`) vine când există serverul.
 
 ## Sursa: Sentinel-2 L2A de pe Earth Search
 
@@ -277,3 +297,193 @@ luminare calculată pe fiecare imagine ar fi făcut pozele de la date diferite n
 și `overlay_bounds`. Desenează deasupra poligonul parcelei și `zone_center` și verifică automat că
 `zone_center` cade pe un pixel roșu. Pe demo1 conturul stă pe câmp, iar marcajul e pe zonă la
 ambele date cu zone.
+
+## Comparația cu scena anterioară: relativă la mediana parcelei
+
+**Ales:** fiecare scenă acceptată se compară cu scena acceptată anterioară a aceleiași parcele (cele
+sărite nu contează), doar pe pixelii valizi în ambele. Un pixel s-a înrăutățit dacă NDVI-ul lui a
+scăzut cu peste 0,10 **mai mult decât mediana parcelei**, adică distanța lui sub mediană a crescut cu
+0,10. Zonele înrăutățite sub 10 pixeli se ignoră, ca la pasul 3. `declined_pct` e procentul de
+pixeli înrăutățiți din pixelii comparați.
+**Respins:** comparația absolută (prima idee: „a scăzut cu peste 0,10”) și „slab nou” (slab acum,
+nu era slab înainte).
+**De ce:** pe perechea 28.06 → 30.06 (2 zile, nimic real schimbat) am plantat schimbări pe a doua
+scenă (`measure_change.py`):
+
+| Situație | Schimbarea medianei | absolută | **relativă** | „slab nou” |
+|---|---|---|---|---|
+| real 28.06 → 30.06 | −0,032 | 0% | 0% | 0,3% |
+| real 30.06 → 18.07 | −0,007 | 0% | 0% | 0% |
+| zonă nouă în NE (−0,20) | −0,033 | găsește 100% | găsește 100% | găsește 97% |
+| maturare uniformă (−0,15) | −0,182 | 100% din câmp | 0% | 0,3% |
+| maturare + zonă nouă | −0,183 | 100% peste tot | 100% din zonă, 0% în afară | 97% |
+| creștere uniformă (+0,08) | +0,048 | 0% | 0% | 0,3% |
+
+Comparația absolută marchează tot câmpul la maturare, iar o zonă nouă reală se pierde în roșul de
+peste tot. „Slab nou” face zone noi false (0,3% pe perechea reală de 2 zile), pentru că pixelii de la
+limita pragului sar înăuntru și afară de la o zi la alta, și nu vede o zonă deja slabă care se
+agravează. Comparația relativă anulează orice schimbare uniformă: maturare, creștere și diferența de
+0,02–0,03 dintre sateliți.
+
+## Schimbarea pe toată parcela se raportează separat
+
+**Ales:** `median_change` (mediana de acum minus mediana scenei anterioare) apare la fiecare rezultat.
+Dacă scade cu peste 0,10, rezultatul primește avertismentul „toată parcela a scăzut”.
+**De ce:** comparația relativă și pragul de la pasul 3 se raportează la mediană, deci nu văd o
+problemă care cuprinde peste jumătate din câmp, pentru că mediana coboară odată cu ea. Schimbarea
+medianei o vede. Pragul de 0,10 e de peste 3 ori diferența dintre sateliți (0,03). Din imagine nu
+putem spune dacă e maturare, recoltare sau secetă; aici ajută senzorii de sol și calendarul culturii.
+
+**Câmpuri noi, de anunțat echipei:** `prev_scene_date` (data scenei anterioare), `median_change` și
+`declined_pct`. Pentru prima scenă a unei parcele toate trei sunt `null`. Zonele înrăutățite nu
+apar deocamdată în overlay.
+
+**Scena anterioară prea veche:** dacă scena anterioară e la peste 30 de zile, rezultatul primește un
+avertisment. Comparația se face, dar spune puțin, pentru că în o lună câmpul se schimbă mult și din
+motive normale.
+
+## Nori scăpați de mască, la comparație: avertisment „posibil nor”
+
+**Ales:** dacă o zonă înrăutățită are un pixel la mai puțin de 100 m de pixeli aruncați de masca de
+nori în aceeași scenă, rezultatul primește un avertisment: „posibil un nor pe care masca l-a ratat”.
+**De ce:** un nor subțire nevăzut de SCL ar arăta exact ca o zonă înrăutățită, iar norii scăpați
+stau de obicei la marginea celor detectați.
+**Verificat pe un caz plantat**, cu funcția din pipeline. Pe o copie a scenei din 30.06 am marcat ca
+mascat un „nor” rotund de ~70 m rază, o zonă înrăutățită cu marginea la 40 m de el și o alta la
+328 m. Avertismentul a numărat exact o zonă, pe cea de lângă nor. Norul fără zonă și zona fără nor
+n-au dat avertisment. Tot cu cazuri plantate am verificat avertismentul „toată parcela a scăzut”
+(maturare de −0,15 → mediana −0,18) și pe cel de vechime (40 de zile).
+**Limită:** prinde doar norii scăpați de lângă norii detectați. Un nor pe care SCL nu l-a văzut
+deloc, într-o scenă altfel senină, trece neobservat. Pe datele demo avertismentul nu se declanșează,
+pentru că toate scenele acceptate sunt 100% senine.
+**Pentru produsul real:** o zonă înrăutățită ar trebui considerată sigură doar dacă se vede și la
+următoarea trecere a satelitului (2–5 zile). Asta prinde orice efect trecător (nor, umbră, sol ud
+după ploaie), cu prețul unei alerte întârziate. N-am făcut-o acum: cere ținut minte starea între
+scene și ar complica rezultatele în ultimele ore.
+
+## NDMI: doar la nivel de parcelă, fără etichetă de stres de apă
+
+**Ales:** raportăm `ndmi_median` (NDMI-ul tipic al parcelei) și `ndmi_change` (față de scena
+anterioară; `null` la prima scenă). NDMI = (B8A − B11) / (B8A + B11), la 20 m, și arată apa din
+frunze, nu umiditatea solului. Din imagine nu punem nicio etichetă de „stres de apă”: pe aceasta o
+dau senzorii de sol, iar NDMI e context („apa din frunze e stabilă sau scade”).
+**Ce am măsurat pe J4** (`measure_ndmi.py`): NDMI e stabil (se repetă la 2 zile distanță cu
+corelație 0,99, zgomot 0,006) și aproape nu simte diferența dintre sateliți (−0,003, față de −0,032 la
+NDVI). În interiorul câmpului NDMI urmează NDVI aproape perfect: **corelație 0,98, pantă ~1,4**, adică
+NDMI coboară de 1,4 ori cât NDVI. Harta NDMI e practic o copie mai neclară a hărții NDVI.
+**Respins: eticheta „NDMI mai mic în zonă”.** În cele 4 zone slabe reale NDMI e cu 0,14–0,15 sub
+mediană, dar exact cât prezice NDVI-ul lor mai mic (0,15–0,18). Zonele au NDMI mic doar pentru că
+acolo vegetația e mai rară. Eticheta ar fi pus „stres de apă” pe toate zonele, adică o concluzie falsă.
+**Respins acum: eticheta „mai uscat decât explică NDVI”** (NDMI-ul zonei comparat cu cât prezice
+NDVI-ul ei). Pe J4 n-ar marca nimic, ceea ce e corect: zonele sunt chiar puțin mai umede decât ar
+prezice NDVI (+0,01 până la +0,03). Dar n-avem niciun câmp cu stres real ca să calibrăm pragul și să
+arătăm că funcționează. Un test plantat ar verifica doar aritmetica, nu agronomia. În plus, zonele
+mici au doar 6–11 pixeli distincți de 20 m.
+**Direcții pentru produsul real:**
+1. Eticheta „mai uscat decât explică NDVI”, calibrată pe câmpuri cu stres de apă confirmat.
+2. Semnalul „NDMI scade, NDVI stabil” pe toată parcela. Frunzele pierd apă înainte să se vadă în
+   verdeață, deci ar fi un indiciu timpuriu de uscare. Pe J4 nu apare: între 30.06 și 18.07 NDMI a
+   crescut cu 0,05, cu NDVI stabil.
+
+## Tot sezonul (mai–iulie): nu descărcăm benzile scenelor care sigur vor fi sărite
+
+**Ales:** pentru fiecare scenă din interval, `fetch.py` citește întâi doar harta de clase (SCL), care e
+mică. Calculează cât din parcela micșorată are o clasă păstrată de mască (vegetație, sol gol, apă),
+înainte de lărgirea cu 20 m. Lărgirea doar scoate pixeli, deci `valid_pct` din analiză nu poate
+depăși această valoare. Dacă ea e sub 50%, analiza ar sări oricum scena, așa că celelalte benzi nu
+se mai descarcă. Scena rămâne în cache doar cu SCL și apare în `skipped`, cu `valid_pct` calculat din
+SCL cu aceeași mască, lărgire și micșorare.
+**De ce:** citim puțin de pe rețea fără să pierdem nimic. Regula nu poate arunca o scenă pe care
+analiza ar fi acceptat-o. Tot această valoare, calculată pe parcelă (nu pe toată fereastra), alege
+între două scene din aceeași zi.
+
+**Rezultat pe demo1, 1 mai – 31 iulie 2026:** 46 de date cu scene ale tile-ului 35TPN, citite în 155 de
+secunde, cu ~274 MB de pe rețea. 23 de scene acceptate și 23 sărite. Pentru 21 dintre cele sărite n-am
+descărcat decât harta de clase, pentru că parcela era acoperită de nori. Cache-ul parcelei are 2,6 MB.
+Graficul sezonului e în `out/demo1/season.png` (`season_chart.py`, care citește doar `imagery.json`).
+
+**Ce arată sezonul** (observații, nu decizii):
+- **Mai:** sol gol, apoi răsărire (NDVI 0,14 → 0,35, NDMI negativ). Nicio zonă slabă, ceea ce e corect,
+  dar „0% afectat” pe un câmp unde încă nu crește nimic poate fi citit greșit ca „totul e bine”.
+- **31.05–10.06, creștere rapidă** (NDVI 0,40 → 0,64, +0,11 până la +0,12 pe scenă): zone împrăștiate pe
+  1,4–3,6% din parcelă, probabil răsărire neuniformă sau sol vizibil printre rânduri. Aici pragul de
+  0,10 nu e validat; l-am validat doar la NDVI ~0,75.
+- **18.06–03.07, platou** (NDVI 0,75–0,80): zona din nord-vest apare în 4 scene la rând (18, 20, 25,
+  28.06), iar pata din centru-nord pe 28.06–03.07. O zonă care se repetă la mai multe treceri e
+  aproape sigur reală; e exact ideea „confirmării la următoarea trecere” propusă pentru produsul real.
+- **20.07:** e vizibilă doar jumătatea de sud (51,5% valid). NDVI scade cu 0,062, iar NDMI crește cu
+  0,063, adică în sens opus. Pare voal de nor rămas după mască, dar scăderea e uniformă, deci nicio
+  regulă nu se declanșează. E o limită: o scenă abia peste pragul de 50% poate avea mediana luată
+  dintr-o parte nereprezentativă a câmpului.
+- **30.07:** NDVI 0,647, NDMI 0,222 (−0,13 față de 20.07, dar 20.07 e suspectă). Față de 18.07 scad
+  amândouă (NDVI −0,10, NDMI −0,06), deci nu e semnalul „NDMI scade, NDVI stabil”.
+
+## Început de sezon: avertisment sub NDVI 0,6
+
+**Ales:** dacă mediana NDVI a parcelei e sub 0,6, rezultatul primește avertismentul `low_vegetation`:
+vegetația nu acoperă încă solul, iar zonele slabe pot fi răsărire neuniformă sau sol gol.
+**Respins:** doar o notă (fermierul ar citi „0% afectat” pe un câmp gol ca „totul e bine”) și
+ascunderea cifrelor (`affected_pct` `null`) sub 0,3. Avertismentul păstrează cifrele și explică ce
+înseamnă.
+**De ce 0,6:** regula de pixel slab e validată la NDVI ~0,75. Sub 0,6 se vede solul printre rânduri.
+Pe demo1 avertismentul apare pe cele 11 scene din 1.05–5.06 (NDVI 0,14–0,52) și dispare de la 10.06
+(0,64).
+
+## Avertismentele au cod fix
+
+**Ales:** fiecare element din `warnings` e `{"code": ..., "text": ...}`. Scorul de prioritate citește
+doar codul, iar textul e pentru oameni. Codurile sunt:
+
+| Cod | Când apare |
+|---|---|
+| `low_pixel_count` | sub 200 de pixeli în parcelă după micșorarea de 20 m |
+| `low_vegetation` | mediana NDVI sub 0,6 (început de sezon) |
+| `possible_cloud` | o zonă slabă sau înrăutățită la sub 100 m de pixeli aruncați de masca de nori |
+| `whole_field_drop` | mediana NDVI a scăzut cu peste 0,10 față de scena anterioară |
+| `stale_previous` | scena anterioară e la peste 30 de zile |
+
+**De ce:** dacă scorul ar căuta cuvinte în propoziții, orice reformulare a textului l-ar strica.
+
+## „Posibil nor” se aplică și zonelor slabe
+
+**Ales:** avertismentul `possible_cloud` verifică, cu aceeași regulă de 100 m, și zonele slabe ale
+scenei, nu doar zonele înrăutățite față de scena anterioară.
+**De ce:** pe 10.06 două zone slabe stăteau lipite de un nor mascat și nu primeau niciun avertisment,
+pentru că nu erau „înrăutățite” (câmpul creștea uniform). Pe tot sezonul avertismentul apare pe 10.06
+(cele 2 zone de lângă nor), pe 20.06 (zona din nord-vest, care e reală și se repetă în alte 3 scene,
+deci acolo e doar o prudență în plus) și pe 30.07 (zona din colțul de nord-vest, văzută o singură
+dată). Avertismentul nu șterge nimic, doar cere prudență.
+
+## Zona confirmată de scena anterioară
+
+**Ales:** `zone_confirmed` e `true` când zona principală (cea care dă sectorul) se suprapune cu pixeli
+slabi ai scenei acceptate anterioare, și `false` altfel. E `null` la prima scenă a parcelei, când nu
+există zone slabe sau când zonele sunt împrăștiate.
+**Verificat pe date reale:** zona din nord-vest iese `true` pe 20, 25 și 28 iunie, iar zona din 30.07
+iese `false`, cum era de așteptat. Tot `true` ies 10.06 (NE), 30.06 și 03.07 (N), confirmate fiecare de
+scena dinainte.
+**Atenție la sens:** `false` înseamnă **neconfirmată**, nu „infirmată”. Zona din 30.07 era în partea
+acoperită de nori pe 20.07 (0 din 25 de pixeli vizibili), deci scena anterioară n-a văzut locul.
+Pentru produsul real, comparația ar trebui făcută cu ultima scenă care a văzut acel loc.
+
+## Corecție: marcajul zonei stă întotdeauna pe zonă
+
+La rularea pe tot sezonul, verificarea hărții (`check_map.py`) a găsit un caz în care `zone_center` nu
+cădea pe roșu: pe 10.06 zona principală e o fâșie curbată, iar centrul ei geometric cade în afara ei,
+pe un pixel sănătos. Am corectat: `zone_center` e acum pixelul zonei cel mai apropiat de centrul ei
+geometric. La zonele compacte marcajul se mută cu ~3 m, spre centrul celui mai apropiat pixel. La
+zonele curbate ajunge pe zonă. Sectorul se calculează în continuare din centrul geometric, ca înainte,
+și nu s-a schimbat pe nicio dată. După corecție, toate cele 7 marcaje din sezon cad pe roșu.
+
+## Limite cunoscute, adunate
+
+- Pragul de 0,10 e validat doar la NDVI ~0,75; la început de sezon apare avertismentul `low_vegetation`.
+- Petele mari sunt subestimate, pentru că mediana coboară odată cu ele; o problemă pe peste jumătate
+  din câmp se vede doar prin `median_change` și avertismentul `whole_field_drop`.
+- Sectorul poate sări între direcții vecine când două zone au mărimi apropiate.
+- `possible_cloud` prinde doar norii scăpați de lângă cei detectați; un nor nevăzut deloc de SCL trece.
+- O scenă abia peste 50% valid poate avea mediana luată dintr-o parte nereprezentativă a câmpului
+  (20.07 pe demo1).
+- Cultura e presupusă (porumb), nu confirmată; NDMI nu spune nimic despre sol.
+- Pe demo1 nu există o problemă reală mare: e o parcelă sănătoasă cu variație minoră, iar acesta e
+  rezultatul pe care îl arătăm.

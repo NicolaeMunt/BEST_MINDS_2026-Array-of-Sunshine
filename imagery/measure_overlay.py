@@ -21,7 +21,7 @@ from rasterio.transform import from_origin
 from rasterio.warp import Resampling, reproject, transform, transform_bounds
 
 from analyze import MIN_VALID_PCT, analyze_scene, weak_zones
-from common import OUT, load_index, load_parcels
+from common import OUT, load_parcels, study_scenes
 from measure_sector import patch_at
 
 DISPLAY_RES_M = 1.25   # ground size of one display pixel: each 10 m pixel becomes 8 x 8
@@ -127,7 +127,7 @@ def main():
     ap.add_argument("parcel")
     args = ap.parse_args()
     parcel = load_parcels()[args.parcel]
-    scene = next(s for s in load_index(args.parcel)["scenes"]
+    scene = next(s for s in study_scenes(args.parcel)
                  if analyze_scene(args.parcel, parcel, s)["valid_pct"] >= MIN_VALID_PCT)
     a = analyze_scene(args.parcel, parcel, scene)
     lat = np.mean([p[1] for p in parcel["geometry"]["coordinates"][0]])

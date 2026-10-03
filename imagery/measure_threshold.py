@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy.ndimage import binary_opening
 
 from analyze import MIN_VALID_PCT, MIN_ZONE_PX, analyze_scene, remove_small_zones as remove_small
-from common import OUT, load_index, load_parcels
+from common import OUT, load_parcels, study_scenes
 
 RULES = {
     "fixed 0.15": lambda v, med, sd: v < med - 0.15,
@@ -133,7 +133,7 @@ def main():
     parcel = load_parcels()[args.parcel]
     out_dir = OUT / args.parcel
     scenes = []
-    for scene in load_index(args.parcel)["scenes"]:
+    for scene in study_scenes(args.parcel):
         a = analyze_scene(args.parcel, parcel, scene)
         if a["valid_pct"] >= MIN_VALID_PCT:
             scenes.append((scene["date"], a))

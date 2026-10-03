@@ -18,8 +18,11 @@ import argparse
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from analyze import DROP_NDVI, MIN_VALID_PCT, MIN_ZONE_PX, analyze_scene, remove_small_zones, weak_zones
-from common import OUT, load_index, load_parcels
+from scipy.ndimage import distance_transform_edt
+
+from analyze import (DROP_NDVI, MIN_VALID_PCT, MIN_ZONE_PX, PIXEL_M, analyze_scene, change_since, possible_cloud,
+                     remove_small_zones, weak_zones)
+from common import OUT, load_parcels, study_scenes
 from measure_sector import patch_at
 
 SCALE = 3
@@ -58,13 +61,55 @@ def panel(base, valid, flagged, box, title, truth=None):
     return img
 
 
+def disk_at(valid, cy, cx, r):
+    rr, cc = np.ogrid[:valid.shape[0], :valid.shape[1]]
+    return valid & ((rr - cy) ** 2 + (cc - cx) ** 2 <= r * r)
+
+
+def warnings_test(d0, prev, d1, cur):
+    """Planted cases run through analyze.change_since and analyze.possible_cloud, the code the pipeline uses."""
+    rows, cols = np.nonzero(cur["valid"])
+    cy, cx = np.percentile(rows, 25), np.percentile(cols, 75)
+    cloud = disk_at(cur["valid"], cy, cx, 7)                       # ~70 m radius, marked as masked
+    near = disk_at(cur["valid"] & ~cloud, cy + 7 + 4 + 4, cx, 4)    # its edge ~40 m south of the cloud
+    far = disk_at(cur["valid"], np.percentile(rows, 75), np.percentile(cols, 25), 4)
+    dist_m = PIXEL_M * distance_transform_edt(~cloud)
+    print(f"\nWarnings, planted on {d1} vs {d0} (cloud = pixels marked as masked; zones lowered by 0.20)")
+    print(f"   zone next to the cloud: {near.sum()} px, nearest pixel {dist_m[near].min():.0f} m from the cloud")
+    print(f"   zone far away:          {far.sum()} px, nearest pixel {dist_m[far].min():.0f} m from the cloud")
+
+    p = {"date": d0, "ndvi": prev["ndvi"], "valid": prev["valid"],
+         "median": float(np.median(prev["ndvi"][prev["valid"]]))}
+
+    def run(name, cloud_px, zones, everywhere=0.0, date=d1):
+        nd = cur["ndvi"] + everywhere
+        nd[zones] -= 0.20
+        valid = cur["valid"] & ~cloud_px
+        c = {"ndvi": nd, "valid": valid, "invalid": cur["invalid"] | cloud_px,
+             "median": float(np.median(nd[valid]))}
+        change, warnings, declined = change_since(p, c, date)
+        cloud = possible_cloud(weak_zones(nd, valid)[2], declined, c["invalid"])
+        warnings += [cloud] if cloud else []
+        shown = "; ".join(f"{w['code']}: {w['text']}" for w in warnings) or "none"
+        print(f"   {name:40s} median_change {change['median_change']:+.3f}  declined {change['declined_pct']:4.1f}%  "
+              f"warnings: {shown}")
+
+    none = np.zeros_like(cloud)
+    run("cloud + zone next to it + zone far away", cloud, near | far)
+    run("cloud, no planted zone (a real weak zone is near)", cloud, none)
+    run("zone far away, no cloud", none, far)
+    run("uniform ripening (-0.15)", none, none, everywhere=-0.15)
+    later = (np.datetime64(d0) + np.timedelta64(40, "D")).astype(str)
+    run(f"same scene dated {later} (40 days)", none, none, date=later)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("parcel")
     args = ap.parse_args()
     parcel = load_parcels()[args.parcel]
     acc = []
-    for s in load_index(args.parcel)["scenes"]:
+    for s in study_scenes(args.parcel):
         a = analyze_scene(args.parcel, parcel, s)
         if a["valid_pct"] >= MIN_VALID_PCT:
             acc.append((s["date"], a))
@@ -114,6 +159,7 @@ def main():
     path = OUT / args.parcel / "change_study.png"
     out.save(path)
     print(f"\nwritten {path}")
+    warnings_test(d0, prev, d1, cur)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ const TROUBLE = {
 
 function App() {
   const [selected, setSelected] = useState(START_PARCEL);
-  const [minutes, setMinutes] = useState(15);
+  const [minutes, setMinutes] = useState(1440);
   const [reload, setReload] = useState(0);
   const [toast, setToast] = useState('');
   const data = useLiveData(selected, minutes, reload);
@@ -84,7 +84,7 @@ function App() {
     try {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
-      if (kind !== 'reset') setMinutes(kind === 'replay' ? 720 : 15);
+      if (kind !== 'reset') setMinutes(kind === 'replay' ? 1440 : 15);  // a replayed night needs the long chart
       setReload(n => n + 1);
     } catch (e) {
       setToast(String(e.message).includes('503') ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
@@ -112,7 +112,7 @@ function App() {
           <h1>${sensor.name}</h1>
           <p className="sheet-meta">Senzor de aer, ${(CROP[sensor.crop] || sensor.crop || 'cultură nespecificată').toLowerCase()}</p>
         </header>
-        <${SensorSheet} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
+        <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
                         alerts=${own ? data.alerts : []} />`}
     </main>
 

@@ -1,5 +1,5 @@
-"""Copies the readings of the sensors-alerts service into the database, so they build up a history
-and survive that service's restarts (it keeps only the last readings in memory)."""
+"""Copies the readings and alerts of the sensors-alerts service into the database, so they build up a
+history and survive that service's restarts (it keeps only the last ones in memory)."""
 import logging
 import os
 import threading
@@ -52,3 +52,14 @@ class Collector(threading.Thread):
                 with db.get_conn() as conn:
                     db.add_readings(conn, parcel_id, rows, db.ts_text(datetime.now(timezone.utc)))
                 self._last[parcel_id] = rows[-1][0]
+
+        # Alerts: the service returns the last ones it holds; those stored before are skipped by their key.
+        now = db.ts_text(datetime.now(timezone.utc))
+        alerts = [{"parcel_id": a["parcelId"], "timestamp": db.ts_text(parse_ts(a["timestamp"])),
+                   "type": a.get("type") or "FROST", "level": a["level"], "parcel_name": a["parcelName"],
+                   "crop": a.get("crop"), "temperature_c": a["temperatureC"], "humidity_pct": a["humidityPct"],
+                   "dew_point_c": a["dewPointC"], "message": a["message"], "received_at": now}
+                  for a in sensors_client.alerts()]
+        if alerts:
+            with db.get_conn() as conn:
+                db.add_alerts(conn, alerts)

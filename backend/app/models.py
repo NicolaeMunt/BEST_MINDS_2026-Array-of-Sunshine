@@ -32,6 +32,8 @@ class SensorReadingOut(CamelModel):
     temperature_c: float
     humidity_pct: float
     dew_point_c: float = Field(description="°C, Magnus formula")
+    min_temperature_c: float | None = Field(None, description="Lowest in this point's stretch of time (long charts)")
+    max_temperature_c: float | None = Field(None, description="Highest in this point's stretch of time (long charts)")
 
 
 class FrostAssessment(CamelModel):

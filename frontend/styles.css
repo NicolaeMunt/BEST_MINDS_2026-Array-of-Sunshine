@@ -94,6 +94,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .zero{stroke:var(--blue);stroke-width:1.5}
 .temp-line{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
 .dew-line{fill:none;stroke:var(--blue);stroke-width:2;stroke-dasharray:6 4}
+.temp-line-thin{stroke-width:1.5}
+.temp-band{fill:color-mix(in srgb,var(--ink) 22%,transparent)}
+.flag line{stroke:var(--status);stroke-width:1.5}
+.flag rect{fill:var(--status)}
 .temp-now{fill:var(--ink)}
 .now{font-size:14px;font-weight:650;fill:var(--ink)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 20px;font-size:15px;color:var(--mute);margin-top:6px}
@@ -101,6 +105,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .key-temp{background:var(--ink);height:3px;vertical-align:4px}
 .key-dew{height:0;border-top:3px dashed var(--blue);vertical-align:4px}
 .key-zero{background:var(--frost);border:1px solid var(--blue)}
+.key-band{background:color-mix(in srgb,var(--ink) 22%,transparent)}
+.key-flag{width:10px;height:10px;background:var(--status)}
+.more{margin-top:16px}
 
 /* ---------- alerts ---------- */
 .alerts{margin-top:8px}

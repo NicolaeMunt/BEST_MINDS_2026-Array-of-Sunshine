@@ -31,7 +31,7 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 |---|---|---|
 | Web app → API | Everything the page shows; the page only talks to the API | `frontend/src/` |
 | API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
-| sensors-alerts → API → SQLite | Every reading, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
+| sensors-alerts → API → SQLite | Every reading and alert, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
 | sensors-alerts → Telegram | Frost and humidity alerts with crop-specific advice | `sensors-alerts/.env` |
 
 ### Stored readings
@@ -51,8 +51,25 @@ CREATE TABLE sensor_readings (
 ```
 
 `GET /sensors/parcels/{id}/readings?minutes=N` serves the chart from this table, so the history survives
-a restart of `sensors-alerts` and goes back further than its memory. The sensor locations themselves
-(ID, name, crop) are configured in `sensors-alerts/src/main/resources/application.yml`.
+a restart of `sensors-alerts` and goes back further than its memory. Windows over two hours come
+summarised (one point per 5 minutes, hour or day, with the lowest and highest temperature). The sensor
+locations themselves (ID, name, crop) are configured in `sensors-alerts/src/main/resources/application.yml`.
+
+Alerts are stored the same way, in `sensor_alerts` (sensor, time sent, type, level, the readings at that
+moment and the text sent to the farmer), and `GET /alerts` reads them from there.
+
+### Sample season
+
+So there is a history to show, `backend/data/` holds a sample season for the five demo sensors:
+`sensor-history-sample.csv` (hourly readings since 1 May) and `alert-history-sample.csv` (the alerts those
+readings raise under the crop thresholds). **The numbers are invented, not measured**: a late frost in
+May, rainy spells, two heat waves and the first autumn frost.
+
+```powershell
+cd backend
+.venv\Scripts\python.exe load_sample.py   # into sensors.db; start.ps1 does this for a new database
+.venv\Scripts\python.exe make_sample.py   # rewrites the two files, up to yesterday
+```
 
 ### The web app
 
@@ -63,7 +80,8 @@ Components are written with htm templates (`html\`<div>...</div>\``) instead of 
 
 The left column lists the sensors, those that need attention first. The selected sensor's sheet says
 what its readings mean right now (frost, air too humid or too dry, or all fine), shows the current
-numbers, the temperature over time from the stored readings, and the alerts that were sent.
+numbers, and a timeline: the temperature for the last 15 minutes, 24 hours, 7 days or since May, with
+every alert marked on it and listed underneath for the same period.
 
 ## Folders
 
@@ -78,5 +96,4 @@ numbers, the temperature over time from the stored readings, and the alerts that
 
 - Parcels, the drone and soil reports and the priority score were removed from the API for now; they
   come back with the parcel view. `imagery/push.py` has no endpoint to post to until then.
-- Alerts are still only in the memory of `sensors-alerts` and are lost when it restarts.
 - `frontend/AgroMonitor.html` is the earlier static mobile prototype; it does not use the API.

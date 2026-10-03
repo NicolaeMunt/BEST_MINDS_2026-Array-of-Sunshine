@@ -74,15 +74,16 @@ def latest_reading(parcel_id: str):
 
 
 @app.get("/sensors/parcels/{parcel_id}/readings", response_model=list[SensorReadingOut])
-def stored_readings(parcel_id: str, minutes: int = Query(60, ge=1, le=7 * 24 * 60)):
-    """Stored readings of the last N minutes (counted back from the newest reading), oldest first."""
+def stored_readings(parcel_id: str, minutes: int = Query(60, ge=1, le=366 * 24 * 60)):
+    """Stored readings of the last N minutes (counted back from the newest reading), oldest first.
+    Windows over two hours come summarised: one point per 5 minutes, hour or day, with min and max."""
     return sensors.readings(parcel_id, minutes)
 
 
 @app.get("/alerts", response_model=list[AlertOut])
 def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId"),
                   type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|ALL)$")):
-    """Recent frost and humidity alerts from sensors-alerts, newest first. Level OK is the all-clear."""
+    """Stored frost and humidity alerts, newest first. Level OK is the all-clear."""
     return sensors.alerts(parcel_id, type_)
 
 
@@ -104,4 +105,4 @@ def demo(kind: str, parcel_id: str):
 def demo_reset():
     sensors_client.demo_reset()
     sensors.reset_modes()
-    return {"mode": "NORMAL", "message": "Toate terenurile sunt în modul NORMAL, alertele au fost șterse"}
+    return {"mode": "NORMAL", "message": "Toți senzorii au revenit la vremea normală"}

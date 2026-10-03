@@ -1,5 +1,5 @@
-"""SQLite storage: sensor readings with their timestamps, copied from the sensors-alerts service
-(see collector.py). Parcels and the drone, soil and satellite results are not stored here for now."""
+"""SQLite storage: sensor readings and alerts with their timestamps, copied from the sensors-alerts
+service (see collector.py). Parcels and the drone, soil and satellite results are not stored here for now."""
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -19,7 +19,25 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     PRIMARY KEY (parcel_id, timestamp)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_readings_received ON sensor_readings(parcel_id, received_at);
+CREATE TABLE IF NOT EXISTS sensor_alerts (
+    parcel_id     TEXT NOT NULL,
+    timestamp     TEXT NOT NULL,   -- when the alert was sent
+    type          TEXT NOT NULL,   -- FROST | HUMIDITY_HIGH | HUMIDITY_LOW
+    level         TEXT NOT NULL,   -- WARNING | CRITICAL | OK (the all-clear)
+    parcel_name   TEXT NOT NULL,
+    crop          TEXT,
+    temperature_c REAL NOT NULL,
+    humidity_pct  REAL NOT NULL,
+    dew_point_c   REAL NOT NULL,
+    message       TEXT NOT NULL,   -- the text sent to the farmer
+    received_at   TEXT NOT NULL,
+    PRIMARY KEY (parcel_id, timestamp, type, level)
+) WITHOUT ROWID;
 """
+# Local days for the daily summary: Europe/Chisinau in summer. Good enough for a May-October season.
+LOCAL_OFFSET_SEC = 3 * 3600
+ALERT_COLUMNS = ("parcel_id", "timestamp", "type", "level", "parcel_name", "crop", "temperature_c",
+                 "humidity_pct", "dew_point_c", "message", "received_at")
 
 
 def ts_text(ts):
@@ -73,4 +91,43 @@ def readings(conn, parcel_id, minutes):
         "SELECT parcel_id, timestamp, temperature_c, humidity_pct FROM sensor_readings "
         "WHERE parcel_id = ? AND timestamp BETWEEN ? AND ? ORDER BY timestamp",
         (parcel_id, start, newest),
+    ).fetchall()
+
+
+def readings_summary(conn, parcel_id, minutes, bucket_sec):
+    """The same window as readings(), one row per bucket_sec of time: the first timestamp, the average
+    temperature and humidity, the lowest and highest temperature. Day-long buckets follow local days."""
+    newest = newest_timestamp(conn, parcel_id)
+    if not newest:
+        return []
+    start = ts_text(datetime.fromisoformat(newest.replace("Z", "+00:00")) - timedelta(minutes=minutes))
+    return conn.execute(
+        "SELECT parcel_id, MIN(timestamp) AS timestamp, AVG(temperature_c) AS temperature_c, "
+        "AVG(humidity_pct) AS humidity_pct, MIN(temperature_c) AS min_temperature_c, "
+        "MAX(temperature_c) AS max_temperature_c FROM sensor_readings "
+        "WHERE parcel_id = ? AND timestamp BETWEEN ? AND ? "
+        "GROUP BY (CAST(strftime('%s', timestamp) AS INTEGER) + ?) / ? ORDER BY 2",
+        (parcel_id, start, newest, LOCAL_OFFSET_SEC if bucket_sec >= 86400 else 0, bucket_sec),
+    ).fetchall()
+
+
+def add_alerts(conn, alerts):
+    """alerts: dicts with ALERT_COLUMNS as keys. An alert stored before is left as it is."""
+    conn.executemany(
+        f"INSERT OR IGNORE INTO sensor_alerts ({', '.join(ALERT_COLUMNS)}) "
+        f"VALUES ({', '.join(':' + c for c in ALERT_COLUMNS)})", alerts)
+
+
+def alerts(conn, parcel_id=None, kind="ALL", limit=1000):
+    """Stored alerts, newest first. kind: FROST | HUMIDITY | ALL."""
+    where, params = [], []
+    if parcel_id:
+        where.append("parcel_id = ?")
+        params.append(parcel_id)
+    if kind != "ALL":
+        where.append("type = 'FROST'" if kind == "FROST" else "type <> 'FROST'")
+    return conn.execute(
+        f"SELECT {', '.join(ALERT_COLUMNS)} FROM sensor_alerts "
+        f"{'WHERE ' + ' AND '.join(where) if where else ''} ORDER BY timestamp DESC LIMIT ?",
+        (*params, limit),
     ).fetchall()

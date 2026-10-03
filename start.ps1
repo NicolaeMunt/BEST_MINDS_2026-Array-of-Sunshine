@@ -52,7 +52,13 @@ if (-not (Test-Path $py)) {
 if (Test-Port 8000) {
     Write-Host "Port 8000 is already in use: assuming the API is running."
 } else {
-    # The API creates backend\sensors.db itself and fills it with the sensor readings as they arrive.
+    # The API creates backend\sensors.db itself and fills it with readings and alerts as they arrive.
+    # A new database first gets the sample season (invented readings and alerts since May), so there is a history to show.
+    if (-not (Test-Path (Join-Path $backend "sensors.db"))) {
+        Push-Location $backend
+        try { & $py load_sample.py; if ($LASTEXITCODE -ne 0) { throw "load_sample.py failed" } }
+        finally { Pop-Location }
+    }
     Start-Process $py -ArgumentList "-m", "uvicorn", "app.main:app", "--port", "8000" -WorkingDirectory $backend
 }
 Wait-Http "http://127.0.0.1:8000/sensors/parcels" "Crop Monitor API" 60

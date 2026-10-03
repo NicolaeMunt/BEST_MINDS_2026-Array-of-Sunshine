@@ -1,5 +1,8 @@
 package md.agro.sensors.telegram;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -33,7 +36,7 @@ public class TelegramNotifier implements AlertNotifier {
 
     private final AppProperties props;
     private final SensorStore store;
-    // Subscriptions live in memory only; the fallback chat ID covers restarts.
+    // Chats that sent /start; also written to chatsFile so they survive restarts.
     private final Set<String> chats = ConcurrentHashMap.newKeySet();
     private final ExecutorService sender = Executors.newSingleThreadExecutor();
     private volatile Bot bot;
@@ -45,7 +48,8 @@ public class TelegramNotifier implements AlertNotifier {
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        String token = props.telegram().token();
+        loadChats();
+        String token = props.telegram().token().trim();
         if (token.isBlank()) {
             log.warn("TELEGRAM_BOT_TOKEN not set: alerts are logged, not sent");
             return;
@@ -54,9 +58,30 @@ public class TelegramNotifier implements AlertNotifier {
             Bot b = new Bot(token);
             new TelegramBotsApi(DefaultBotSession.class).registerBot(b);
             bot = b;
-            log.info("Telegram bot @{} started", props.telegram().username());
+            log.info("Telegram bot @{} started", b.getBotUsername());
         } catch (Exception e) {
             log.error("Telegram bot could not start; alerts are logged, not sent", e);
+        }
+    }
+
+    private void loadChats() {
+        Path file = Path.of(props.telegram().chatsFile());
+        if (!Files.exists(file)) {
+            return;
+        }
+        try {
+            Files.readAllLines(file).stream().map(String::trim).filter(s -> !s.isEmpty()).forEach(chats::add);
+            log.info("Loaded {} subscribed Telegram chat(s) from {}", chats.size(), file);
+        } catch (IOException e) {
+            log.warn("Could not read {}: {}", file, e.getMessage());
+        }
+    }
+
+    private void saveChats() {
+        try {
+            Files.write(Path.of(props.telegram().chatsFile()), chats);
+        } catch (IOException e) {
+            log.warn("Could not save subscribed chats: {}", e.getMessage());
         }
     }
 
@@ -102,6 +127,7 @@ public class TelegramNotifier implements AlertNotifier {
         return switch (command) {
             case "/start" -> {
                 chats.add(chatId);
+                saveChats();
                 yield "Bun venit! Veți primi alerte de îngheț pentru toate parcelele.\n"
                         + "/parcele – lista parcelelor\n/status <parcelId> – detalii parcelă\n"
                         + "Chat ID: " + chatId;
@@ -151,7 +177,8 @@ public class TelegramNotifier implements AlertNotifier {
 
         @Override
         public String getBotUsername() {
-            return props.telegram().username();
+            // Tolerate "@MyBot" in the config.
+            return props.telegram().username().trim().replaceFirst("^@", "");
         }
 
         @Override
@@ -159,6 +186,7 @@ public class TelegramNotifier implements AlertNotifier {
             try {
                 if (update.hasMessage() && update.getMessage().hasText()) {
                     String chatId = String.valueOf(update.getMessage().getChatId());
+                    log.info("Telegram message from chat {}: {}", chatId, update.getMessage().getText());
                     String answer = reply(chatId, update.getMessage().getText());
                     sender.submit(() -> deliver(chatId, answer));
                 }

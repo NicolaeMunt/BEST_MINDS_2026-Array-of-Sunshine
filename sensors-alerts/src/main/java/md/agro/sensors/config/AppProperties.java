@@ -37,7 +37,8 @@ public record AppProperties(
     public record Telegram(
             @DefaultValue("") String token,
             @DefaultValue("") String username,
-            @DefaultValue("") String fallbackChatId) {
+            @DefaultValue("") String fallbackChatId,
+            @DefaultValue("telegram-chats.txt") String chatsFile) {
     }
 
     public Optional<Parcel> parcel(String id) {

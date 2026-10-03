@@ -1,3 +1,8 @@
+spring:
+  config:
+    # Local secrets (bot token). The .env file is gitignored; see .env.example.
+    import: optional:file:.env[.properties]
+
 server:
   port: ${PORT:8081}
 

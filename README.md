@@ -4,7 +4,8 @@ Crop monitoring for farmers. The app shows the air sensors (frost, disease-risk 
 Telegram that follow each crop's phase, the readings stored with their timestamps, when to water from the
 soil water balance, a web app that says in plain words what each sensor means) and, for every parcel, what
 the Sentinel-2 satellite saw since May: weak vegetation zones, the picture of the field and how it changed,
-refreshed once a day, on a map of the fields.
+refreshed once a day, on a map of the fields. Farmers create an account;
+an administrator enters their parcels from the official land documents.
 
 ## Start everything
 
@@ -45,6 +46,50 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 | API → satellite job | The parcels (polygons) as `imagery/parcels.geojson`; the job runs as its own process | `backend/app/imagery.py` |
 | satellite job → API → SQLite | `imagery/out/imagery.json`: one result per parcel and scene, and the scenes skipped for clouds | `backend/app/imagery.py` |
 | API → web app | Parcels, the satellite result as of any day, the season history, the PNGs at `/overlays/` | `backend/app/main.py` |
+| API → sensors-alerts | Each user parcel, registered by its cadastral number so it gets a simulated sensor | `backend/app/collector.py` |
+
+### Accounts, administrators and parcels
+
+Anyone can open the web app and see the demo parcels (those of `backend/data/parcels.geojson`, owned by
+"Fermier demo", who cannot sign in). A farmer creates an account (`#/register`: name, email, phone,
+password); email and phone are required, at sign-up and in the profile (`#/profile`). The farmer cannot add
+parcels: the profile only shows them.
+
+A user's parcels are entered by an **administrator** on `#/admin`: the list of all users (search by name,
+email or phone), and for the chosen one their parcels and a form that copies the official document: type of
+document (title, extract from the real estate register, sale, donation, inheritance, lease), its number and
+date, the cadastral number, village and district, the area in ares (shown in hectares too), the crop, whose
+thresholds the alerts use, and the parcel's outline: clicked corner by corner on a map with a satellite photo
+background (corners can be dragged, a right click removes one) or pasted as `lat, lon` lines from the document.
+The page compares the outline's area with the document's. The administrator can also change or delete a parcel.
+
+An account becomes an administrator from the command line, after it has been registered in the web app:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe make_admin.py ion@exemplu.md            # administrator
+.venv\Scripts\python.exe make_admin.py ion@exemplu.md --remove   # ordinary user again
+```
+
+- A user's parcel is a row of `parcels` like the demo ones: its ID is the cadastral number (one parcel per
+  number, it cannot be changed afterwards), with the document's data in extra columns and the outline in
+  `geometry`. It is on the map in the side column and the satellite job analyses it like the demo parcels: the
+  API starts a run as soon as a parcel is added or gets a new outline (a new outline drops its old results and
+  cached scenes). The job reads one Sentinel-2 tile (35TPN, around Orhei); a parcel outside it is on the map
+  but gets no pictures, and the form says so.
+- The satellite job writes into `imagery/out/` (kept in git for the demo parcels): with user parcels its
+  results and pictures appear there too and should not be committed.
+- It is registered in sensors-alerts (`PUT /sensors/parcels/{cadastral number}`), which starts a simulated
+  sensor with that crop's thresholds. sensors-alerts keeps such parcels in memory only, so the collector
+  registers them again within 5 s after it restarts.
+- A user sees their own parcels and the demo ones, in every endpoint (sensors, alerts, `/parcels`, satellite,
+  water); other users' parcels answer `404`.
+- Passwords are stored as scrypt hashes (Python standard library). Signing in gives a token that the page keeps
+  in `localStorage` and sends as `Authorization: Bearer`; it lasts 30 days.
+- A deleted parcel loses its stored readings and alerts. Its simulated sensor runs on until sensors-alerts
+  restarts (that service cannot forget a parcel); the API hides it and stops storing it.
+- Alerts for user parcels go to the same Telegram chats as the demo ones: sensors-alerts does not know which
+  chat belongs to which user yet.
 
 ### Stored readings
 
@@ -110,6 +155,10 @@ React without a build step: `frontend/index.html` loads React, ReactDOM and htm 
 and the components from `frontend/src/` as plain ES modules, so it needs neither Node nor internet.
 Components are written with htm templates (`html\`<div>...</div>\``) instead of JSX. The fonts
 (Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
+
+The page asks the API for new data once an hour; the **Actualizează** button asks right away. While a presentation
+scenario runs it follows the sensor every 3 s, and while the server is down it retries every 5 s. The fields list
+and each block of the sheet fold open and shut (`src/Fold.js`), and the page remembers which ones are folded.
 
 Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
 each), those with a problem first. The selected field opens with one coloured block that says what is

@@ -1,5 +1,5 @@
 // Romanian wording for the codes the API returns, in the words a farmer would use.
-import { num } from './lib.js';
+import { num, day } from './lib.js';
 
 export const CROP = { wheat: 'Grâu', barley: 'Orz', corn: 'Porumb', sunflower: 'Floarea-soarelui', orchard: 'Livadă',
   vineyard: 'Viță-de-vie' };
@@ -61,4 +61,26 @@ export function alertWord(alert) {
   if (alert.type === 'IRRIGATION') return { status: 'warning', word: 'De udat' };
   if (alert.type === 'SOWING') return { status: 'ok', word: 'Poți semăna' };
   return alert.level === 'CRITICAL' ? { status: 'critical', word: 'Îngheț' } : { status: 'warning', word: 'Risc de îngheț' };
+}
+
+// The documents a field is entered from; the same keys as DOC_TYPES in backend/app/accounts.py.
+export const DOC_TYPE = {
+  titlu: 'Titlu de autentificare a dreptului deținătorului de teren',
+  extras: 'Extras din Registrul bunurilor imobile',
+  vanzare: 'Contract de vânzare-cumpărare',
+  donatie: 'Contract de donație',
+  mostenire: 'Certificat de moștenitor',
+  arenda: 'Contract de arendă',
+  altul: 'Alt act',
+};
+
+/** "235,5 ari (2,36 ha)" */
+export function areaText(ari) {
+  return ari == null ? '—' : `${num(ari, 2)} ari (${num(ari / 100, 2)} ha)`;
+}
+
+/** "Titlu de autentificare ... nr. A-1234 din 12 mar. 2019" */
+export function docText(field) {
+  if (!field.docType) return '—';
+  return `${DOC_TYPE[field.docType] || field.docType} nr. ${field.docNumber} din ${day(field.docDate)}`;
 }

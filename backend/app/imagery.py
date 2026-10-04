@@ -10,6 +10,7 @@ day in the evening, at start-up when the last good run is older than a day, and 
 import json
 import logging
 import os
+import shutil
 import subprocess
 import threading
 from datetime import date, datetime, time, timedelta, timezone
@@ -102,6 +103,17 @@ def run_job():
         log.info("%s: %s", args[0], lines[-1] if lines else "done")
 
 
+def forget_parcel(parcel_id):
+    """Drops a parcel's satellite results and its cached scenes: after a new outline, the cached windows may not
+    cover the field any more, and the next run downloads and analyses it again."""
+    with db.get_conn() as conn:
+        for table in ("imagery_results", "imagery_warnings", "imagery_skipped"):
+            conn.execute(f"DELETE FROM {table} WHERE parcel_id = ?", (parcel_id,))
+    cache = IMAGERY_DIR / "cache" / parcel_id
+    if cache.is_dir() and cache.parent == IMAGERY_DIR / "cache":
+        shutil.rmtree(cache, ignore_errors=True)
+
+
 def import_data(data):
     """Stores one output of the satellite job; returns how many (parcel, date) pairs are new."""
     with db.get_conn() as conn:
@@ -162,6 +174,10 @@ class Updater(threading.Thread):
             return False
         self._wake.set()
         return True
+
+    def queue(self):
+        """A run now, or right after the one running (a parcel was added or got a new outline meanwhile)."""
+        self._wake.set()
 
     def run(self):
         if AUTO and self._stale():

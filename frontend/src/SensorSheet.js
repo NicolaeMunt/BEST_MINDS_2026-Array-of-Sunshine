@@ -1,6 +1,7 @@
 // One field: what the sensor means right now, the two numbers, the soil water, the temperature over time and the alerts.
 import { html, useState, num, hm, when, day } from './lib.js';
 import { MODE, verdict, alertWord, phaseLine } from './labels.js';
+import { Fold } from './Fold.js';
 import { SatelliteSection } from './SatelliteSection.js';
 
 // Minutes since 1 April of this year: the whole season on one chart.
@@ -25,7 +26,7 @@ function timeMarks(t0, t1, minutes) {
   return marks;
 }
 
-function TempChart({ readings, minutes, alerts }) {
+function TempChart({ readings, minutes, alerts, drawKey }) {
   if (readings.length < 2) return html`<p className="note">Încă nu sunt destule măsurători pentru grafic. Apar în câteva secunde.</p>`;
   // Long charts show, for every hour or day, the range between its lowest and highest temperature.
   const banded = minutes > 1440;
@@ -46,7 +47,8 @@ function TempChart({ readings, minutes, alerts }) {
   // Urgent alerts are drawn last, so a warning sent the same night does not cover them.
   const flags = alerts.filter(a => Date.parse(a.timestamp) >= t0 && Date.parse(a.timestamp) <= t1)
     .sort((a, b) => (a.level === 'CRITICAL') - (b.level === 'CRITICAL'));
-  return html`<svg className="temp-chart" viewBox=${`0 0 ${W} ${H}`} role="img"
+  // drawKey changes with the sensor and the period, so the line draws itself again only then, not on every refresh.
+  return html`<svg key=${drawKey} className="temp-chart" viewBox=${`0 0 ${W} ${H}`} role="img"
       aria-label=${`Temperatura aerului în timp, cu ${flags.length} alerte marcate`}>
     <rect className="below-zero" x=${LEFT} y=${y(0)} width=${W - LEFT - RIGHT} height=${H - BOTTOM - y(0)} />
     ${ticks.map(c => html`<g key=${c}>
@@ -56,7 +58,7 @@ function TempChart({ readings, minutes, alerts }) {
       <line className="grid" x1=${x(t)} x2=${x(t)} y1=${TOP} y2=${H - BOTTOM} />
       <text className="tick" x=${x(t) + 4} y=${H - 8}>${label}</text></g>`)}
     ${banded && html`<polygon className="temp-band" points=${band} />`}
-    <path className=${banded ? 'temp-line temp-line-thin' : 'temp-line'} d=${line} />
+    <path className=${banded ? 'temp-line temp-line-thin' : 'temp-line'} d=${line} pathLength="1" />
     ${flags.map((a, i) => html`<g key=${i} className=${'flag is-' + alertWord(a).status}>
       <title>${when(a.timestamp)}: ${alertWord(a).word}</title>
       <line x1=${x(Date.parse(a.timestamp))} x2=${x(Date.parse(a.timestamp))} y1=${TOP - 8} y2=${TOP + 6} />
@@ -71,8 +73,7 @@ function TempChart({ readings, minutes, alerts }) {
 /** Whether the crop needs water: from the soil probe when it reports, else from the temperature and rain (FAO-56). */
 function WaterSection({ water: w }) {
   const sensor = w.source === 'sensor';
-  return html`<section className="section">
-    <h2>Apa din sol</h2>
+  return html`<${Fold} title="Apa din sol" className="section" storageKey="water">
     ${!w.hasCrop ? html`<p>În faza „${w.phase}” nu e nimic de udat.</p>` : html`
       <div className="figures">
         ${sensor
@@ -88,10 +89,10 @@ function WaterSection({ water: w }) {
       `${when(x.time)} (de la ${num(x.fromPct, 0)}% la ${num(x.toPct, 0)}%)`).join(', ')}.</p>`}
     <p className="note">${sensor ? 'Măsurat de senzorul de sol la 20 cm. Când uzi, senzorul vede apa și sfatul se schimbă singur.'
       : 'Socotit din temperatura și ploaia măsurate din 1 mai, după metoda FAO; fără senzor de sol nu știm dacă ai udat.'}</p>
-  </section>`;
+  <//>`;
 }
 
-export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, parcel, history }) {
+export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, drawKey, parcel, history }) {
   const s = sensor.latest, v = verdict(sensor), drop = s && s.dropLastHourC;
   const trend = drop == null ? '' : drop > 0.3 ? `Se răcește: cu ${num(drop)}° mai rece decât acum o oră.`
     : drop < -0.3 ? `Se încălzește: cu ${num(-drop)}° mai cald decât acum o oră.` : 'Temperatura stă pe loc față de acum o oră.';
@@ -109,8 +110,7 @@ export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, parc
     </section>
     ${s && MODE[s.mode] && html`<p className="note demo-note">Demonstrație: senzorul arată ${MODE[s.mode]}, nu vremea de afară.</p>`}
 
-    ${s && html`<section className="section">
-      <h2>Acum</h2>
+    ${s && html`<${Fold} title="Acum" className="section" storageKey="now">
       <div className="figures">
         <div className="figure"><b>${num(s.temperatureC)}<small>°C</small></b><span>temperatura aerului</span></div>
         <div className="figure"><b>${num(s.humidityPct, 0)}<small>%</small></b><span>umiditatea aerului</span></div>
@@ -120,28 +120,26 @@ export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, parc
       <p>${trend}</p>
       ${phaseLine(s) && html`<p>${phaseLine(s)}</p>`}
       <p className="note">Măsurat ${when(s.timestamp)}.</p>
-    </section>`}
+    <//>`}
 
     ${parcel && history && html`<${SatelliteSection} parcel=${parcel} history=${history} />`}
 
     ${sensor.water && html`<${WaterSection} water=${sensor.water} />`}
 
-    <section className="section">
-      <h2>Temperatura</h2>
+    <${Fold} title="Temperatura" className="section" storageKey="temperature">
       <div className="ranges" role="group" aria-label="Ce perioadă arată graficul">
         ${RANGES.map(([value, label]) => html`<button key=${value} aria-pressed=${minutes === value}
           onClick=${() => { setShowAll(false); onMinutes(value); }}>${label}</button>`)}
       </div>
-      <${TempChart} readings=${readings} minutes=${minutes} alerts=${sent} />
+      <${TempChart} readings=${readings} minutes=${minutes} alerts=${sent} drawKey=${drawKey} />
       <p className="legend">
         ${banded && html`<span><i className="key key-band"></i>de la cea mai rece la cea mai caldă oră ${minutes > 20160 ? 'a zilei' : ''}</span>`}
         <span><i className="key key-zero"></i>sub zero: îngheț</span>
         <span><i className="key key-flag is-warning"></i><i className="key key-flag is-critical"></i>alertă</span>
       </p>
-    </section>
+    <//>
 
-    <section className="section">
-      <h2>Alerte ${range[2]}</h2>
+    <${Fold} title=${'Alerte ' + range[2]} extra=${inPeriod.length || null} className="section" storageKey="alerts">
       ${inPeriod.length === 0
         ? html`<p className="note">Nicio alertă în această perioadă. Alertele ajung și pe Telegram.</p>`
         : html`<ul className="alerts">
@@ -155,5 +153,5 @@ export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, parc
         </ul>`}
       ${inPeriod.length > listed.length && html`<button className="btn more" onClick=${() => setShowAll(true)}>
         Arată toate cele ${inPeriod.length}</button>`}
-    </section>`;
+    <//>`;
 }

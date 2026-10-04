@@ -5,7 +5,7 @@ come from the water balance (see water.py)."""
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import crops, db, sowing, water
+from . import accounts, crops, db, sowing, water
 from . import sensors_client as client
 from .frost import assess_frost, dew_point, drop_last_hour
 
@@ -94,10 +94,16 @@ def water_status(parcel_id, crop, day=None, with_days=False):
         return water.status(conn, parcel_id, crop, day or today(), with_days)
 
 
-def parcels():
-    """Sensor locations known to sensors-alerts, each with its latest reading (None before the first one) and its
-    soil water today."""
-    return [{**p, "latest": latest(p["id"]), "water": water_status(p["id"], p.get("crop"))} for p in client.parcels()]
+def parcels(user=None):
+    """The signed-in user's parcels first, then the demo ones, each with its latest reading (None before the first
+    one) and its soil water today. Other users' parcels are left out. A parcel sensors-alerts does not know yet (it
+    restarted; the collector registers it again within seconds) is listed without a reading."""
+    known = {p["id"] for p in client.parcels()}
+    return [{"id": row["id"], "name": row["name"], "crop": row["crop"], "own": own,
+             "area_ha": None if row["area_ari"] is None else round(row["area_ari"] / 100, 4),
+             "latest": latest(row["id"]) if row["id"] in known else None,
+             "water": water_status(row["id"], row["crop"])}
+            for row, own in accounts.visible_parcels(user)]
 
 
 def alerts(parcel_id=None, type_="ALL"):

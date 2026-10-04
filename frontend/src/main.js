@@ -1,20 +1,30 @@
-import { html, useState, useEffect, useRef, useMemo, api, START_PARCEL } from './lib.js';
-import { CROP, verdict } from './labels.js';
+import { html, useState, useEffect, useRef, useMemo, api, send, hm, num, getToken, setToken, useRoute, START_PARCEL } from './lib.js';
+import { CROP, MODE, verdict } from './labels.js';
 import { SensorList } from './SensorList.js';
 import { SensorSheet } from './SensorSheet.js';
 import { DemoMenu } from './Demo.js';
+import { Fold } from './Fold.js';
 import { OverviewMap } from './OverviewMap.js';
+import { LoginPage, RegisterPage } from './Account.js';
+import { ProfilePage } from './Profile.js';
+import { AdminPage } from './Admin.js';
 
-const POLL_MS = 3000;
-const EMPTY = { sensors: [], alerts: [], readings: [], state: 'loading', id: null, asked: undefined };
+// The page refreshes once an hour. While a scenario runs, or a new field waits for its first reading, it follows
+// the sensors every few seconds; while the server is down it retries often, so the page comes back by itself.
+const POLL_MS = 60 * 60 * 1000, DEMO_POLL_MS = 3000, RETRY_MS = 5000;
+const EMPTY = { sensors: [], alerts: [], readings: [], state: 'loading', id: null, asked: undefined, minutes: null, updatedAt: null };
 const SEVERITY = { critical: 0, warning: 1, ok: 2, no_data: 3 };
 
-/** All sensors plus the stored readings and the alerts of the selected one, refreshed every POLL_MS. */
-function useLiveData(selected, minutes, reload) {
+const inDemo = sensors => sensors.some(s => s.latest && MODE[s.latest.mode]);
+const waiting = sensors => sensors.some(s => !s.latest);
+
+/** All sensors plus the stored readings and the alerts of the selected one, refreshed every POLL_MS or when reload changes. */
+function useLiveData(selected, minutes, reload, userId) {
   const [data, setData] = useState(EMPTY);
   useEffect(() => {
     let stopped = false, timer;
     async function load() {
+      let next = RETRY_MS;
       try {
         const sensors = await api('/sensors/parcels');
         const id = sensors.some(s => s.id === selected) ? selected : null;
@@ -22,16 +32,18 @@ function useLiveData(selected, minutes, reload) {
           api('/alerts?parcelId=' + encodeURIComponent(id)).catch(() => []),
           api('/sensors/parcels/' + encodeURIComponent(id) + '/readings?minutes=' + minutes).catch(() => []),
         ]);
-        if (!stopped) setData({ sensors, alerts, readings, state: 'up', id, asked: selected });
+        if (!stopped) setData({ sensors, alerts, readings, state: 'up', id, asked: selected, minutes, updatedAt: new Date() });
+        // A new field has no chart yet: follow it until it has two readings.
+        next = inDemo(sensors) || waiting(sensors) || (id && readings.length < 2) ? DEMO_POLL_MS : POLL_MS;
       } catch (e) {
         // 503: the API answers but the sensors service behind it does not.
         if (!stopped) setData(d => ({ ...d, state: String(e.message).includes('503') ? 'no-sensors' : 'down' }));
       }
-      if (!stopped) timer = setTimeout(load, POLL_MS);
+      if (!stopped) timer = setTimeout(load, next);
     }
     load();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [selected, minutes, reload]);
+  }, [selected, minutes, reload, userId]);
   return data;
 }
 
@@ -41,7 +53,8 @@ function useParcels(selected, apiUp) {
   const [history, setHistory] = useState({ id: null, data: null });
   useEffect(() => {
     if (!apiUp || parcels.length) return;
-    api('/parcels').then(setParcels).catch(() => {});
+    // Only the parcels with a polygon go on the maps; a user's parcel gets one later, if ever.
+    api('/parcels').then(list => setParcels(list.filter(p => p.geometry))).catch(() => {});
   }, [apiUp]);
   useEffect(() => {
     if (!selected || !parcels.some(p => p.parcelId === selected)) return;
@@ -61,20 +74,45 @@ const TROUBLE = {
   up: ['Niciun teren încă', 'Terenurile apar aici imediat ce au un senzor configurat în sensors-alerts.'],
 };
 
-function App() {
-  const [selected, setSelected] = useState(START_PARCEL);
+/** The account corner of the side column: sign in / sign up, or the signed-in user with a link to the profile. */
+function AccountBox({ user }) {
+  if (!user) {
+    return html`<div className="account">
+      <a className="btn btn-small btn-primary" href="#/login">Intră în cont</a>
+      <a className="btn btn-small" href="#/register">Creează cont</a>
+    </div>`;
+  }
+  return html`<div className="account account-stack">
+    <a className="account-user" href="#/profile">
+      <span className="avatar" aria-hidden="true">${user.name.trim()[0].toUpperCase()}</span>
+      <span className="account-text"><b>${user.name}</b><small>Profilul meu</small></span>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor"
+        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </a>
+    ${user.role === 'admin' && html`<a className="btn btn-small btn-admin" href="#/admin">Administrare: utilizatori și terenuri</a>`}
+  </div>`;
+}
+
+function Dashboard({ user, startParcel }) {
+  const [selected, setSelected] = useState(startParcel || START_PARCEL);
   const [minutes, setMinutes] = useState(1440);
   const [reload, setReload] = useState(0);
   const [toast, setToast] = useState('');
-  const data = useLiveData(selected, minutes, reload);
+  const [refreshing, setRefreshing] = useState(0);  // when the refresh button was pressed, 0 when idle
+  const data = useLiveData(selected, minutes, reload, user && user.id);
   const { parcels, history } = useParcels(selected, data.state === 'up');
   const parcel = parcels.find(p => p.parcelId === selected);
+  const lastToast = useRef('');
+  if (toast) lastToast.current = toast;  // kept on screen while the toast fades out
 
-  // Sensors that need attention come first.
-  const sensors = useMemo(() => [...data.sensors].sort((a, b) =>
-    SEVERITY[verdict(a).status] - SEVERITY[verdict(b).status] || a.id.localeCompare(b.id)), [data.sensors]);
+  // The user's own fields first, then the demo ones; in each group those that need attention come first.
+  const sensors = useMemo(() => [...data.sensors].sort((a, b) => (b.own - a.own) ||
+    SEVERITY[verdict(a).status] - SEVERITY[verdict(b).status] || a.id.localeCompare(b.id, undefined, { numeric: true })), [data.sensors]);
+  const mine = sensors.filter(s => s.own), demo = sensors.filter(s => !s.own);
   const sensor = sensors.find(s => s.id === selected);
-  const own = data.id === selected;  // the details on hand belong to the selected sensor
+  // The details on hand belong to the selected sensor. Nothing selected yet is not "current": otherwise the first
+  // sensor's existing alerts would be announced as new right after the page opens.
+  const current = selected != null && data.id === selected;
 
   // The server does not know the selected sensor (first load, or a stale ?parcel=): take the first one.
   useEffect(() => {
@@ -90,11 +128,24 @@ function App() {
   // A new alert for the selected sensor is announced once.
   const lastAlert = useRef(null);
   useEffect(() => {
-    if (!own) return;
+    if (!current) return;
     const newest = data.alerts.length ? data.alerts[0].timestamp : '';
     if (lastAlert.current !== null && newest > lastAlert.current) setToast(`${data.alerts[0].title}: ${data.alerts[0].parcelName}`);
     lastAlert.current = newest;
-  }, [data.alerts, own]);
+  }, [data.alerts, current]);
+
+  // The button spins until the answer arrives, and at least long enough to be seen.
+  useEffect(() => {
+    if (!refreshing) return;
+    const timer = setTimeout(() => setRefreshing(0), Math.max(0, 700 - (Date.now() - refreshing)));
+    return () => clearTimeout(timer);
+  }, [data]);
+
+  function refresh() {
+    if (refreshing) return;
+    setRefreshing(Date.now());
+    setReload(n => n + 1);
+  }
 
   function select(id) {
     lastAlert.current = null;
@@ -119,31 +170,104 @@ function App() {
   const up = data.state === 'up';
   return html`<div className="shell">
     <aside className="side">
-      <p className="wordmark">Agronomicon</p>
-      <h2 className="side-title">Terenurile tale</h2>
+      <div className="brand">
+        <img className="brand-mark" src="assets/logo-mark.png" alt="" width="64" height="64" />
+        <p><span className="wordmark">Agronomicon</span><span className="tagline">See. Analyze. Grow.</span></p>
+      </div>
+      <${AccountBox} user=${user} />
       ${parcels.length > 0 && html`<${OverviewMap} parcels=${parcels} sensors=${sensors} selected=${selected} onSelect=${select} />`}
-      <p className="note">Cele cu probleme sunt primele.</p>
-      <${SensorList} sensors=${sensors} selected=${selected} onSelect=${select} />
+      ${user && html`<${Fold} title="Terenurile tale" extra=${mine.length || null} className="lands" storageKey="lands">
+        ${mine.length
+          ? html`<p className="note">Cele cu probleme sunt primele.</p>
+              <${SensorList} sensors=${mine} selected=${selected} onSelect=${select} />`
+          : html`<p className="note">Încă nu ai terenuri. Le adaugă administratorul, după actele oficiale.</p>`}
+      <//>`}
+      <${Fold} title="Terenuri demonstrative" extra=${demo.length || null} className="lands" storageKey="demo-lands">
+        <p className="note">${user ? 'Exemple pentru prezentare, văzute de toți.' : 'Intră în cont ca să-ți adaugi terenurile tale.'}</p>
+        <${SensorList} sensors=${demo} selected=${selected} onSelect=${select} />
+      <//>
       <div className="side-foot">
         <${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />
         <p className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
-          ${up ? 'Se actualizează singur' : TROUBLE[data.state][0]}</p>
+          ${!up ? TROUBLE[data.state][0] : inDemo(data.sensors) ? 'Demonstrație: se actualizează la câteva secunde'
+            : 'Se actualizează în fiecare oră'}</p>
       </div>
     </aside>
 
     <main className="sheet">
       ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
-      : html`
+      : html`<div key=${sensor.id} className="sheet-body">
         <header className="sheet-head">
-          <h1>${sensor.name}</h1>
-          <p className="sheet-meta">${CROP[sensor.crop] || sensor.crop || ''}</p>
+          <div>
+            <h1>${sensor.name}</h1>
+            <p className="sheet-meta">${[CROP[sensor.crop] || sensor.crop, sensor.areaHa != null && num(sensor.areaHa, 2) + ' ha',
+              !sensor.own && 'teren demonstrativ'].filter(Boolean).join(' · ')}</p>
+          </div>
+          <div className="refresh">
+            <button className=${'btn btn-refresh' + (refreshing ? ' is-spinning' : '')} onClick=${refresh} aria-busy=${!!refreshing}>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" strokeWidth="2.5"
+                      strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Actualizează
+            </button>
+            ${data.updatedAt && html`<span className="note">Actualizat la ${hm(data.updatedAt)}</span>`}
+          </div>
         </header>
-        <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
-                        alerts=${own ? data.alerts : []} parcel=${parcel} history=${history} />`}
+        <${SensorSheet} sensor=${sensor} readings=${current ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
+                        alerts=${current ? data.alerts : []} drawKey=${current ? data.id + ':' + data.minutes : ''}
+                        parcel=${parcel} history=${history} />
+      </div>`}
     </main>
 
-    <p className="toast" role="status">${toast}</p>
+    <p className=${'toast' + (toast ? ' is-shown' : '')} role="status">${toast || lastToast.current}</p>
   </div>`;
+}
+
+/** Who is signed in, and which page the address asks for: the fields (''), login, register, profile or admin. */
+function App() {
+  const { page, params, navigate } = useRoute();
+  const [user, setUser] = useState(getToken() ? undefined : null);  // undefined while the stored token is checked
+
+  useEffect(() => {
+    if (user !== undefined) return;
+    let timer;
+    const ask = () => api('/me').then(setUser).catch(e => {
+      if (e.status === 401) { setToken(''); setUser(null); }  // expired, or signed out elsewhere
+      else timer = setTimeout(ask, RETRY_MS);  // server down: the token may still be good
+    });
+    ask();
+    return () => clearTimeout(timer);
+  }, [user]);
+
+  function signedIn(session, next) {
+    setToken(session.token);
+    setUser(session.user);
+    navigate(next);
+  }
+  async function signOut() {
+    await send('POST', '/auth/logout').catch(() => {});
+    setToken('');
+    setUser(null);
+    navigate('');
+  }
+
+  // Pages for signed-in users send the others to the login, and the other way round; admin is for administrators.
+  const wanted = (page === 'profile' || page === 'admin') && user === null ? 'login'
+    : (page === 'login' || page === 'register') && user ? 'profile'
+    : page === 'admin' && user && user.role !== 'admin' ? 'profile' : null;
+  useEffect(() => { if (wanted) navigate(wanted); }, [wanted]);
+
+  if (user === undefined) return html`<div className="splash"><span className="spinner spinner-big" aria-label="Se încarcă"></span></div>`;
+  if (wanted) return null;
+  if (page === 'login') return html`<${LoginPage} onSignedIn=${signedIn} />`;
+  if (page === 'register') return html`<${RegisterPage} onSignedIn=${signedIn} />`;
+  if (page === 'admin') return html`<${AdminPage} user=${user} onSignOut=${signOut} selectedId=${params.get('user')} />`;
+  if (page === 'profile') {
+    return html`<${ProfilePage} key=${user.id} user=${user} onUser=${setUser} onSignOut=${signOut} welcome=${params.has('welcome')} />`;
+  }
+  return html`<${Dashboard} key=${(user ? user.id : 'guest') + ':' + (params.get('parcel') || '')} user=${user}
+                            startParcel=${params.get('parcel')} />`;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);

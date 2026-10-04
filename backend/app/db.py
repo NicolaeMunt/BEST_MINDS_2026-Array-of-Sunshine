@@ -1,6 +1,8 @@
 """SQLite storage: sensor readings and alerts with their timestamps, copied from the sensors-alerts
-service (see collector.py); users and parcels; the satellite results of every parcel and scene, with the
-scenes skipped for clouds and the runs of the daily satellite job (see imagery.py)."""
+service (see collector.py); users with their sign-in data and sessions (see accounts.py) and parcels, the demo
+ones from backend/data/parcels.geojson and the users' ones entered by an administrator from the official land
+documents; the satellite results of every parcel and scene, with the scenes skipped for clouds and the runs of
+the daily satellite job (see imagery.py)."""
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -37,6 +39,12 @@ CREATE TABLE IF NOT EXISTS sensor_alerts (
     received_at   TEXT NOT NULL,
     PRIMARY KEY (parcel_id, timestamp, type, level)
 ) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash    TEXT PRIMARY KEY,   -- SHA-256 of the token the browser holds; the token itself is not stored
+    user_id       INTEGER NOT NULL,
+    created_at    TEXT NOT NULL,
+    expires_at    TEXT NOT NULL
+) WITHOUT ROWID;
 """
 # Local days for the daily summary: Europe/Chisinau in summer. Good enough for a May-October season.
 LOCAL_OFFSET_SEC = 3 * 3600
@@ -63,12 +71,14 @@ def get_conn():
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
-        # Databases created before the rain and soil columns were added.
-        columns = {row["name"] for row in conn.execute("PRAGMA table_info(sensor_readings)")}
-        for column in ("precipitation_mm", "soil_temperature_c", "soil_moisture_pct"):
-            if column not in columns:
-                conn.execute(f"ALTER TABLE sensor_readings ADD COLUMN {column} REAL")
         conn.executescript(IMAGERY_SCHEMA)
+        # Databases created before these columns were added get them here.
+        for table, columns in LATER_COLUMNS.items():
+            have = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+            for name, kind in columns.items():
+                if name not in have:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {kind}")
+        conn.executescript(INDEXES)
 
 
 def add_readings(conn, parcel_id, readings, received_at):
@@ -195,10 +205,16 @@ def alerts(conn, parcel_id=None, kind="ALL", limit=1000):
 # ---------- users, parcels and satellite results ----------
 
 IMAGERY_SCHEMA = """
+-- A user who can sign in has an email, a phone and a password. The owner of the demo parcels ("Fermier demo",
+-- see imagery.DEMO_USER) has none of them and cannot sign in.
 CREATE TABLE IF NOT EXISTS users (
-    id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL,
-    created_at  TEXT NOT NULL
+    id             INTEGER PRIMARY KEY,
+    name           TEXT NOT NULL,
+    email          TEXT COLLATE NOCASE,          -- stored in lower case; unique (idx_users_email)
+    phone          TEXT,                         -- digits with an optional leading +, e.g. +37369123456
+    password_hash  TEXT,                         -- scrypt$<salt hex>$<hash hex>
+    role           TEXT NOT NULL DEFAULT 'user', -- user | admin (make_admin.py)
+    created_at     TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS parcels (
     id              TEXT PRIMARY KEY,           -- cadastral number (fictive in the demo), as in sensors-alerts
@@ -210,7 +226,14 @@ CREATE TABLE IF NOT EXISTS parcels (
     lpis_parcel     TEXT,                       -- agricultural parcel in LPIS, once that system exists
     geometry        TEXT,                       -- GeoJSON Polygon in [lon, lat]; NULL = no satellite analysis
     note            TEXT,
-    created_at      TEXT NOT NULL
+    created_at      TEXT NOT NULL,
+    -- A user's parcel, entered by an administrator, as written in the official document (NULL for the demo ones):
+    area_ari        REAL,                       -- area in ares (1 ha = 100 ari)
+    location        TEXT,                       -- village and district
+    doc_type        TEXT,                       -- key of accounts.DOC_TYPES
+    doc_number      TEXT,
+    doc_date        TEXT,                       -- YYYY-MM-DD
+    added_by        INTEGER                     -- the administrator who entered it
 );
 CREATE TABLE IF NOT EXISTS imagery_results (
     parcel_id        TEXT NOT NULL REFERENCES parcels(id),
@@ -274,6 +297,17 @@ RESULT_COLUMNS = ("parcel_id", "scene_date", "scene_id", "ndvi_median", "ndmi_me
                   "bounds_south", "bounds_west", "bounds_north", "bounds_east", "rules_version", "received_at")
 SKIPPED_COLUMNS = ("parcel_id", "scene_date", "scene_id", "valid_pct", "reason", "rules_version", "received_at")
 RUN_COLUMNS = ("started_at", "finished_at", "status", "new_scenes", "newest_scene", "error")
+# Columns added after a table was first created: init_db adds them to an older database.
+LATER_COLUMNS = {
+    "sensor_readings": {"precipitation_mm": "REAL", "soil_temperature_c": "REAL", "soil_moisture_pct": "REAL"},
+    "users": {"email": "TEXT", "phone": "TEXT", "password_hash": "TEXT", "role": "TEXT NOT NULL DEFAULT 'user'"},
+    "parcels": {"area_ari": "REAL", "location": "TEXT", "doc_type": "TEXT", "doc_number": "TEXT", "doc_date": "TEXT",
+                "added_by": "INTEGER"},
+}
+INDEXES = """
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_parcels_user ON parcels(user_id);
+"""
 
 
 def _insert(table, columns):

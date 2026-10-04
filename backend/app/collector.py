@@ -1,12 +1,13 @@
 """Copies the readings and alerts of the sensors-alerts service into the database, so they build up a
-history and survive that service's restarts (it keeps only the last ones in memory)."""
+history and survive that service's restarts (it keeps only the last ones in memory). Also keeps the users'
+parcels registered there: that service forgets them when it restarts. Sends the watering and sowing advice."""
 import logging
 import os
 import threading
 import time
 from datetime import datetime, timedelta, timezone
 
-from . import crops, db, sensors_client, sowing, water
+from . import accounts, crops, db, sensors_client, sowing, water
 from .frost import dew_point
 from .sensors import parse_ts
 from .sensors_client import SensorsUnavailable
@@ -46,8 +47,23 @@ class Collector(threading.Thread):
                 log.exception("Collecting sensor readings failed")
             self._stopped.wait(POLL_SEC)
 
+    def sync_parcels(self):
+        """Registers every user parcel sensors-alerts does not know, or knows by an old name or crop. Returns the
+        parcels the service has that are in the database: a deleted parcel's sensor runs on until the service
+        restarts, and is left out."""
+        known = {p["id"]: p for p in sensors_client.parcels()}
+        for f in accounts.account_parcels():
+            p = known.get(f["id"])
+            if not p or p.get("name") != f["name"] or p.get("crop") != f["crop"]:
+                known[f["id"]] = sensors_client.register(f["id"], f["name"], f["crop"]) or {"id": f["id"]}
+        with db.get_conn() as conn:
+            stored = {row["id"] for row in db.parcels(conn)}
+        return [p for p in known.values() if p["id"] in stored]
+
     def collect(self):
-        for parcel in sensors_client.parcels():
+        parcels = self.sync_parcels()
+        wanted = {p["id"] for p in parcels}
+        for parcel in parcels:
             parcel_id = parcel["id"]
             first = parcel_id not in self._last
             if first:
@@ -79,7 +95,7 @@ class Collector(threading.Thread):
                    "type": a.get("type") or "FROST", "level": a["level"], "parcel_name": a["parcelName"],
                    "crop": a.get("crop"), "temperature_c": a["temperatureC"], "humidity_pct": a["humidityPct"],
                    "dew_point_c": a["dewPointC"], "message": a["message"], "received_at": now}
-                  for a in sensors_client.alerts()]
+                  for a in sensors_client.alerts() if a["parcelId"] in wanted]
         if alerts:
             with db.get_conn() as conn:
                 db.add_alerts(conn, alerts)

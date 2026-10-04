@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,10 +38,11 @@ public class ParcelRegistry {
         return parcels.values().stream().filter(p -> p.id().equalsIgnoreCase(id)).findFirst();
     }
 
-    /** Adds the parcel or replaces its name and crop. */
-    public synchronized AppProperties.Parcel put(String id, String name, String crop) {
+    /** Adds the parcel or replaces its name, crop and sowing date. */
+    public synchronized AppProperties.Parcel put(String id, String name, String crop, String sowingDate) {
         AppProperties.Parcel parcel = new AppProperties.Parcel(id,
-                name == null || name.isBlank() ? id : name.trim(), crop == null ? "" : crop.trim());
+                name == null || name.isBlank() ? id : name.trim(), crop == null ? "" : crop.trim(),
+                sowingDate == null || sowingDate.isBlank() ? null : sowingDate.trim());
         parcels.put(id, parcel);
         return parcel;
     }
@@ -54,7 +56,9 @@ public class ParcelRegistry {
         return get(id).map(p -> p.crop().trim().toLowerCase()).orElse("");
     }
 
+    /** The rules of the parcel's crop, moved to the parcel's sowing date when it has one. */
     public AppProperties.Crop cropFor(String id) {
-        return props.crops().getOrDefault(cropKey(id), AppProperties.DEFAULT_CROP);
+        AppProperties.Crop crop = props.crops().getOrDefault(cropKey(id), AppProperties.DEFAULT_CROP);
+        return CropCalendar.forSowing(crop, get(id).map(AppProperties.Parcel::sowingDate).orElse(null));
     }
 }

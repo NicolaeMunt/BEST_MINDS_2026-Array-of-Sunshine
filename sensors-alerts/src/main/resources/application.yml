@@ -45,6 +45,8 @@ app:
   #           condition is enough: at least "hours" damp hours in the last "within-hours", with the hourly
   #           temperature between min-temp-c and max-temp-c.
   # dry:      the days when dry, hot air (app.humidity) harms the crop.
+  # calendar-sowing: the sowing day the calendar assumes (spring crops); a parcel the farmer sowed N days later
+  #           has all its phases and windows N days later.
   # water:    root depth (FAO-56 table 22, middle of the range) and the share of the soil water the crop can
   #           use without stress (FAO-56 p).
   # sowing:   the days when the backend says "poți semăna" once the soil at seed depth has had a daily mean
@@ -78,6 +80,7 @@ app:
       water: { root-depth-m: 1.65, depletion-fraction: 0.55 }
     corn:
       name: porumb
+      calendar-sowing: "04-20"
       frost-advice: Frunzele arse de îngheț cresc la loc; verificați peste câteva zile dacă vârful de creștere e viu.
       phases:
         - { from: "01-01", name: înainte de semănat, season: dormant }
@@ -104,6 +107,7 @@ app:
       sowing: { from: "04-01", to: "05-31", min-soil-temp-c: 10, days: 3 }
     sunflower:
       name: floarea-soarelui
+      calendar-sowing: "04-10"
       frost-advice: Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața.
       phases:
         - { from: "01-01", name: înainte de semănat, season: dormant }

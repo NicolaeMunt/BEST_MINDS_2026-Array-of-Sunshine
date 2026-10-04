@@ -6,6 +6,7 @@ import { check, useForm, useFlash, Input, PasswordInput, FormError, Submit } fro
 import { Fold } from './Fold.js';
 import { Topbar } from './Topbar.js';
 import { FieldFacts } from './FieldFacts.js';
+import { CropSowing } from './CropSowing.js';
 
 function Details({ user, onUser }) {
   const form = useForm({ name: user.name, email: user.email, phone: user.phone }, 'me-');
@@ -59,7 +60,7 @@ function PasswordForm() {
   </form>`;
 }
 
-function FieldCard({ field, sensor }) {
+function FieldCard({ field, sensor, onSaved }) {
   const v = sensor ? verdict(sensor) : null;
   return html`<li className="field-card">
     <div className="field-top">
@@ -72,6 +73,7 @@ function FieldCard({ field, sensor }) {
         ${sensor.latest && html`<b>${num(sensor.latest.temperatureC)}°</b>`}
       </div>`}
     </div>
+    <${CropSowing} field=${field} onSaved=${onSaved} />
     <${FieldFacts} field=${field} />
     <div className="field-actions">
       <a className="btn btn-small" href=${'#/?parcel=' + encodeURIComponent(field.id)}>Vezi terenul</a>
@@ -83,12 +85,19 @@ export function ProfilePage({ user, onUser, onSignOut, welcome }) {
   const [fields, setFields] = useState(null);  // null while loading
   const [sensors, setSensors] = useState({});
   const [loadError, setLoadError] = useState('');
+  const [demo, setDemo] = useState([]);  // the demo fields, which an administrator sets up for presentations
 
   useEffect(() => {
     api('/me/fields').then(setFields).catch(e => setLoadError(e.status ? 'Terenurile nu s-au încărcat.' : 'Serverul nu răspunde.'));
     // Status and temperature for each field; the page works without them.
     api('/sensors/parcels').then(list => setSensors(Object.fromEntries(list.map(s => [s.id, s])))).catch(() => {});
+    if (user.role === 'admin') {
+      api('/parcels').then(list => setDemo(list.filter(p => p.userId !== user.id)
+        .map(p => ({ id: p.parcelId, name: p.name, crop: p.crop, sowingDate: p.sowingDate })))).catch(() => {});
+    }
   }, []);
+  const saved = id => change => setFields(list => list.map(f => (f.id === id ? { ...f, ...change } : f)));
+  const savedDemo = id => change => setDemo(list => list.map(f => (f.id === id ? { ...f, ...change } : f)));
 
   const totalAri = (fields || []).reduce((sum, f) => sum + (f.areaAri || 0), 0);
   return html`<div className="page">
@@ -115,7 +124,7 @@ export function ProfilePage({ user, onUser, onSignOut, welcome }) {
           ${fields && fields.length > 0 && html`<p className="note fields-total">
             În total ${num(totalAri, 2)} ari (${num(totalAri / 100, 2)} ha), după acte.</p>`}
           ${fields && fields.length > 0 && html`<ul className="field-cards">
-            ${fields.map(f => html`<${FieldCard} key=${f.id} field=${f} sensor=${sensors[f.id]} />`)}
+            ${fields.map(f => html`<${FieldCard} key=${f.id} field=${f} sensor=${sensors[f.id]} onSaved=${saved(f.id)} />`)}
           </ul>`}
           <div className="info-box">
             <b>${fields && fields.length === 0 ? 'Nu ai încă terenuri înregistrate.' : 'Lipsește un teren sau e ceva greșit?'}</b>
@@ -124,6 +133,20 @@ export function ProfilePage({ user, onUser, onSignOut, welcome }) {
           </div>
         <//>
       </section>
+
+      ${user.role === 'admin' && demo.length > 0 && html`<section className="card">
+        <${Fold} title="Terenuri demonstrative" extra=${demo.length} storageKey="profile-demo" open=${false}>
+          <p className="note">Le văd toți vizitatorii. Ca administrator le poți schimba cultura și data semănatului
+            pentru prezentare.</p>
+          <ul className="field-cards">
+            ${demo.map(f => html`<li key=${f.id} className="field-card">
+              <div className="field-top"><div className="field-text"><h3>${f.name}</h3>
+                <p className="note">nr. cadastral ${f.id}</p></div></div>
+              <${CropSowing} field=${f} onSaved=${savedDemo(f.id)} />
+            </li>`)}
+          </ul>
+        <//>
+      </section>`}
 
       <section className="card">
         <${Fold} title="Datele tale" storageKey="profile-details">

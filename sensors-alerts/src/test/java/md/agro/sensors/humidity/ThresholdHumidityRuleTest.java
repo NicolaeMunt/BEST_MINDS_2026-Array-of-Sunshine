@@ -21,7 +21,7 @@ class ThresholdHumidityRuleTest {
     /** Disease after 6 damp hours in a row at 18-27 °C (like corn leaf blight); dry air hurts from June to August. */
     private static final AppProperties.Crop CROP = new AppProperties.Crop("test", "", List.of(), new AppProperties.Disease(
             "boala", "06-01", "08-31", 90, List.of(new AppProperties.Condition(6, 6, 18, 27)), ""),
-            new AppProperties.Window("06-01", "08-31", ""));
+            new AppProperties.Window("06-01", "08-31", ""), null);
 
     /** Hourly readings, the last one being {@code current}. */
     private static List<Reading> hourly(Instant start, double temp, double... humidity) {
@@ -72,7 +72,7 @@ class ThresholdHumidityRuleTest {
         // Like apple scab: 6 hours at 16-24 °C, or 12 hours from 9 °C up.
         AppProperties.Crop scab = new AppProperties.Crop("test", "", List.of(), new AppProperties.Disease("rapăn", "04-01",
                 "06-30", 90, List.of(new AppProperties.Condition(6, 6, 16, 24), new AppProperties.Condition(12, 12, 9, 24)), ""),
-                null);
+                null, null);
         assertEquals(HumidityLevel.HIGH, last(hourly(JUNE, 18, 92, 92, 92, 92, 92, 92), scab).level());
         assertEquals(HumidityLevel.OK, last(hourly(JUNE, 11, 92, 92, 92, 92, 92, 92), scab).level());
         assertEquals(HumidityLevel.HIGH, last(hourly(JUNE, 11, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92), scab).level());

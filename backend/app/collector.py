@@ -48,16 +48,23 @@ class Collector(threading.Thread):
             self._stopped.wait(POLL_SEC)
 
     def sync_parcels(self):
-        """Registers every user parcel sensors-alerts does not know, or knows by an old name or crop. Returns the
-        parcels the service has that are in the database: a deleted parcel's sensor runs on until the service
-        restarts, and is left out."""
+        """Registers every user parcel sensors-alerts does not know, and every parcel it knows by an old name, crop
+        or sowing date: sensors-alerts starts with the crops of its configuration, and forgets the users' parcels
+        and the farmers' crops and sowing dates when it restarts. Returns the parcels the service has that are in
+        the database: a deleted parcel's sensor runs on until the service restarts, and is left out."""
         known = {p["id"]: p for p in sensors_client.parcels()}
-        for f in accounts.account_parcels():
-            p = known.get(f["id"])
-            if not p or p.get("name") != f["name"] or p.get("crop") != f["crop"]:
-                known[f["id"]] = sensors_client.register(f["id"], f["name"], f["crop"]) or {"id": f["id"]}
+        owned = {f["id"] for f in accounts.account_parcels()}
         with db.get_conn() as conn:
-            stored = {row["id"] for row in db.parcels(conn)}
+            rows = db.parcels(conn)
+        for row in rows:
+            p = known.get(row["id"])
+            if (not p and row["id"] not in owned) or not row["crop"]:
+                continue  # a demo parcel without a sensor stays without one
+            if not p or (p.get("name"), p.get("crop"), p.get("sowingDate")) != (row["name"], row["crop"], row["sowing_date"]):
+                known[row["id"]] = sensors_client.register(row["id"], row["name"], row["crop"], row["sowing_date"]) \
+                    or {"id": row["id"]}
+                log.info("%s registered in sensors-alerts: %s, sown %s", row["id"], row["crop"], row["sowing_date"])
+        stored = {row["id"] for row in rows}
         return [p for p in known.values() if p["id"] in stored]
 
     def collect(self):
@@ -99,6 +106,7 @@ class Collector(threading.Thread):
         if alerts:
             with db.get_conn() as conn:
                 db.add_alerts(conn, alerts)
+
 
     def send_advice(self):
         """Watering and sowing advice of today and yesterday that was not sent yet goes to sensors-alerts, which

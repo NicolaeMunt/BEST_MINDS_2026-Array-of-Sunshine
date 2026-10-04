@@ -389,6 +389,7 @@ def main():
     OVERLAYS.mkdir(parents=True, exist_ok=True)
     for parcel_id, parcel in load_parcels().items():
         crop = parcel["properties"].get("crop")
+        sown = parcel["properties"].get("sowing_date")
         panels, weak_panels = [], []
         grid = display_grid(parcel["geometry"])
         prev = None  # previous accepted scene of this parcel
@@ -407,7 +408,7 @@ def main():
                       f"{'':6s} {'':8s} {'':8s} {'':5s} {'':9s}  {'':16s}  SKIPPED: {reason}")
                 continue
             a = analyze_scene(parcel_id, parcel, scene)
-            phase, season = phase_on(calendar, crop, date)
+            phase, season = phase_on(calendar, crop, date, sown)
             warnings = []
             if a["n_inner"] < LOW_CONFIDENCE_PX:
                 warnings.append(warning("low_pixel_count", f"low confidence: only {a['n_inner']} pixels after the "

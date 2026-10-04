@@ -31,6 +31,54 @@ def humidity_settings():
     return config().get("humidity", {})
 
 
+# ---------- the farmer's sowing date ----------
+
+MAX_SHIFT_DAYS = 60  # further from the calendar's sowing day than this: taken as a typing mistake, ignored
+
+
+def _shift_month_day(text, days):
+    """A month-day moved by some days within the year; 01-01 stays (that phase covers the days before the next)."""
+    if str(text).strip() == "01-01":
+        return "01-01"
+    d = date(2026, *map(int, str(text).split("-")))
+    moved = d + timedelta(days=days)
+    if moved.year != d.year:
+        moved = date(2026, 1, 1) if days < 0 else date(2026, 12, 31)
+    return f"{moved.month:02d}-{moved.day:02d}"
+
+
+def sowing_shift_days(cfg, sowing_date):
+    """Days between the calendar's sowing day (calendar-sowing) and the farmer's; 0 when it does not apply."""
+    if not cfg or not cfg.get("calendar-sowing") or not sowing_date:
+        return 0
+    sown = sowing_date if isinstance(sowing_date, date) else date.fromisoformat(str(sowing_date))
+    days = (sown - date(sown.year, *map(int, str(cfg["calendar-sowing"]).split("-")))).days
+    return days if abs(days) <= MAX_SHIFT_DAYS else 0
+
+
+def for_sowing(cfg, sowing_date):
+    """The crop's rules for a parcel sown on sowing_date: phases, disease and dry windows moved by the days between
+    the calendar's sowing day and the farmer's (the same as CropCalendar.forSowing in sensors-alerts)."""
+    days = sowing_shift_days(cfg, sowing_date)
+    if not days:
+        return cfg
+    out = dict(cfg)
+    out["phases"] = sorted(({**p, "from": _shift_month_day(p["from"], days)} for p in cfg.get("phases", [])),
+                           key=lambda p: p["from"])
+    for key in ("disease", "dry"):
+        if cfg.get(key):
+            out[key] = {**cfg[key], "from": _shift_month_day(cfg[key]["from"], days),
+                        "to": _shift_month_day(cfg[key]["to"], days)}
+    return out
+
+
+def parcel_crop(crop_key, sowing_date=None):
+    """The rules of a parcel's crop, moved to its sowing date; None for an unknown crop."""
+    cfg = crop(crop_key)
+    return for_sowing(cfg, sowing_date) if cfg else None
+
+
+
 def soil():
     """Field capacity and wilting point of the parcels' soil, % of the soil volume."""
     w = config().get("water", {})
@@ -72,9 +120,9 @@ def frost_harms(ph):
     return ph.get("frost-warning-c") is not None and ph.get("frost-critical-c") is not None
 
 
-def phase_out(crop_key, day):
+def phase_out(crop_key, day, sowing_date=None):
     """What the API shows about the crop on that day: phase name, satellite season, frost thresholds, watched disease."""
-    cfg = crop(crop_key)
+    cfg = parcel_crop(crop_key, sowing_date)
     if not cfg:
         return None
     ph = phase(cfg, day)

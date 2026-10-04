@@ -1,15 +1,11 @@
-// One field: what the sensor means right now, the two numbers, the soil water, the temperature over time and the alerts.
-import { html, useState, num, hm, when, day } from './lib.js';
+// One field: what it needs now, the air and the soil, what the satellite sees, the soil water and the temperature.
+import { html, useState, useEffect, api, num, hm, when, day } from './lib.js';
 import { MODE, verdict, alertWord, phaseLine } from './labels.js';
-import { Fold } from './Fold.js';
 import { SatelliteSection } from './SatelliteSection.js';
 
-// Minutes since 1 April of this year: the whole season on one chart.
-const SEASON = Math.ceil((Date.now() - new Date(new Date().getFullYear(), 3, 1)) / 60000);
-// [minutes, button label, how the alert list names the period]
-const RANGES = [[15, 'Acum', 'din ultimele 15 minute'], [1440, 'O zi', 'din ultima zi'],
-  [10080, 'O săptămână', 'din ultima săptămână'], [SEASON, 'Din aprilie', 'din aprilie până azi']];
-const SHOWN_ALERTS = 5;
+// [minutes, button label, how the alert list and the statistics name the period]
+const RANGES = [[60, 'O oră', 'din ultima oră', 'Ultima oră'], [1440, 'O zi', 'din ultima zi', 'Ultima zi'],
+  [10080, 'O săptămână', 'din ultima săptămână', 'Ultima săptămână'], [43200, 'O lună', 'din ultima lună', 'Ultima lună']];
 const W = 760, H = 300, LEFT = 44, RIGHT = 56, TOP = 26, BOTTOM = 30;
 
 /** Marks along the time axis: month starts for a season, midnights for a week, nothing for shorter charts. */
@@ -70,88 +66,90 @@ function TempChart({ readings, minutes, alerts, drawKey }) {
   </svg>`;
 }
 
-/** Whether the crop needs water: from the soil probe when it reports, else from the temperature and rain (FAO-56). */
-function WaterSection({ water: w }) {
-  const sensor = w.source === 'sensor';
-  return html`<${Fold} title="Apa din sol" className="section" storageKey="water">
-    ${!w.hasCrop ? html`<p>În faza „${w.phase}” nu e nimic de udat.</p>` : html`
-      <div className="figures">
-        ${sensor
-          ? html`<div className="figure"><b>${num(w.soilMoisturePct, 0)}<small>%</small></b><span>apă în sol acum</span></div>
-            <div className="figure"><b>${num(w.thresholdPct, 0)}<small>%</small></b><span>sub atât suferă cultura</span></div>`
-          : html`<div className="figure"><b>${num(w.deficitMm, 0)}<small>mm</small></b><span>lipsesc din sol</span></div>
-            <div className="figure"><b>${num(w.readilyAvailableMm, 0)}<small>mm</small></b><span>de la cât lipsă suferă cultura</span></div>`}
-      </div>
-      <p>${w.irrigate ? `E timpul să uzi. Cultura iese din stres cu cel puțin ${num(w.amountMm, 0)} mm, adică ${num(w.amountMm * 10, 0)} m³ la hectar.`
-        : sensor ? `Cultura are apă destulă. Udă când solul coboară sub ${num(w.thresholdPct, 0)}%.`
-        : `Cultura mai are apă: udă când lipsesc peste ${num(w.readilyAvailableMm, 0)} mm.`}</p>`}
-    ${w.waterings && w.waterings.length > 0 && html`<p>Am văzut că ai udat: ${w.waterings.map(x =>
-      `${when(x.time)} (de la ${num(x.fromPct, 0)}% la ${num(x.toPct, 0)}%)`).join(', ')}.</p>`}
-    <p className="note">${sensor ? 'Măsurat de senzorul de sol la 20 cm. Când uzi, senzorul vede apa și sfatul se schimbă singur.'
-      : 'Socotit din temperatura și ploaia măsurate din 1 mai, după metoda FAO; fără senzor de sol nu știm dacă ai udat.'}</p>
-  <//>`;
+// Simple line icons for the two cards: a cloud for the air, a sprout in the soil for the ground.
+const AIR_ICON = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 10 4 4 0 0 0 7 18z"/></svg>`;
+const SOIL_ICON = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14V8"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 11C12 8.5 10.3 7 8 7c0 2.3 1.7 4 4 4z"/><path d="M3 14h18M5 18h14M8 21h8"/></svg>`;
+
+/** The period's lowest, mean and highest temperature and air humidity, as two cards a farmer reads at a glance. */
+function PeriodStats({ sensorId, minutes }) {
+  const [stats, setStats] = useState([]);
+  useEffect(() => {
+    let stopped = false, timer;
+    const load = () => api('/sensors/parcels/' + encodeURIComponent(sensorId) + '/stats')
+      .then(s => { if (!stopped) setStats(s); }).catch(() => {})
+      .finally(() => { if (!stopped) timer = setTimeout(load, 30000); });
+    load();
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [sensorId]);
+  const s = stats.find(x => x.minutes === minutes);
+  if (!s || !s.readings) return null;
+  const card = (title, unit, lo, mean, hi, loWord, hiWord) => html`<div className="stat-card">
+    <h3>${title}</h3>
+    <div className="stat-row">
+      <div className="stat stat-lo"><b>${num(lo, unit === '%' ? 0 : 1)}<small>${unit}</small></b><span>${loWord}</span></div>
+      <div className="stat stat-mean"><b>${num(mean, unit === '%' ? 0 : 1)}<small>${unit}</small></b><span>în medie</span></div>
+      <div className="stat stat-hi"><b>${num(hi, unit === '%' ? 0 : 1)}<small>${unit}</small></b><span>${hiWord}</span></div>
+    </div>
+  </div>`;
+  return html`<div className="stat-cards">
+    ${card('Temperatura', '°', s.minC, s.meanC, s.maxC, 'cea mai rece', 'cea mai caldă')}
+    ${card('Umiditatea aerului', '%', s.minHumidityPct, s.meanHumidityPct, s.maxHumidityPct, 'cea mai uscată', 'cea mai umedă')}
+  </div>`;
 }
 
 export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts, drawKey, parcel, history }) {
   const s = sensor.latest, v = verdict(sensor), drop = s && s.dropLastHourC;
   const trend = drop == null ? '' : drop > 0.3 ? `Se răcește: cu ${num(drop)}° mai rece decât acum o oră.`
     : drop < -0.3 ? `Se încălzește: cu ${num(-drop)}° mai cald decât acum o oră.` : 'Temperatura stă pe loc față de acum o oră.';
-  const range = RANGES.find(r => r[0] === minutes) || RANGES[1];
-  const sent = alerts.filter(a => a.level !== 'OK');  // the "danger has passed" messages are left out
-  // The list follows the chart's period. It counts back from now, so alerts show during a replayed night too.
-  const inPeriod = sent.filter(a => Date.parse(a.timestamp) >= Date.now() - minutes * 60000);
-  const [showAll, setShowAll] = useState(false);
-  const listed = showAll ? inPeriod : inPeriod.slice(0, SHOWN_ALERTS);
+  const sent = alerts.filter(a => a.level !== 'OK');  // marked on the chart; the all-clear messages are left out
   const banded = minutes > 1440;
   return html`
     <section className=${'verdict is-' + v.status}>
-      <h2>${v.title}</h2>
-      <p>${v.text}</p>
+      <div className="verdict-main">
+        <h2>${v.title}</h2>
+        <p>${v.text}</p>
+        ${s && html`<p className="verdict-more">${trend}${phaseLine(s) ? ' ' + phaseLine(s) : ''}</p>`}
+      </div>
+      ${s && html`<div className="verdict-temp"><b>${num(s.temperatureC)}°</b><span>acum</span></div>`}
     </section>
     ${s && MODE[s.mode] && html`<p className="note demo-note">Demonstrație: senzorul arată ${MODE[s.mode]}, nu vremea de afară.</p>`}
 
-    ${s && html`<${Fold} title="Acum" className="section" storageKey="now">
-      <div className="figures">
-        <div className="figure"><b>${num(s.temperatureC)}<small>°C</small></b><span>temperatura aerului</span></div>
-        <div className="figure"><b>${num(s.humidityPct, 0)}<small>%</small></b><span>umiditatea aerului</span></div>
-        ${s.soilTemperatureC != null && html`<div className="figure"><b>${num(s.soilTemperatureC)}<small>°C</small></b><span>solul la 5 cm</span></div>`}
-        ${s.soilMoisturePct != null && html`<div className="figure"><b>${num(s.soilMoisturePct, 0)}<small>%</small></b><span>apă în sol la 20 cm</span></div>`}
+    ${s && html`<section className="section">
+      <h2>Acum</h2>
+      <div className="cards">
+        <div className="card">
+          <h3>${AIR_ICON}Aerul</h3>
+          <div className="figures">
+            <div className="figure"><b>${num(s.temperatureC)}<small>°C</small></b><span>temperatura</span></div>
+            <div className="figure"><b>${num(s.humidityPct, 0)}<small>%</small></b><span>umiditatea</span></div>
+          </div>
+        </div>
+        ${s.soilMoisturePct != null && html`<div className="card">
+          <h3>${SOIL_ICON}Solul</h3>
+          <div className="figures">
+            <div className="figure"><b>${num(s.soilTemperatureC)}<small>°C</small></b><span>temperatura la 5 cm</span></div>
+            <div className="figure"><b>${num(s.soilMoisturePct, 0)}<small>%</small></b><span>apă la 20 cm</span></div>
+          </div>
+        </div>`}
       </div>
-      <p>${trend}</p>
-      ${phaseLine(s) && html`<p>${phaseLine(s)}</p>`}
-      <p className="note">Măsurat ${when(s.timestamp)}.</p>
-    <//>`}
+      <p className="note updated">Actualizat ${when(s.timestamp)}</p>
+    </section>`}
 
     ${parcel && history && html`<${SatelliteSection} parcel=${parcel} history=${history} />`}
 
-    ${sensor.water && html`<${WaterSection} water=${sensor.water} />`}
-
-    <${Fold} title="Temperatura" className="section" storageKey="temperature">
-      <div className="ranges" role="group" aria-label="Ce perioadă arată graficul">
-        ${RANGES.map(([value, label]) => html`<button key=${value} aria-pressed=${minutes === value}
-          onClick=${() => { setShowAll(false); onMinutes(value); }}>${label}</button>`)}
+    <section className="section">
+      <h2>Vremea pe teren</h2>
+      <div className="ranges" role="group" aria-label="Ce perioadă arăt">
+        ${RANGES.map(([value, , , label]) => html`<button key=${value} aria-pressed=${minutes === value}
+          onClick=${() => onMinutes(value)}>${label}</button>`)}
       </div>
+      <${PeriodStats} sensorId=${sensor.id} minutes=${minutes} />
+      <h3 className="chart-title">Temperatura în timp</h3>
       <${TempChart} readings=${readings} minutes=${minutes} alerts=${sent} drawKey=${drawKey} />
       <p className="legend">
         ${banded && html`<span><i className="key key-band"></i>de la cea mai rece la cea mai caldă oră ${minutes > 20160 ? 'a zilei' : ''}</span>`}
         <span><i className="key key-zero"></i>sub zero: îngheț</span>
         <span><i className="key key-flag is-warning"></i><i className="key key-flag is-critical"></i>alertă</span>
       </p>
-    <//>
-
-    <${Fold} title=${'Alerte ' + range[2]} extra=${inPeriod.length || null} className="section" storageKey="alerts">
-      ${inPeriod.length === 0
-        ? html`<p className="note">Nicio alertă în această perioadă. Alertele ajung și pe Telegram.</p>`
-        : html`<ul className="alerts">
-          ${listed.map(a => html`<li key=${a.timestamp + a.type + a.level} className=${'is-' + alertWord(a).status}>
-            <span className="stamp">${alertWord(a).word}</span>
-            <span className="alert-facts">${a.type === 'IRRIGATION' ? `lipsesc ${num(a.deficitMm, 0)} mm de apă în sol`
-              : a.type === 'SOWING' ? `solul are ${num(a.temperatureC)}°C la 5 cm`
-              : `${num(a.temperatureC)}°C, umiditate ${num(a.humidityPct, 0)}%`}</span>
-            <time>${day(a.timestamp, false)}, ${hm(new Date(a.timestamp))}</time>
-          </li>`)}
-        </ul>`}
-      ${inPeriod.length > listed.length && html`<button className="btn more" onClick=${() => setShowAll(true)}>
-        Arată toate cele ${inPeriod.length}</button>`}
-    <//>`;
+    </section>`;
 }

@@ -29,6 +29,9 @@ def alerts(conn, parcel, day):
     rule = (cfg or {}).get("sowing")
     if not rule:
         return []
+    # Once the farmer has sowed, the advice is no longer needed from that day on.
+    row = db.parcel(conn, parcel["id"])
+    sown = date.fromisoformat(row["sowing_date"]) if row and row["sowing_date"] else None
     first = date(day.year, *map(int, str(rule["from"]).split("-")))
     last = min(day, date(day.year, *map(int, str(rule["to"]).split("-"))))
     if last < first:
@@ -39,6 +42,8 @@ def alerts(conn, parcel, day):
     while d <= last:
         t = temps.get(d)
         run = run + [t] if t is not None and t >= rule["min-soil-temp-c"] else []
+        if sown and d >= sown:
+            return []
         if len(run) >= need:
             text = (f"🌱 Poți semăna – {parcel['name']} ({cfg['name']})\nSolul are în medie {sum(run[-need:]) / need:.1f} °C "
                     f"la 5 cm de {need} zile la rând; {cfg['name']} răsare uniform de la {rule['min-soil-temp-c']:.0f} °C.")

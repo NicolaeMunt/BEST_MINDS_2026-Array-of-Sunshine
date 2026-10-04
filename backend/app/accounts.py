@@ -228,7 +228,8 @@ def _field_out(row):
             "areaAri": area_ari, "areaHa": None if area_ari is None else round(area_ari / 100, 4),
             "cadastralNumber": row["id"], "location": row["location"], "docType": row["doc_type"],
             "docNumber": row["doc_number"], "docDate": row["doc_date"], "coordinates": corners,
-            "outlineAri": round(_area_ari(corners), 1) if corners else None, "createdAt": row["created_at"]}
+            "outlineAri": round(_area_ari(corners), 1) if corners else None, "createdAt": row["created_at"],
+            "sowingDate": row["sowing_date"]}
 
 
 def _field_input(data):

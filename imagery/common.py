@@ -1,6 +1,7 @@
 """Reading the cached windows written by fetch.py. No network here."""
 import json
 import os
+from datetime import date as Date, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -51,16 +52,41 @@ def load_parcels():
 
 
 def crop_calendar():
-    """{crop: [(first day MM-DD, phase name, season), ...]} in calendar order."""
+    """{crop: {"sowing": calendar sowing day MM-DD or None, "phases": [(first day MM-DD, phase name, season), ...]}}."""
     crops = yaml.safe_load(CROPS_FILE.read_text(encoding="utf-8"))["app"]["crops"]
-    return {crop: [(str(p["from"]), p["name"], p.get("season", "growing")) for p in cfg.get("phases", [])]
+    return {crop: {"sowing": cfg.get("calendar-sowing"),
+                   "phases": [(str(p["from"]), p["name"], p.get("season", "growing")) for p in cfg.get("phases", [])]}
             for crop, cfg in crops.items()}
 
 
-def phase_on(calendar, crop, date):
-    """(phase name, season) of the crop on that day (YYYY-MM-DD); (None, "growing") for a crop without a calendar.
-    Before the first phase starts, last year's last phase still runs."""
-    phases = calendar.get(crop) or []
+MAX_SHIFT_DAYS = 60
+
+
+def _sown_phases(entry, sowing_date):
+    """The phases moved to the farmer's sowing date (as in sensors-alerts): N days late sowing, N days later phases.
+    01-01 stays; a date further than MAX_SHIFT_DAYS from the calendar's is ignored."""
+    phases = entry["phases"]
+    if not entry.get("sowing") or not sowing_date:
+        return phases
+    sown = Date.fromisoformat(str(sowing_date))
+    days = (sown - Date(sown.year, *map(int, str(entry["sowing"]).split("-")))).days
+    if not days or abs(days) > MAX_SHIFT_DAYS:
+        return phases
+
+    def shift(md):
+        if md == "01-01":
+            return md
+        d = Date(2026, *map(int, md.split("-"))) + timedelta(days=days)
+        d = d if d.year == 2026 else (Date(2026, 1, 1) if days < 0 else Date(2026, 12, 31))
+        return f"{d.month:02d}-{d.day:02d}"
+    return sorted(((shift(p[0]), p[1], p[2]) for p in phases), key=lambda p: p[0])
+
+
+def phase_on(calendar, crop, date, sowing_date=None):
+    """(phase name, season) of the crop on that day (YYYY-MM-DD), moved to the parcel's sowing date if it has one;
+    (None, "growing") for a crop without a calendar. Before the first phase starts, last year's last phase still runs."""
+    entry = calendar.get(crop)
+    phases = _sown_phases(entry, sowing_date) if entry else []
     if not phases:
         return None, "growing"
     current = phases[-1]

@@ -107,6 +107,10 @@ ET0 по Hargreaves из минимальной и максимальной те
 | `GET /sensors/parcels` | датчики (`id`, `name`, `crop`) с последним показанием в `latest` (`null`, пока показаний нет) и водой в почве сегодня в `water` |
 | `GET /sensors/parcels/{id}/latest` | контракт sensors-alerts + `mode`, `dropLastHourC`, `frost` (приоритет, рекомендация, причины) |
 | `GET /sensors/parcels/{id}/readings?minutes=60` | сохранённые показания из базы + `dewPointC`. До 2 часов — сами показания (не больше 300, равномерно прорежены); дольше — по точке на 5 минут, час или день со средним и `minTemperatureC` / `maxTemperatureC` |
+| `GET /sensors/parcels/{id}/stats` | самая низкая, средняя (по часам) и самая высокая температура за последний час, день, неделю и месяц |
+| `GET /users/me`, `PUT /users/me` | демо-фермер: имя, фамилия, e-mail |
+| `GET /crops` | культуры правил (`sown`: сеется каждый год) |
+| `PUT /parcels/{id}/crop`, `PUT /parcels/{id}/sowing` | культура участка и дата сева; правила sensors-alerts меняются сразу, у кукурузы и подсолнечника весь календарь фаз сдвигается на дату сева |
 | `GET /sensors/parcels/{id}/water?date=` | вода на дату: источник (`sensor` / `balance`), влажность почвы и порог, нужно ли поливать (`irrigate`) и сколько минимум (`amountMm`), замеченные поливы, плюс баланс по дням с 1 мая |
 | `GET /alerts?parcelId={id}&type=ALL` | оповещения, новые первыми: сохранённые + `IRRIGATION` из баланса; контракт + `priority`, `title`; уровень `OK` — отбой тревоги. `type`: `FROST`, `HUMIDITY`, `IRRIGATION`, `SOWING`, `ALL` |
 | `POST /demo/{frost\|humid\|dry\|replay\|normal\|irrigate}/{parcelId}` | → sensors-alerts: режим симулятора, `irrigate` — полив (влажность почвы растёт без дождя); `409` с причиной |

@@ -803,3 +803,25 @@ merge și în nordul, și în sudul Moldovei.
 Testat pe livadă:
 1. După „zile de arșiță”, solul rămâne la 17,2%, așa că aplicația trimite „E timpul să udați”.
 2. După „S-a udat”, solul urcă la 27%, iar aplicația trimite singură „S-a udat”.
+
+## Data semănatului mută calendarul culturii
+
+Calendarul fix e potrivit pentru zona Orhei și pentru un an obișnuit. Fermierul poate da acum, pe profil, data
+la care a semănat fiecare teren. La porumb și floarea-soarelui, calendarul presupune o zi de semănat (20, respectiv
+10 aprilie). Dacă terenul a fost semănat cu N zile mai târziu, toate fazele lui se mută cu N zile, la fel
+ferestrele de boală și de arșiță. Asta schimbă pragurile de îngheț, sfatul de udare și ce e normal pe satelit.
+
+Exemplu, porumbul semănat pe 10 mai:
+- pe 25 septembrie e încă în „coacere”, cu prag de îngheț de −2 °C; după calendarul fix ar fi deja la
+  „maturitate”, când înghețul nu mai contează;
+- scena din 3 septembrie e la „înflorire și umplerea boabelor”, deci o scădere a verdelui ar fi avertisment,
+  nu maturare normală.
+
+Am respins varianta în care grâul de toamnă primește aceeași mutare: dezvoltarea lui de primăvară ține de
+vremea din primăvară, nu de ziua semănatului din toamnă. La grâu, data doar se păstrează și se afișează.
+
+O dată mai departe de 60 de zile de calendar e luată drept greșeală de scriere și ignorată.
+
+Odată ce terenul e semănat, sfatul „poți semăna” nu mai apare. Mutarea e implementată la fel în trei
+locuri: serviciul de senzori (`CropCalendar.forSowing`), backend (`crops.for_sowing`) și pipeline-ul de
+satelit (`common.phase_on`).

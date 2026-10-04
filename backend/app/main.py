@@ -159,7 +159,8 @@ def my_fields(user=Depends(signed_in)):
 
 def _field_data(body):
     return {"name": body.name, "crop": body.crop, "area_ari": body.area_ari, "cadastral_number": body.cadastral_number,
-            "location": body.location, "doc_type": body.doc_type, "doc_number": body.doc_number, "doc_date": body.doc_date}
+            "location": body.location, "doc_type": body.doc_type, "doc_number": body.doc_number, "doc_date": body.doc_date,
+            "coordinates": body.coordinates}
 
 
 @app.get("/admin/users", response_model=list[AdminUserOut])
@@ -174,24 +175,30 @@ def admin_user(user_id: int, _=Depends(admin)):
 
 
 @app.post("/admin/users/{user_id}/fields", response_model=FieldOut, status_code=201)
-def admin_add_field(user_id: int, body: FieldIn, me=Depends(admin)):
-    """A field from an official document into the user's profile. It gets a simulated sensor with the crop's
-    frost and humidity thresholds."""
+def admin_add_field(user_id: int, body: FieldIn, request: Request, me=Depends(admin)):
+    """A field from an official document into the user's profile, with its outline. It gets a simulated sensor
+    with the crop's frost and humidity thresholds, and the satellite job runs for it right away."""
     field = accounts.add_field(me["id"], user_id, _field_data(body))
     _register_sensor(field)
+    request.app.state.updater.queue()
     return field
 
 
 @app.put("/admin/fields/{field_id}", response_model=FieldOut)
-def admin_update_field(field_id: str, body: FieldIn, _=Depends(admin)):
-    field = accounts.update_field(field_id, _field_data(body))
+def admin_update_field(field_id: str, body: FieldIn, request: Request, _=Depends(admin)):
+    """A new outline drops the old satellite results and cached scenes; the satellite job runs again."""
+    field, outline_changed = accounts.update_field(field_id, _field_data(body))
     _register_sensor(field)
+    if outline_changed:
+        imagery.forget_parcel(field_id)
+        request.app.state.updater.queue()
     return field
 
 
 @app.delete("/admin/fields/{field_id}", status_code=204)
 def admin_delete_field(field_id: str, _=Depends(admin)):
     accounts.delete_field(field_id)
+    imagery.forget_parcel(field_id)
     return Response(status_code=204)
 
 

@@ -182,6 +182,7 @@ class FieldIn(CamelModel):
     doc_type: str = Field("", description="titlu | extras | vanzare | donatie | mostenire | arenda | altul")
     doc_number: str = ""
     doc_date: str = Field("", description="YYYY-MM-DD")
+    coordinates: list[list[float]] | None = Field(None, description="The outline's corners, [[lat, lon], ...], at least 3")
 
 
 class FieldOut(CamelModel):
@@ -196,6 +197,8 @@ class FieldOut(CamelModel):
     doc_type: str | None = None
     doc_number: str | None = None
     doc_date: str | None = None
+    coordinates: list[list[float]] = Field([], description="The outline's corners, [[lat, lon], ...]")
+    outline_ari: float | None = Field(None, description="Area of the outline, in ares: to compare with the document")
     created_at: datetime
 
 

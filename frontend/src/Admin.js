@@ -6,10 +6,12 @@ import { check, useForm, useFlash, Input, Select, FormError, Submit } from './fo
 import { Fold } from './Fold.js';
 import { Topbar } from './Topbar.js';
 import { FieldFacts } from './FieldFacts.js';
+import { DrawMap, outlineAri, inSatelliteArea, parseCorners, cornersText } from './DrawMap.js';
 
 const CROPS = ['wheat', 'corn', 'sunflower', 'orchard', 'vineyard'];  // the crops of sensors-alerts
 const CADASTRAL = /^\d[\d.]{3,28}\d$/;
-const EMPTY = { docType: '', docNumber: '', docDate: '', cadastralNumber: '', name: '', location: '', areaAri: '', crop: '' };
+const EMPTY = { docType: '', docNumber: '', docDate: '', cadastralNumber: '', name: '', location: '', areaAri: '', crop: '',
+  coordinates: [] };
 
 function localToday() {
   const d = new Date();
@@ -38,7 +40,61 @@ const RULES = {
     return !Number.isFinite(a) || a <= 0 || a > 10000000 ? 'Scrie suprafața din act, în ari. Exemplu: 235,5' : '';
   },
   crop: v => (v ? '' : 'Alege cultura.'),
+  coordinates: v => (v.length < 3 ? 'Pune pe hartă cel puțin 3 colțuri ale terenului.' : ''),
 };
+
+/** Step 3: the outline, drawn on the map or pasted from the document; compared with the area in the document. */
+function OutlineField({ form, docAri }) {
+  const points = form.values.coordinates;
+  const [paste, setPaste] = useState(null);  // the text box's content while it is open
+  const [pasteError, setPasteError] = useState('');
+  const [frame, setFrame] = useState(0);
+  const error = form.errors.coordinates;
+  const drawn = outlineAri(points);
+  const off = Number.isFinite(docAri) && docAri > 0 && points.length >= 3 && Math.abs(drawn - docAri) / docAri > 0.15;
+  function applyPaste() {
+    try {
+      const corners = parseCorners(paste || '');
+      if (corners.length < 3) throw new Error('Sunt nevoie de cel puțin 3 colțuri, câte unul pe rând.');
+      form.set('coordinates')(corners);
+      setPaste(null);
+      setPasteError('');
+      setFrame(n => n + 1);
+    } catch (e) {
+      setPasteError(e.message);
+    }
+  }
+  return html`<div className="outline">
+    <${DrawMap} id=${'f-' + form.prefix + 'coordinates'} points=${points} onChange=${form.set('coordinates')} frame=${frame}
+                invalid=${!!error} />
+    <div className="outline-bar">
+      <span className=${'outline-stat' + (points.length >= 3 ? ' is-ready' : '')}>
+        ${points.length === 0 ? 'Niciun colț încă' : `${points.length} ${points.length === 1 ? 'colț' : 'colțuri'}`}
+        ${points.length >= 3 && html` · contur ≈ <b>${num(drawn, 1)} ari</b>`}
+      </span>
+      <button type="button" className="btn btn-small" disabled=${!points.length}
+              onClick=${() => form.set('coordinates')(points.slice(0, -1))}>Anulează ultimul colț</button>
+      <button type="button" className="btn btn-small btn-quiet" disabled=${!points.length}
+              onClick=${() => form.set('coordinates')([])}>Șterge conturul</button>
+      <button type="button" className="btn btn-small btn-quiet" aria-expanded=${paste !== null}
+              onClick=${() => { setPaste(paste === null ? cornersText(points) : null); setPasteError(''); }}>
+        ${paste === null ? 'Lipește coordonatele' : 'Închide'}</button>
+    </div>
+    ${paste !== null && html`<div className="outline-paste">
+      <label htmlFor=${'f-' + form.prefix + 'paste'}>Coordonatele colțurilor, câte unul pe rând: latitudine, longitudine</label>
+      <textarea id=${'f-' + form.prefix + 'paste'} rows="5" value=${paste} placeholder=${'47.38121, 28.82044\n47.38190, 28.82390\n47.37950, 28.82450'}
+                onChange=${e => setPaste(e.target.value)} />
+      ${pasteError && html`<p className="input-error">${pasteError}</p>`}
+      <button type="button" className="btn btn-small btn-primary" onClick=${applyPaste}>Pune pe hartă</button>
+    </div>`}
+    ${error ? html`<p className="input-error">${error}</p>`
+      : off ? html`<p className="outline-warn">Conturul are ≈ ${num(drawn, 0)} ari, iar în act scrie ${num(docAri, 1)} ari.
+          Verifică colțurile sau suprafața din act.</p>`
+      : points.length >= 3 && !inSatelliteArea(points) ? html`<p className="outline-warn">Terenul e în afara zonei pe care o
+          analizează satelitul (în jurul Orheiului): va fi pe hartă, dar fără poze din satelit.</p>`
+      : html`<p className="input-hint">Satelitul analizează terenul după acest contur; terenul apare și pe harta din stânga.</p>`}
+  </div>`;
+}
 
 function CropPicker({ form }) {
   const error = form.errors.crop;
@@ -62,6 +118,7 @@ function FieldDocForm({ userId, field, onSaved, onCancel }) {
     docType: field.docType || '', docNumber: field.docNumber || '', docDate: field.docDate || '',
     cadastralNumber: field.cadastralNumber || '', name: field.name, location: field.location || '',
     areaAri: field.areaAri == null ? '' : String(field.areaAri).replace('.', ','), crop: field.crop,
+    coordinates: field.coordinates || [],
   } : EMPTY, field ? field.id + '-' : 'new-');
   const ari = parseAri(form.values.areaAri);
   async function submit(e) {
@@ -94,6 +151,10 @@ function FieldDocForm({ userId, field, onSaved, onCancel }) {
       <${Input} form=${form} name="areaAri" label="Suprafața din act, în ari" inputMode="decimal" placeholder="235,5"
                 hint=${Number.isFinite(ari) && ari > 0 ? `= ${num(ari / 100, 4)} ha` : '1 ha = 100 ari'} />
       <${CropPicker} form=${form} />
+    </fieldset>
+    <fieldset className="doc-group">
+      <legend><span className="step">3</span> Conturul terenului</legend>
+      <${OutlineField} form=${form} docAri=${ari} />
     </fieldset>
     <${FormError} form=${form} />
     <div className="form-actions">

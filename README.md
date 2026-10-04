@@ -58,8 +58,10 @@ parcels: the profile only shows them.
 A user's parcels are entered by an **administrator** on `#/admin`: the list of all users (search by name,
 email or phone), and for the chosen one their parcels and a form that copies the official document: type of
 document (title, extract from the real estate register, sale, donation, inheritance, lease), its number and
-date, the cadastral number, village and district, the area in ares (shown in hectares too) and the crop, whose
-thresholds the alerts use. The administrator can also change or delete a parcel.
+date, the cadastral number, village and district, the area in ares (shown in hectares too), the crop, whose
+thresholds the alerts use, and the parcel's outline: clicked corner by corner on a map with a satellite photo
+background (corners can be dragged, a right click removes one) or pasted as `lat, lon` lines from the document.
+The page compares the outline's area with the document's. The administrator can also change or delete a parcel.
 
 An account becomes an administrator from the command line, after it has been registered in the web app:
 
@@ -70,8 +72,13 @@ cd backend
 ```
 
 - A user's parcel is a row of `parcels` like the demo ones: its ID is the cadastral number (one parcel per
-  number, it cannot be changed afterwards), with the document's data in extra columns. It has no polygon, so
-  no satellite analysis and no place on the maps until it gets one; the watering and sowing advice works.
+  number, it cannot be changed afterwards), with the document's data in extra columns and the outline in
+  `geometry`. It is on the map in the side column and the satellite job analyses it like the demo parcels: the
+  API starts a run as soon as a parcel is added or gets a new outline (a new outline drops its old results and
+  cached scenes). The job reads one Sentinel-2 tile (35TPN, around Orhei); a parcel outside it is on the map
+  but gets no pictures, and the form says so.
+- The satellite job writes into `imagery/out/` (kept in git for the demo parcels): with user parcels its
+  results and pictures appear there too and should not be committed.
 - It is registered in sensors-alerts (`PUT /sensors/parcels/{cadastral number}`), which starts a simulated
   sensor with that crop's thresholds. sensors-alerts keeps such parcels in memory only, so the collector
   registers them again within 5 s after it restarts.

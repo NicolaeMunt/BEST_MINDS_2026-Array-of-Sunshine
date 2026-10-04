@@ -135,7 +135,10 @@ ET0 по Hargreaves из минимальной и максимальной те
 | `POST /admin/users/{id}/fields` | **admin**: участок из документа; его ID — кадастровый номер, регистрируется в sensors-alerts |
 | `PUT /admin/fields/{id}`, `DELETE /admin/fields/{id}` | **admin**: изменить / удалить (вместе с показаниями и оповещениями) |
 
-Участок из документа: `{name, crop, areaAri, cadastralNumber, location, docType, docNumber, docDate}`.
+Участок из документа: `{name, crop, areaAri, cadastralNumber, location, docType, docNumber, docDate, coordinates}`.
+`coordinates` — углы контура `[[lat, lon], ...]`, не меньше 3, все в Молдове; хранится как GeoJSON Polygon в
+`parcels.geometry`. После добавления или нового контура API сразу запускает спутниковую обработку (новый контур
+стирает старые результаты и кэш снимков участка). В ответе ещё `outlineAri` — площадь контура, для сверки с актом.
 `areaAri` — площадь в арах (1 га = 100 ар), в ответе ещё `areaHa`. `cadastralNumber` — цифры и точки
 (`0100415.123`), один участок на номер. `docType`: `titlu` (титул), `extras` (выписка из Регистра недвижимости),
 `vanzare`, `donatie`, `mostenire`, `arenda`, `altul`. `docDate` — `YYYY-MM-DD`, с 1990 года по сегодня.
@@ -149,7 +152,7 @@ ET0 по Hargreaves из минимальной и максимальной те
 пароль scrypt и `role`; у владельца демо-участков их нет), `sessions` (хранится SHA-256 токена, не сам токен;
 30 дней), `parcels` (участок пользователя — такая же строка, как демо: `id` — кадастровый номер, менять нельзя;
 данные документа в колонках `area_ari`, `location`, `doc_type`, `doc_number`, `doc_date`, `added_by` — кто внёс;
-полигона нет, поэтому нет и спутникового анализа). Колонки, появившиеся позже, `init_db` добавляет в старую базу сам.
+контур в `geometry`, как у демо). Колонки, появившиеся позже, `init_db` добавляет в старую базу сам.
 
 Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
 `readings` и `/alerts` продолжают отдавать то, что уже сохранено.

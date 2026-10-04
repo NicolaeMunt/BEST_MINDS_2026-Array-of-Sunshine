@@ -5,6 +5,8 @@ ones (owned by the demo user, who cannot sign in). Each parcel is registered wit
 simulated sensor with that crop's thresholds. Messages are in Romanian, for the page."""
 import hashlib
 import hmac
+import json
+import math
 import re
 import secrets
 from datetime import date, datetime, timedelta, timezone
@@ -17,6 +19,9 @@ EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE = re.compile(r"^\+?\d{8,15}$")
 CADASTRAL = re.compile(r"^\d[\d.]{3,28}\d$")
 MAX_ARI = 10_000_000
+# The outline's corners must be in Moldova (a generous box around it); at most this many corners.
+MOLDOVA = {"lat": (45.4, 48.5), "lon": (26.6, 30.2)}
+MAX_CORNERS = 200
 # The documents a field can be entered from; the page shows the names.
 DOC_TYPES = {
     "titlu": "Titlu de autentificare a dreptului deținătorului de teren",
@@ -177,16 +182,58 @@ def change_password(user_id, current, new):
 
 # ---------- parcels: the demo ones for everyone, a user's ones entered by an administrator ----------
 
+def _corners(geometry_text):
+    """The outline's corners as [lat, lon], without the closing repeat of the first one; [] without an outline."""
+    if not geometry_text:
+        return []
+    ring = json.loads(geometry_text)["coordinates"][0]
+    return [[lat, lon] for lon, lat in (ring[:-1] if len(ring) > 1 and ring[0] == ring[-1] else ring)]
+
+
+def _area_ari(corners):
+    """Area of an outline of [lat, lon] corners in ares (shoelace on a local flat projection; fine for a field)."""
+    lat0 = math.radians(sum(c[0] for c in corners) / len(corners))
+    pts = [(lon * 111_320 * math.cos(lat0), lat * 110_540) for lat, lon in corners]
+    twice = sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]))
+    return abs(twice) / 2 / 100
+
+
+def _polygon(points):
+    """[[lat, lon], ...] from the page -> GeoJSON Polygon text ([lon, lat], ring closed), as the satellite job reads."""
+    if not isinstance(points, list) or len(points) < 3:
+        raise Invalid({"coordinates": "Pune pe hartă cel puțin 3 colțuri ale terenului."})
+    if len(points) > MAX_CORNERS:
+        raise Invalid({"coordinates": f"Conturul are prea multe puncte: cel mult {MAX_CORNERS}."})
+    corners = []
+    for p in points:
+        try:
+            lat, lon = float(p[0]), float(p[1])
+        except (TypeError, ValueError, IndexError):
+            raise Invalid({"coordinates": "Fiecare punct e o pereche lat, lon. Exemplu: 47.3812, 28.8204"})
+        if not (MOLDOVA["lat"][0] <= lat <= MOLDOVA["lat"][1] and MOLDOVA["lon"][0] <= lon <= MOLDOVA["lon"][1]):
+            raise Invalid({"coordinates": f"Punctul {lat}, {lon} nu e în Moldova. Verifică ordinea: întâi latitudinea (~47), apoi longitudinea (~28)."})
+        corners.append([round(lat, 7), round(lon, 7)])
+    if corners[0] == corners[-1]:
+        corners.pop()
+    if len(corners) < 3 or _area_ari(corners) < 1:
+        raise Invalid({"coordinates": "Conturul nu închide o suprafață: colțurile nu pot fi pe o singură linie."})
+    ring = [[lon, lat] for lat, lon in corners]
+    return json.dumps({"type": "Polygon", "coordinates": [ring + ring[:1]]})
+
+
 def _field_out(row):
     area_ari = row["area_ari"]
+    corners = _corners(row["geometry"])
     return {"id": row["id"], "userId": row["user_id"], "name": row["name"], "crop": row["crop"],
             "areaAri": area_ari, "areaHa": None if area_ari is None else round(area_ari / 100, 4),
             "cadastralNumber": row["id"], "location": row["location"], "docType": row["doc_type"],
-            "docNumber": row["doc_number"], "docDate": row["doc_date"], "createdAt": row["created_at"]}
+            "docNumber": row["doc_number"], "docDate": row["doc_date"], "coordinates": corners,
+            "outlineAri": round(_area_ari(corners), 1) if corners else None, "createdAt": row["created_at"]}
 
 
 def _field_input(data):
-    """data: name, crop, area_ari, cadastral_number, location, doc_type, doc_number, doc_date (from the document)."""
+    """data: name, crop, area_ari, cadastral_number, location, doc_type, doc_number, doc_date (from the document)
+    and coordinates, the outline's corners [[lat, lon], ...] (for the map and the satellite)."""
     name = _name(data.get("name"), "Denumirea terenului")
     if data.get("crop") not in CROPS:
         raise Invalid({"crop": "Alege cultura."})
@@ -219,8 +266,9 @@ def _field_input(data):
         raise Invalid({"docDate": "Scrie data actului."})
     if not date(1990, 1, 1) <= when <= date.today():
         raise Invalid({"docDate": "Data actului trebuie să fie între 1990 și azi."})
+    geometry = _polygon(data.get("coordinates"))
     return {"id": cadastral, "name": name, "crop": data["crop"], "area_ari": area, "location": location,
-            "doc_type": data["doc_type"], "doc_number": number, "doc_date": when.isoformat()}
+            "doc_type": data["doc_type"], "doc_number": number, "doc_date": when.isoformat(), "geometry": geometry}
 
 
 # A parcel belongs to a user's account when its owner can sign in (has an email); the others are the demo ones.
@@ -284,16 +332,17 @@ def add_field(admin_id, user_id, data):
 
 
 def update_field(parcel_id, data):
-    """Everything but the cadastral number, which is the parcel's ID: a wrong one means deleting and adding again."""
+    """Everything but the cadastral number, which is the parcel's ID: a wrong one means deleting and adding again.
+    Returns (parcel, whether the outline changed): a new outline needs a new satellite analysis."""
     values = _field_input({**data, "cadastral_number": data.get("cadastral_number") or parcel_id})
     if values.pop("id") != parcel_id:
         raise Invalid({"cadastralNumber": "Numărul cadastral nu se schimbă. Șterge terenul și adaugă-l din nou."})
     with db.get_conn() as conn:
-        _owned_parcel(conn, parcel_id)
+        before = _owned_parcel(conn, parcel_id)
         conn.execute(f"UPDATE parcels SET {', '.join(k + ' = ?' for k in values)} WHERE id = ?",
                      (*values.values(), parcel_id))
         saved = conn.execute("SELECT * FROM parcels WHERE id = ?", (parcel_id,)).fetchone()
-    return _field_out(saved)
+    return _field_out(saved), _corners(before["geometry"]) != _corners(saved["geometry"])
 
 
 def delete_field(parcel_id):

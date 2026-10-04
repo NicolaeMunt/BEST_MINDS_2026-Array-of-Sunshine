@@ -96,7 +96,7 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/sensors/parcels` | the parcels this service has sensors for: `id, name, crop` |
-| PUT | `/sensors/parcels/{id}` | body `{"name": ..., "crop": ...}`: adds the parcel (it gets a sensor) or updates its name and crop. The backend calls this for its parcels |
+| PUT | `/sensors/parcels/{id}` | body `{"name": ..., "crop": ..., "sowingDate": "2026-05-10"}`: adds the parcel (it gets a sensor) or updates its name, crop and sowing date. The backend calls this for its parcels |
 | GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, soilTemperatureC, soilMoisturePct, dewPointC, frostLevel, crop, humidityLevel, mode, phase, frostWarningC, frostCriticalC, disease` |
 | GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, soilTemperatureC, soilMoisturePct` |
 | GET | `/alerts?parcelId={id}&type=FROST` | newest first: `parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
@@ -172,6 +172,11 @@ numbers come from extension services and FAO; sources and reasons are in `imager
 
 A parcel with no crop, or a crop not listed, gets frost alerts at 2 °C / 0 °C all year and nothing else.
 
+**Sowing date.** Corn and sunflower have `calendar-sowing` (the day the calendar assumes: 20 and 10 April). A
+parcel registered with a `sowingDate` N days later gets all its phases, its disease window and its dry window N
+days later (`CropCalendar.forSowing`); a date more than 60 days off is ignored. Winter wheat's spring development
+does not follow its autumn sowing day, so its calendar stays.
+
 ### Replay CSV
 
 `timestamp,temperatureC,humidityPct[,precipitationMm,soilTemperatureC,soilMoisturePct]`, one row per line, comma
@@ -195,5 +200,6 @@ every replay start, so it can be swapped without a restart.
 
 ## Tests
 
-`mvn test` – unit tests for the frost rule (thresholds by crop and phase, local days) and the humidity
-rule (damp hours, conditions, windows, the 24-hour hold, dry air).
+`mvn test` – unit tests for the frost rule (thresholds by crop and phase, local days, the sowing date) and
+the humidity rule (damp hours, conditions, windows, the 24-hour hold, dry air), and a test that the real
+`application.yml` binds.

@@ -1,10 +1,9 @@
-import { html, useState, useEffect, useRef, useMemo, api, send, hm, num, getToken, setToken, useRoute, START_PARCEL } from './lib.js';
+import { html, useState, useEffect, useRef, useMemo, api, send, hm, num, getToken, setToken, useRoute, START_PARCEL, DEMO } from './lib.js';
 import { CROP, MODE, verdict } from './labels.js';
-import { SensorList } from './SensorList.js';
+import { FieldTabs } from './FieldTabs.js';
 import { SensorSheet } from './SensorSheet.js';
 import { DemoMenu } from './Demo.js';
-import { Fold } from './Fold.js';
-import { OverviewMap } from './OverviewMap.js';
+import { AlertsPanel } from './AlertsPanel.js';
 import { LoginPage, RegisterPage } from './Account.js';
 import { ProfilePage } from './Profile.js';
 import { AdminPage } from './Admin.js';
@@ -74,22 +73,27 @@ const TROUBLE = {
   up: ['Niciun teren încă', 'Terenurile apar aici imediat ce au un senzor configurat în sensors-alerts.'],
 };
 
-/** The account corner of the side column: sign in / sign up, or the signed-in user with a link to the profile. */
+function initials(name) {
+  return (name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase();
+}
+
+/** The right end of the top bar: sign in / sign up, or the signed-in user's card (to the profile). */
 function AccountBox({ user }) {
   if (!user) {
-    return html`<div className="account">
+    return html`<div className="topbar-account">
       <a className="btn btn-small btn-primary" href="#/login">Intră în cont</a>
       <a className="btn btn-small" href="#/register">Creează cont</a>
     </div>`;
   }
-  return html`<div className="account account-stack">
-    <a className="account-user" href="#/profile">
-      <span className="avatar" aria-hidden="true">${user.name.trim()[0].toUpperCase()}</span>
-      <span className="account-text"><b>${user.name}</b><small>Profilul meu</small></span>
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor"
-        strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  return html`<div className="topbar-account">
+    ${user.role === 'admin' && html`<a className="btn btn-small btn-admin" href="#/admin">Administrare</a>`}
+    <a className="user-card" href="#/profile">
+      <span className="avatar" aria-hidden="true">${initials(user.name)}</span>
+      <span className="user-text">
+        <span className="user-name">${user.name}</span>
+        <span className="user-mail">${user.email || 'Profilul tău'}</span>
+      </span>
     </a>
-    ${user.role === 'admin' && html`<a className="btn btn-small btn-admin" href="#/admin">Administrare: utilizatori și terenuri</a>`}
   </div>`;
 }
 
@@ -150,6 +154,13 @@ function Dashboard({ user, startParcel }) {
   function select(id) {
     lastAlert.current = null;
     setSelected(id);
+    scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // The logo and the name: back to the top, on the field that needs attention most.
+  function home(e) {
+    e.preventDefault();
+    if (sensors.length) select(sensors[0].id);
   }
 
   async function runDemo(kind) {
@@ -158,7 +169,7 @@ function Dashboard({ user, startParcel }) {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
       // A replayed night needs a day on the chart, a replayed spell a week.
-      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 15);
+      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 60);
       setReload(n => n + 1);
     } catch (e) {
       // 409: nothing to replay for this crop, or a replay is running; the API says why.
@@ -168,57 +179,52 @@ function Dashboard({ user, startParcel }) {
   }
 
   const up = data.state === 'up';
-  return html`<div className="shell">
-    <aside className="side">
-      <div className="brand">
-        <img className="brand-mark" src="assets/logo-mark.png" alt="" width="64" height="64" />
-        <p><span className="wordmark">Agronomicon</span><span className="tagline">See. Analyze. Grow.</span></p>
-      </div>
+  const sown = parcel && parcel.sowingDate
+    && 'semănat pe ' + new Date(parcel.sowingDate + 'T12:00:00').toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' });
+  return html`<div className="app">
+    <header className="topbar">
+      <a className="brand" href="#/" onClick=${home}>
+        <img src="assets/logo-mark.png" alt="" width="44" height="44" />
+        <span className="wordmark">Agronomicon</span>
+      </a>
+      <span className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
+        ${!up ? TROUBLE[data.state][0] : inDemo(data.sensors) ? 'Demonstrație: se actualizează la câteva secunde'
+          : 'Se actualizează în fiecare oră'}</span>
       <${AccountBox} user=${user} />
-      ${parcels.length > 0 && html`<${OverviewMap} parcels=${parcels} sensors=${sensors} selected=${selected} onSelect=${select} />`}
-      ${user && html`<${Fold} title="Terenurile tale" extra=${mine.length || null} className="lands" storageKey="lands">
-        ${mine.length
-          ? html`<p className="note">Cele cu probleme sunt primele.</p>
-              <${SensorList} sensors=${mine} selected=${selected} onSelect=${select} />`
-          : html`<p className="note">Încă nu ai terenuri. Le adaugă administratorul, după actele oficiale.</p>`}
-      <//>`}
-      <${Fold} title="Terenuri demonstrative" extra=${demo.length || null} className="lands" storageKey="demo-lands">
-        <p className="note">${user ? 'Exemple pentru prezentare, văzute de toți.' : 'Intră în cont ca să-ți adaugi terenurile tale.'}</p>
-        <${SensorList} sensors=${demo} selected=${selected} onSelect=${select} />
-      <//>
-      <div className="side-foot">
-        <${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />
-        <p className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
-          ${!up ? TROUBLE[data.state][0] : inDemo(data.sensors) ? 'Demonstrație: se actualizează la câteva secunde'
-            : 'Se actualizează în fiecare oră'}</p>
-      </div>
-    </aside>
+    </header>
 
-    <main className="sheet">
-      ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
-      : html`<div key=${sensor.id} className="sheet-body">
-        <header className="sheet-head">
-          <div>
-            <h1>${sensor.name}</h1>
-            <p className="sheet-meta">${[CROP[sensor.crop] || sensor.crop, sensor.areaHa != null && num(sensor.areaHa, 2) + ' ha',
-              !sensor.own && 'teren demonstrativ'].filter(Boolean).join(' · ')}</p>
-          </div>
-          <div className="refresh">
-            <button className=${'btn btn-refresh' + (refreshing ? ' is-spinning' : '')} onClick=${refresh} aria-busy=${!!refreshing}>
-              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" strokeWidth="2.5"
-                      strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Actualizează
-            </button>
-            ${data.updatedAt && html`<span className="note">Actualizat la ${hm(data.updatedAt)}</span>`}
-          </div>
-        </header>
-        <${SensorSheet} sensor=${sensor} readings=${current ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
-                        alerts=${current ? data.alerts : []} drawKey=${current ? data.id + ':' + data.minutes : ''}
-                        parcel=${parcel} history=${history} />
-      </div>`}
-    </main>
+    <${FieldTabs} mine=${mine} demo=${demo} signedIn=${!!user} selected=${selected} onSelect=${select} />
+    <div className="main-grid">
+      <main className="sheet">
+        ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
+        : html`<div key=${sensor.id} className="sheet-body">
+          <header className="sheet-head">
+            <div>
+              <h1>${sensor.name}</h1>
+              <p className="sheet-meta">${[CROP[sensor.crop] || sensor.crop, sensor.areaHa != null && num(sensor.areaHa, 2) + ' ha',
+                sown, !sensor.own && 'teren demonstrativ'].filter(Boolean).join(' · ')}</p>
+            </div>
+            <div className="refresh">
+              <button className=${'btn btn-refresh' + (refreshing ? ' is-spinning' : '')} onClick=${refresh} aria-busy=${!!refreshing}>
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" strokeWidth="2.5"
+                        strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Actualizează
+              </button>
+              ${data.updatedAt && html`<span className="note">Actualizat la ${hm(data.updatedAt)}</span>`}
+            </div>
+          </header>
+          <${SensorSheet} sensor=${sensor} readings=${current ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
+                          alerts=${current ? data.alerts : []} drawKey=${current ? data.id + ':' + data.minutes : ''}
+                          parcel=${parcel} history=${history} />
+        </div>`}
+      </main>
+      <aside className="side-panel">
+        <${AlertsPanel} sensors=${sensors} onSelect=${select} reload=${reload} />
+        ${DEMO && html`<${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />`}
+      </aside>
+    </div>
 
     <p className=${'toast' + (toast ? ' is-shown' : '')} role="status">${toast || lastToast.current}</p>
   </div>`;

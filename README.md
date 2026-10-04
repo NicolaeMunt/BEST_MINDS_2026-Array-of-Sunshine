@@ -123,7 +123,9 @@ read it. Per phase it gives the frost thresholds (none when frost does no harm: 
 dormant), the disease the damp-air rule watches for (hours of damp air at its temperatures, e.g. apple scab,
 downy mildew, head blight), the days when dry, hot air harms the crop, and the FAO-56 crop coefficient for
 the water balance. The numbers come from extension services, FAO and the Moldovan weather service; the
-sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi".
+sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi". When the farmer gives the sowing
+date of a corn or sunflower field (profile page), that field's whole calendar moves by the days between the
+calendar's sowing day and the farmer's.
 
 ### Soil, watering and sowing
 
@@ -157,21 +159,28 @@ Components are written with htm templates (`html\`<div>...</div>\``) instead of 
 (Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
 
 The page asks the API for new data once an hour; the **Actualizează** button asks right away. While a presentation
-scenario runs it follows the sensor every 3 s, and while the server is down it retries every 5 s. The fields list
-and each block of the sheet fold open and shut (`src/Fold.js`), and the page remembers which ones are folded.
+scenario runs it follows the sensor every 3 s, and while the server is down it retries every 5 s.
 
-Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
-each), those with a problem first. The selected field opens with one coloured block that says what is
-happening and what to do (frost, disease risk, hot and dry air, time to water, or all fine), then the
-temperature and humidity now with the crop's phase, then the water in the soil, then the temperature over
-time (now, a day, a week or since April) with every alert marked on it and listed underneath, one line each.
+Written for farmers: large type, plain words, no jargon. A bar on top has the logo (back to the field that needs
+attention most) and the account: "Intră în cont" / "Creează cont", or the user's card (to the profile) and, for
+an administrator, "Administrare". Under it, the fields as rows of cards in their status colour: the user's own
+fields, then the demo ones, those with a problem first. The chosen field opens with one coloured block that says
+what is happening and what to do (frost, disease risk, hot and dry air, time to water, or all fine), with the
+temperature now and the crop's phase; then the air and the soil in two cards, what the satellite sees, and the
+weather of the field (lowest, mean and highest temperature and air humidity over the last hour, day, week and
+month, and a chart). On the right, "Alerte": the alerts of every field the user sees, of the last 7 days,
+filtered by high (red) or medium (yellow) risk; a click opens the field.
+
+The profile (`#/profile`) holds the user's details, the password and their fields as the administrator entered
+them; on each field the farmer sets the crop and the sowing date, and the alerts follow at once. An administrator
+also sets them there for the demo fields.
 Under the numbers, "Ce vede satelitul": the field on a map (Leaflet, in `frontend/vendor/`) with the
 Sentinel-2 picture, the weak zones in red, the main zone and the sensor, a sentence in plain words (what was
 seen, how old the picture is, what is normal for the crop's phase), a "Du-mă acolo" link for navigation, and
-the season's passes (clear or cloudy) to pick any day; `?day=2026-07-20` in the address opens that day. A small
-map in the side column shows all the fields in their status colour. The map background (OpenStreetMap) needs the
-internet; without it the satellite picture stays. The demo menu can replay a real frost night and real damp or
-hot, dry spells of 2026, and water a field.
+the clear pictures before and after to step through the season, or any day picked; `?day=2026-07-20` in the
+address opens that day. The map background (OpenStreetMap) needs the internet; without it the satellite picture
+stays. With `?demo=1` a "Prezentare" panel appears under the alerts: replay a real frost night and real damp or
+hot, dry spells of 2026, or water a field.
 
 ## Parcels and satellite results
 

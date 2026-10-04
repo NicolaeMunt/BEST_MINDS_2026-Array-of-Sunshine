@@ -50,9 +50,10 @@ def parcels():
     return _call("GET", "/sensors/parcels") or []
 
 
-def register(parcel_id, name, crop):
-    """Adds a parcel or updates its name and crop; sensors-alerts starts a simulated sensor for a new one."""
-    return _call("PUT", _parcel_path(parcel_id), body={"name": name, "crop": crop})
+def register(parcel_id, name, crop, sowing_date=None):
+    """Adds a parcel or updates its name, crop and sowing date (the crop's rules follow them); sensors-alerts starts
+    a simulated sensor for a new one."""
+    return _call("PUT", _parcel_path(parcel_id), body={"name": name, "crop": crop, "sowingDate": sowing_date})
 
 
 def latest(parcel_id):

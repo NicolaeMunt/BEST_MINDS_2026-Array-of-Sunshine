@@ -30,7 +30,7 @@ class ThresholdFrostRuleTest {
     }
 
     private static AppProperties.Crop crop(double frostWarningC, double frostCriticalC) {
-        return new AppProperties.Crop("test", "", List.of(phase("01-01", frostWarningC, frostCriticalC)), null, null);
+        return new AppProperties.Crop("test", "", List.of(phase("01-01", frostWarningC, frostCriticalC)), null, null, null);
     }
 
     private static AppProperties.Phase phase(String from, Double warning, Double critical) {
@@ -42,7 +42,7 @@ class ThresholdFrostRuleTest {
             phase("01-01", null, null),
             phase("03-15", -9.0, -11.0),
             phase("05-15", 1.0, -1.0),
-            phase("07-15", null, null)), null, null);
+            phase("07-15", null, null)), null, null, null);
 
     @Test
     void levelsByTemperature() {
@@ -72,6 +72,24 @@ class ThresholdFrostRuleTest {
         assertEquals(FrostLevel.OK, rule.evaluate(on("2026-01-10T00:00:00Z", -15), List.of(), WHEAT).level());
         // Tillering wheat is only hurt by a hard frost.
         assertEquals(FrostLevel.CRITICAL, rule.evaluate(on("2026-04-01T00:00:00Z", -11.5), List.of(), WHEAT).level());
+    }
+
+    @Test
+    void sowingLaterMovesTheCalendar() {
+        AppProperties.Crop corn = new AppProperties.Crop("porumb", "", List.of(
+                phase("01-01", null, null),
+                phase("04-20", 0.0, -2.0),
+                phase("09-20", null, null)), null, null, "04-20");
+        Instant sept25 = Instant.parse("2026-09-25T00:00:00Z");
+        // Calendar: on 25 September the crop is mature, frost does no harm.
+        assertEquals(FrostLevel.OK, rule.evaluate(new Reading("P1", sept25, -3, 85), List.of(), corn).level());
+        // Sown 20 days late (10 May): it is still five days before maturity, and -3 °C is critical.
+        AppProperties.Crop late = CropCalendar.forSowing(corn, "2026-05-10");
+        assertEquals(FrostLevel.CRITICAL, rule.evaluate(new Reading("P1", sept25, -3, 85), List.of(), late).level());
+        assertEquals("faza 04-20", CropCalendar.phase(late, sept25).name());
+        // A date far off is ignored, and so is a crop whose calendar does not depend on sowing.
+        assertEquals(corn, CropCalendar.forSowing(corn, "2026-12-01"));
+        assertEquals(WHEAT, CropCalendar.forSowing(WHEAT, "2026-05-10"));
     }
 
     @Test

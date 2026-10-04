@@ -198,6 +198,7 @@ class FieldOut(CamelModel):
     doc_number: str | None = None
     doc_date: str | None = None
     coordinates: list[list[float]] = Field([], description="The outline's corners, [[lat, lon], ...]")
+    sowing_date: str | None = Field(None, description="Set by the farmer on the profile page, YYYY-MM-DD")
     outline_ari: float | None = Field(None, description="Area of the outline, in ares: to compare with the document")
     created_at: datetime
 
@@ -205,6 +206,31 @@ class FieldOut(CamelModel):
 class AdminUserDetailOut(CamelModel):
     user: UserOut
     fields: list[FieldOut]
+
+
+class CropIn(CamelModel):
+    crop: str = Field(description="Crop key: wheat, corn, sunflower, orchard, vineyard")
+
+
+class SowingIn(CamelModel):
+    sowing_date: date | None = Field(None, description="null clears it")
+
+
+class CropOptionOut(CamelModel):
+    key: str
+    name: str
+    sown: bool = Field(description="true: the crop is sown each year, so its sowing date can be given")
+
+
+class TemperatureStatOut(CamelModel):
+    minutes: int = Field(description="The window, counted back from the newest reading")
+    min_c: float | None = None
+    mean_c: float | None = None
+    max_c: float | None = None
+    min_humidity_pct: float | None = None
+    mean_humidity_pct: float | None = None
+    max_humidity_pct: float | None = None
+    readings: int
 
 
 class DemoOut(CamelModel):
@@ -229,6 +255,7 @@ class ParcelOut(CamelModel):
     lpis_parcel: str | None = Field(None, description="Agricultural parcel in LPIS, once that system exists")
     geometry: dict | None = Field(None, description="GeoJSON Polygon in [lon, lat]; null = no satellite analysis")
     note: str | None = None
+    sowing_date: date | None = Field(None, description="Set by the farmer; moves the calendar of spring crops")
 
 
 class ImageryWarning(CamelModel):

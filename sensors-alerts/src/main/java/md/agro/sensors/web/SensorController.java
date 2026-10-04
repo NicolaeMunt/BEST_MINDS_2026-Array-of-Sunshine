@@ -42,7 +42,8 @@ public class SensorController {
             Double frostWarningC, Double frostCriticalC, String disease) {
     }
 
-    public record ParcelRequest(String name, String crop) {
+    /** @param sowingDate 2026-05-10, or null */
+    public record ParcelRequest(String name, String crop, String sowingDate) {
     }
 
     /** Advice from the backend (IRRIGATION: soil water, SOWING: soil warm enough), to be sent like the alerts. */
@@ -88,7 +89,7 @@ public class SensorController {
     /** The backend registers its parcels here, so a parcel created in the web app gets a sensor. */
     @PutMapping("/sensors/parcels/{id}")
     public AppProperties.Parcel register(@PathVariable String id, @RequestBody ParcelRequest body) {
-        AppProperties.Parcel parcel = parcels.put(id, body.name(), body.crop());
+        AppProperties.Parcel parcel = parcels.put(id, body.name(), body.crop(), body.sowingDate());
         simulator.ensureSensor(id);
         return parcel;
     }

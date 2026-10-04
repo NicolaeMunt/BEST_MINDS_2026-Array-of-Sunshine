@@ -1,5 +1,7 @@
 """SQLite storage: sensor readings and alerts with their timestamps, copied from the sensors-alerts
-service (see collector.py). Parcels and the drone, soil and satellite results are not stored here for now."""
+service (see collector.py), and the accounts with their fields, entered by an administrator from the
+official land documents (see accounts.py).
+The drone, soil and satellite results are not stored here for now."""
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -33,6 +35,48 @@ CREATE TABLE IF NOT EXISTS sensor_alerts (
     received_at   TEXT NOT NULL,
     PRIMARY KEY (parcel_id, timestamp, type, level)
 ) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    phone         TEXT NOT NULL,   -- digits with an optional leading +, e.g. +37369123456
+    password_hash TEXT NOT NULL,   -- scrypt$<salt hex>$<hash hex>
+    role          TEXT NOT NULL DEFAULT 'user',   -- user | admin (make_admin.py)
+    created_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash    TEXT PRIMARY KEY,   -- SHA-256 of the token the browser holds; the token itself is not stored
+    user_id       INTEGER NOT NULL,
+    created_at    TEXT NOT NULL,
+    expires_at    TEXT NOT NULL
+) WITHOUT ROWID;
+-- A user's field, entered by an administrator from an official document. Its parcel ID in sensors-alerts is
+-- 'F' || num (F1, F2, ...); AUTOINCREMENT never reuses a number, so a new field never inherits the readings
+-- of a deleted one.
+CREATE TABLE IF NOT EXISTS fields (
+    num              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL,   -- the owner
+    name             TEXT NOT NULL,
+    crop             TEXT NOT NULL,      -- crop key, as in sensors-alerts app.crops
+    area_ari         REAL,               -- area written in the document, in ares (1 ha = 100 ari)
+    cadastral_number TEXT,               -- e.g. 0100415.123, one field per number
+    location         TEXT,               -- village and district
+    doc_type         TEXT,               -- key of accounts.DOC_TYPES
+    doc_number       TEXT,
+    doc_date         TEXT,               -- YYYY-MM-DD
+    added_by         INTEGER,            -- the administrator who entered it
+    created_at       TEXT NOT NULL
+);
+"""
+# Columns added after a table was first created: init_db adds them to an older database.
+LATER_COLUMNS = {
+    "users": {"role": "TEXT NOT NULL DEFAULT 'user'"},
+    "fields": {"area_ari": "REAL", "cadastral_number": "TEXT", "location": "TEXT", "doc_type": "TEXT",
+               "doc_number": "TEXT", "doc_date": "TEXT", "added_by": "INTEGER"},
+}
+INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_fields_user ON fields(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fields_cadastral ON fields(cadastral_number);
 """
 # Local days for the daily summary: Europe/Chisinau in summer. Good enough for a May-October season.
 LOCAL_OFFSET_SEC = 3 * 3600
@@ -59,6 +103,12 @@ def get_conn():
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        for table, columns in LATER_COLUMNS.items():
+            have = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+            for name, kind in columns.items():
+                if name not in have:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {kind}")
+        conn.executescript(INDEXES)
 
 
 def add_readings(conn, parcel_id, readings, received_at):

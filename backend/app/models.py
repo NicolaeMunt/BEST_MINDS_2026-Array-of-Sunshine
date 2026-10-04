@@ -56,10 +56,12 @@ class SensorLatestOut(SensorReadingOut):
 
 
 class SensorParcelOut(CamelModel):
-    """A sensor location as configured in sensors-alerts, with its latest reading."""
+    """A sensor location with its latest reading: a demo sensor of sensors-alerts or the user's own field."""
     id: str
     name: str
     crop: str | None = None
+    own: bool = Field(False, description="The signed-in user's own field (F1, F2, ...), not a demo sensor")
+    area_ha: float | None = None
     latest: SensorLatestOut | None = Field(description="null until the sensor sends its first reading")
 
 
@@ -77,6 +79,83 @@ class AlertOut(CamelModel):
     message: str
     priority: Priority
     title: str
+
+
+# ---------- accounts ----------
+# Inputs are plain strings: accounts.py checks them and answers in Romanian, field by field.
+
+class RegisterIn(CamelModel):
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+    password: str = ""
+
+
+class LoginIn(CamelModel):
+    email: str = ""
+    password: str = ""
+
+
+class ProfileIn(CamelModel):
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+
+
+class PasswordIn(CamelModel):
+    current: str = ""
+    new: str = ""
+
+
+class UserOut(CamelModel):
+    id: int
+    name: str
+    email: str
+    phone: str
+    role: Literal["user", "admin"] = "user"
+    created_at: datetime
+
+
+class AdminUserOut(UserOut):
+    field_count: int
+    total_ari: float = Field(description="Total area of the user's fields, in ares")
+
+
+class SessionOut(CamelModel):
+    token: str = Field(description="Send it back as 'Authorization: Bearer <token>'")
+    user: UserOut
+
+
+class FieldIn(CamelModel):
+    """A field as written in the official document; entered by an administrator."""
+    name: str = ""
+    crop: str = ""
+    area_ari: str | float | None = Field(None, description="Area from the document, in ares (1 ha = 100 ari)")
+    cadastral_number: str = ""
+    location: str = Field("", description="Village and district")
+    doc_type: str = Field("", description="titlu | extras | vanzare | donatie | mostenire | arenda | altul")
+    doc_number: str = ""
+    doc_date: str = Field("", description="YYYY-MM-DD")
+
+
+class FieldOut(CamelModel):
+    id: str = Field(description="Parcel ID in sensors-alerts: F1, F2, ...")
+    user_id: int
+    name: str
+    crop: str
+    area_ari: float | None = None
+    area_ha: float | None = None
+    cadastral_number: str | None = None
+    location: str | None = None
+    doc_type: str | None = None
+    doc_number: str | None = None
+    doc_date: str | None = None
+    created_at: datetime
+
+
+class AdminUserDetailOut(CamelModel):
+    user: UserOut
+    fields: list[FieldOut]
 
 
 class DemoOut(CamelModel):

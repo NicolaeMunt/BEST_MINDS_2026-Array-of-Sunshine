@@ -2,7 +2,8 @@
 
 Crop monitoring for farmers. For now the app shows the air sensors: per-crop frost and humidity alerts
 on Telegram, the readings stored with their timestamps, and a web app that says in plain words what
-each sensor means. The parcel view and the satellite analytics are being built separately.
+each sensor means. Farmers create an account; an administrator enters their fields from the official land
+documents. The parcel view and the satellite analytics are being built separately.
 
 ## Start everything
 
@@ -33,6 +34,38 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 | API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
 | sensors-alerts → API → SQLite | Every reading and alert, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
 | sensors-alerts → Telegram | Frost and humidity alerts with crop-specific advice | `sensors-alerts/.env` |
+| API → sensors-alerts | Each user field, registered as parcel `F1`, `F2`, … so it gets a simulated sensor | `backend/app/collector.py` |
+
+### Accounts, administrators and fields
+
+Anyone can open the web app and see the five demo fields (`P1`–`P5`). A farmer creates an account
+(`#/register`: name, email, phone, password); email and phone are required, at sign-up and in the profile
+(`#/profile`). The farmer cannot add fields: the profile only shows them.
+
+Fields are entered by an **administrator** on `#/admin`: the list of all users (search by name, email or
+phone), and for the chosen one their fields and a form that copies the official document: type of document
+(title, extract from the real estate register, sale, donation, inheritance, lease), its number and date, the
+cadastral number (one field per number), village and district, the area in ares (shown in hectares too) and
+the crop, whose thresholds the alerts use. The administrator can also change or delete a field.
+
+An account becomes an administrator from the command line, after it has been registered in the web app:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe make_admin.py ion@exemplu.md            # administrator
+.venv\Scripts\python.exe make_admin.py ion@exemplu.md --remove   # ordinary user again
+```
+
+- Each field becomes parcel `F<n>` in sensors-alerts (`PUT /sensors/parcels/F<n>`), which starts a
+  simulated sensor with that crop's thresholds. sensors-alerts keeps parcels in memory only, so the
+  collector registers the fields again within 5 s after it restarts.
+- A user sees their own fields and the demo ones; other users' fields answer `404`.
+- Passwords are stored as scrypt hashes (Python standard library, no new dependencies). Signing in gives a
+  token that the page keeps in `localStorage` and sends as `Authorization: Bearer`; it lasts 30 days.
+- A deleted field loses its stored readings and alerts. Its simulated sensor runs on until sensors-alerts
+  restarts (that service cannot forget a parcel); the API hides it and stops storing it.
+- Alerts for user fields go to the same Telegram chats as the demo ones: sensors-alerts does not know
+  which chat belongs to which user yet.
 
 ### Stored readings
 
@@ -77,6 +110,10 @@ React without a build step: `frontend/index.html` loads React, ReactDOM and htm 
 and the components from `frontend/src/` as plain ES modules, so it needs neither Node nor internet.
 Components are written with htm templates (`html\`<div>...</div>\``) instead of JSX. The fonts
 (Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
+
+The page asks the API for new data once an hour; the **Actualizează** button asks right away. While a presentation
+scenario runs it follows the sensor every 3 s, and while the server is down it retries every 5 s. The fields list
+and each block of the sheet fold open and shut (`src/Fold.js`), and the page remembers which ones are folded.
 
 Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
 each), those with a problem first. The selected field opens with one coloured block that says what is

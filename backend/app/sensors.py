@@ -4,7 +4,7 @@ The readings for the chart and the alerts come from the database (see collector.
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import db
+from . import accounts, db
 from . import sensors_client as client
 from .frost import assess_frost, dew_point, drop_last_hour
 
@@ -80,9 +80,16 @@ def readings(parcel_id, minutes, max_points=300):
             for r in rows]
 
 
-def parcels():
-    """Sensor locations known to sensors-alerts, each with its latest reading (None before the first one)."""
-    return [{**p, "latest": latest(p["id"])} for p in client.parcels()]
+def parcels(user=None):
+    """The signed-in user's own fields first, then the demo sensors of sensors-alerts, each with its latest
+    reading (None before the first one). Other users' fields are left out. A field sensors-alerts does not
+    know yet (it restarted; the collector registers it again within seconds) is listed without a reading."""
+    service = client.parcels()
+    known = {p["id"] for p in service}
+    demo = [{**p, "own": False, "area_ha": None} for p in service if not accounts.is_field_id(p["id"])]
+    own = [{"id": f["id"], "name": f["name"], "crop": f["crop"], "own": True, "area_ha": f["areaHa"]}
+           for f in (accounts.fields(user["id"]) if user else [])]
+    return [{**p, "latest": latest(p["id"]) if p["id"] in known else None} for p in own + demo]
 
 
 def alerts(parcel_id=None, type_="ALL"):

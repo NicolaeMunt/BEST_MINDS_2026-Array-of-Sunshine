@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import md.agro.sensors.alert.AlertService;
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.frost.FrostLevel;
 import md.agro.sensors.humidity.HumidityLevel;
 import md.agro.sensors.model.Alert;
@@ -30,8 +31,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class SensorController {
 
     // Field names here are what Coder 3 sees; align with the shared JSON contract.
+    /**
+     * @param phase          the crop's phase on the reading's day
+     * @param frostWarningC  frost thresholds of that phase; null when frost does no harm in it
+     * @param disease        the disease the damp-air rule watches for on that day; null outside its window
+     */
     public record LatestResponse(String parcelId, Instant timestamp, double temperatureC, double humidityPct,
-            double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel, SensorMode mode) {
+            double precipitationMm, double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel,
+            SensorMode mode, String phase, Double frostWarningC, Double frostCriticalC, String disease) {
     }
 
     public record ParcelRequest(String name, String crop) {
@@ -57,9 +64,14 @@ public class SensorController {
         SensorStore.Status st = store.latest(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No readings yet for " + id));
         Reading r = st.reading();
-        return new LatestResponse(r.parcelId(), r.timestamp(), r.temperatureC(), r.humidityPct(),
+        AppProperties.Crop crop = parcels.cropFor(id);
+        AppProperties.Phase phase = CropCalendar.phase(crop, r.timestamp());
+        AppProperties.Disease disease = crop.disease();
+        boolean diseaseWatched = disease != null && CropCalendar.within(disease.from(), disease.to(), r.timestamp());
+        return new LatestResponse(r.parcelId(), r.timestamp(), r.temperatureC(), r.humidityPct(), r.precipitationMm(),
                 Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level(),
-                parcels.cropKey(id), st.humidity(), simulator.mode(id));
+                parcels.cropKey(id), st.humidity(), simulator.mode(id), phase.name(), phase.frostWarningC(),
+                phase.frostCriticalC(), diseaseWatched ? disease.name() : null);
     }
 
     @GetMapping("/sensors/parcels")
@@ -105,11 +117,13 @@ public class SensorController {
         return switchMode(parcelId, SensorMode.FROST);
     }
 
+    /** Replays a real damp spell of 2026 for the parcel's crop; 409 if the crop had none. */
     @PostMapping("/demo/humid/{parcelId}")
     public Map<String, Object> humid(@PathVariable String parcelId) {
         return switchMode(parcelId, SensorMode.HUMID);
     }
 
+    /** Replays a real hot, dry spell of 2026 for the parcel's crop; 409 if the crop had none. */
     @PostMapping("/demo/dry/{parcelId}")
     public Map<String, Object> dry(@PathVariable String parcelId) {
         return switchMode(parcelId, SensorMode.DRY);
@@ -138,6 +152,8 @@ public class SensorController {
         requireParcel(parcelId);
         try {
             simulator.setMode(parcelId, mode);
+        } catch (SensorSimulator.NoEpisodeException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }

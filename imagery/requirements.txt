@@ -3,3 +3,4 @@ numpy==2.4.4
 scipy==1.17.1
 Pillow==12.2.0
 requests==2.33.1
+PyYAML==6.0.3

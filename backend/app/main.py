@@ -11,8 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from . import db, imagery, sensors, sensors_client
 from .collector import Collector
 from .models import (AlertOut, DemoOut, ImageryAtDateOut, ImageryFileIn, ImageryHistoryOut, ImageryImportOut,
-                     ImageryStatusOut, ParcelOut, SensorLatestOut, SensorParcelOut, SensorReadingOut)
-from .sensors_client import SensorsUnavailable
+                     ImageryStatusOut, ParcelOut, SensorLatestOut, SensorParcelOut, SensorReadingOut, WaterStatusOut)
+from .sensors_client import SensorsConflict, SensorsUnavailable
 
 # Comma-separated frontend origins; "*" allows any.
 CORS_ORIGINS = os.getenv(
@@ -24,9 +24,9 @@ REPO_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = REPO_DIR / "frontend"
 DEMO_MESSAGES = {
     "frost": ("FROST", "Terenul a trecut în modul îngheț"),
-    "humid": ("HUMID", "Terenul a trecut în modul aer umed și cald"),
-    "dry": ("DRY", "Terenul a trecut în modul aer uscat și fierbinte"),
-    "replay": ("REPLAY", "Redarea nopții de îngheț a pornit"),
+    "humid": ("HUMID", "Redau accelerat o perioadă umedă reală din 2026, cu risc de boală pentru această cultură"),
+    "dry": ("DRY", "Redau accelerat o perioadă reală de aer fierbinte și uscat din 2026"),
+    "replay": ("REPLAY", "Redarea nopții reale de îngheț a pornit"),
     "normal": ("NORMAL", "Terenul a revenit la vremea normală"),
 }
 
@@ -89,10 +89,21 @@ def stored_readings(parcel_id: str, minutes: int = Query(60, ge=1, le=366 * 24 *
     return sensors.readings(parcel_id, minutes)
 
 
+@app.get("/sensors/parcels/{parcel_id}/water", response_model=WaterStatusOut)
+def soil_water(parcel_id: str, day: date | None = Query(None, alias="date", description="YYYY-MM-DD; default today")):
+    """Soil water balance of the parcel on that day (FAO-56) and day by day since 1 May: when to water and how much."""
+    with db.get_conn() as conn:
+        row = db.parcel(conn, parcel_id)
+    status = sensors.water_status(parcel_id, row["crop"] if row else None, day, with_days=True)
+    if not status:
+        raise HTTPException(404, f"No water balance for parcel {parcel_id}")
+    return status
+
+
 @app.get("/alerts", response_model=list[AlertOut])
 def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId"),
-                  type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|ALL)$")):
-    """Stored frost and humidity alerts, newest first. Level OK is the all-clear."""
+                  type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|IRRIGATION|ALL)$")):
+    """Frost, humidity and irrigation alerts, newest first. Level OK is the all-clear."""
     return sensors.alerts(parcel_id, type_)
 
 
@@ -103,7 +114,11 @@ def demo(kind: str, parcel_id: str):
     """kind: frost | humid | dry | replay | normal (normal sends the all-clear messages)."""
     if kind not in DEMO_MESSAGES:
         raise HTTPException(404, f"Unknown demo scenario {kind}")
-    if sensors_client.demo(kind, parcel_id) is None:
+    try:
+        answer = sensors_client.demo(kind, parcel_id)
+    except SensorsConflict as e:  # the crop has no recorded spell of that kind
+        raise HTTPException(409, str(e)) from e
+    if answer is None:
         raise HTTPException(404, f"Parcel {parcel_id} unknown to the sensors service")
     mode, message = DEMO_MESSAGES[kind]
     sensors.set_mode(parcel_id, mode)

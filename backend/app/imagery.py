@@ -15,7 +15,7 @@ import threading
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
-from . import db
+from . import crops, db
 
 log = logging.getLogger(__name__)
 
@@ -194,7 +194,8 @@ def status(updater):
 
 # ---------- results for the frontend ----------
 
-def result_out(row, warnings):
+def result_out(row, warnings, crop=None):
+    """One stored result for the API, with the crop's phase on the scene's day (from the crop calendar)."""
     out = {k: row[k] for k in ("scene_date", "scene_id", "ndvi_median", "ndmi_median", "affected_pct",
                                "affected_sector", "zone_count", "valid_pct", "prev_scene_date", "median_change",
                                "ndmi_change", "declined_pct", "overlay_path", "photo_path", "rules_version")}
@@ -202,6 +203,8 @@ def result_out(row, warnings):
     out["zone_confirmed"] = None if row["zone_confirmed"] is None else bool(row["zone_confirmed"])
     out["overlay_bounds"] = [row["bounds_south"], row["bounds_west"], row["bounds_north"], row["bounds_east"]]
     out["warnings"] = [{"code": code, "text": text} for code, text in warnings]
+    phase = crops.phase_out(crop, date.fromisoformat(row["scene_date"])) if crop else None
+    out["phase"], out["season"] = (phase["phase"], phase["season"]) if phase else (None, None)
     return out
 
 
@@ -216,8 +219,9 @@ def at_date(parcel_id, day):
         row = db.imagery_at(conn, parcel_id, day.isoformat())
         skipped = db.imagery_skipped(conn, parcel_id, row["scene_date"] if row else "", day.isoformat())
         warnings = db.imagery_warnings(conn, parcel_id, [row["scene_date"]]) if row else {}
+        crop = (db.parcel(conn, parcel_id) or {"crop": None})["crop"]
     return {"parcel_id": parcel_id, "day": day,
-            "result": result_out(row, warnings.get(row["scene_date"], [])) if row else None,
+            "result": result_out(row, warnings.get(row["scene_date"], []), crop) if row else None,
             "days_old": (day - date.fromisoformat(row["scene_date"])).days if row else None,
             "skipped_since": [skipped_out(s) for s in skipped]}
 
@@ -228,6 +232,7 @@ def history(parcel_id, start, end):
         rows = db.imagery_results(conn, parcel_id, start.isoformat(), end.isoformat())
         warnings = db.imagery_warnings(conn, parcel_id, [row["scene_date"] for row in rows])
         skipped = db.imagery_skipped(conn, parcel_id, (start - timedelta(days=1)).isoformat(), end.isoformat())
+        crop = (db.parcel(conn, parcel_id) or {"crop": None})["crop"]
     return {"parcel_id": parcel_id, "start": start, "end": end,
-            "results": [result_out(row, warnings.get(row["scene_date"], [])) for row in rows],
+            "results": [result_out(row, warnings.get(row["scene_date"], []), crop) for row in rows],
             "skipped": [skipped_out(s) for s in skipped]}

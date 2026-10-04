@@ -31,18 +31,24 @@ Docker: `docker build -t sensors-alerts .` then
    saved to `telegram-chats.txt` (gitignored) and keeps getting alerts after restarts.
    `TELEGRAM_CHAT_ID` is an optional extra chat that always gets alerts.
 
-Commands: `/start`, `/parcele`, `/status <parcelId>`.
+Commands: `/start`, `/parcele`, `/status <parcelId>` (the status also shows the crop's phase today).
 
 ## Demo steps
 
+The rules depend on the crop's phase on the reading's day (see Crops below), so what fires depends on
+the date: in October only the orchard and the vineyard can be hurt by frost, the field crops are ripe
+or harvested.
+
 ```powershell
-# 1. Frost on one parcel: WARNING after ~40 s, CRITICAL after ~50 s
+# 1. Frost now, on the orchard: WARNING after ~40 s, CRITICAL after ~50 s
 Invoke-RestMethod -Method Post http://localhost:8081/demo/frost/6401512.058
 
-# 2. Replay the frost night (14 h in ~2.5 min): WARNING, CRITICAL, then all-clear in the morning
-Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/6401204.045
+# 2. Replay the real frost night of 8-9 April 2025 (start.ps1 sets REPLAY_FILE): on the orchard, in bud,
+#    WARNING, CRITICAL at -2.9 °C, then all-clear in the morning
+Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/6401512.058
 
-# 3. Humid, warm air (disease risk) / dry, hot air (drought stress): alert after ~50 s
+# 3. Replay a real damp spell of 2026 with a disease alert for the crop (wheat: 7 days in ~90 s) or a real
+#    hot, dry spell (corn: in ~10 s). A crop without such a spell answers 409 with the reason.
 Invoke-RestMethod -Method Post http://localhost:8081/demo/humid/6401307.102
 Invoke-RestMethod -Method Post http://localhost:8081/demo/dry/6401512.033
 
@@ -53,7 +59,13 @@ Invoke-RestMethod -Method Post http://localhost:8081/demo/normal/6401307.102
 Invoke-RestMethod -Method Post http://localhost:8081/demo/reset
 ```
 
-FROST, HUMID and DRY go past the thresholds of the parcel's crop, so the alert fires whatever the crop.
+FROST ramps down past the critical threshold of today's phase; when frost does no harm in today's phase
+(not sown, harvested, dormant), nothing fires, as in the field.
+
+HUMID and DRY replay `src/main/resources/replay/{humid|dry}-<crop>.csv`: the first damp spell with a
+disease alert and the first hot, dry spell of 2026 at that crop's parcel, from real weather (written by
+`backend/make_sample.py`). In 2026 the sunflower had no damp spell in flower (July was dry) and the wheat
+no hot, dry day before its harvest, so those two answer 409.
 
 Always call `/demo/reset` between demo runs; otherwise the cooldown (30 min by default) hides
 a repeated alert. For rehearsals set `FROST_COOLDOWN_SECONDS=30`.
@@ -61,7 +73,8 @@ a repeated alert. For rehearsals set `FROST_COOLDOWN_SECONDS=30`.
 ### Demo file
 
 `demo/frost-demo.csv` is a made-up night that falls fast, freezes down to -4.3 °C and recovers in the
-morning. `demo/demo.ps1` replays it on one parcel and prints every reading and every message.
+morning (8 April, when the apple trees are in bud). `demo/demo.ps1` replays it on one parcel and prints
+every reading and every message.
 
 ```powershell
 # window 1, from sensors-alerts/
@@ -72,7 +85,7 @@ mvn spring-boot:run
 powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 ```
 
-`-ParcelId 6401204.045` picks another parcel.
+`-ParcelId 6401204.045` picks another parcel (the vineyard is still dormant on 8 April: no alert).
 
 ## Endpoints
 
@@ -80,73 +93,87 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 |---|---|---|
 | GET | `/sensors/parcels` | the parcels this service has sensors for: `id, name, crop` |
 | PUT | `/sensors/parcels/{id}` | body `{"name": ..., "crop": ...}`: adds the parcel (it gets a sensor) or updates its name and crop. The backend calls this for its parcels |
-| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel, mode` |
-| GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct` |
+| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, dewPointC, frostLevel, crop, humidityLevel, mode, phase, frostWarningC, frostCriticalC, disease` |
+| GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct, precipitationMm` |
 | GET | `/alerts?parcelId={id}&type=FROST` | newest first: `parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
 | POST | `/demo/frost/{parcelId}` | switches the parcel to FROST |
-| POST | `/demo/humid/{parcelId}` | switches the parcel to HUMID (warm and humid) |
-| POST | `/demo/dry/{parcelId}` | switches the parcel to DRY (hot and dry) |
-| POST | `/demo/replay/{parcelId}` | starts the CSV replay |
+| POST | `/demo/humid/{parcelId}` | HUMID: replays the crop's real damp spell; 409 if it has none |
+| POST | `/demo/dry/{parcelId}` | DRY: replays the crop's real hot, dry spell; 409 if it has none |
+| POST | `/demo/replay/{parcelId}` | starts the frost night replay |
 | POST | `/demo/normal/{parcelId}` | one parcel back to NORMAL; all-clear messages are sent |
 | POST | `/demo/reset` | all parcels NORMAL, alerts and cooldowns cleared |
 
 `frostLevel` / `level` is `OK`, `WARNING` or `CRITICAL`. An alert with level `OK` is the all-clear.
-`humidityLevel` is `OK`, `LOW` or `HIGH`. `crop` is the crop key of the parcel, e.g. `wheat`.
+`humidityLevel` is `OK`, `HIGH` (disease risk: the air was damp long enough) or `LOW` (dry, hot air).
+`crop` is the crop key of the parcel, e.g. `wheat`. `phase` is the crop's phase on the reading's day;
+`frostWarningC` / `frostCriticalC` are that phase's thresholds, `null` when frost does no harm then;
+`disease` is the disease the damp-air rule watches for that day, `null` outside its window.
 `/alerts` without `parcelId` returns all parcels.
 
 Alert `type` is `FROST`, `HUMIDITY_HIGH` or `HUMIDITY_LOW`; humidity alerts have level `WARNING`
 (or `OK` for the all-clear). **`/alerts` returns only frost alerts unless asked otherwise**, because
 existing clients title every alert as a frost alert: use `type=HUMIDITY` or `type=ALL` for the rest.
 
-During REPLAY the reading timestamps are those of the recorded night, and `minutes` is counted
-back from the newest reading. Switching into or out of REPLAY clears that parcel's readings.
+During a replay the reading timestamps are those of the recording, and `minutes` is counted back from
+the newest reading. Switching into or out of a replay clears that parcel's readings.
 
 ## Configuration (`src/main/resources/application.yml`)
 
 - `app.parcels` – the parcels known at start-up. The backend registers its own parcels at runtime
   (`PUT /sensors/parcels/{id}`), which are kept in memory until the next restart.
-- `app.crops` – per-crop thresholds and advice texts (see below).
-- `app.simulator` – reading interval, ramp time of the demo modes, replay file and speed.
+- `app.crops` – the crop calendar and rules (see below). The backend and the satellite job read the same
+  section, so every part of the app uses the same phases and thresholds.
+- `app.simulator` – reading interval, ramp time of FROST, the frost night file and the damp/dry spell
+  files, and their replay speeds.
 - `app.frost` – falling-fast rule, all-clear margin and cooldown. The rule is `ThresholdFrostRule` behind `FrostRule`.
-- `app.humidity` – minimum temperature for disease risk and all-clear margin. The rule is `ThresholdHumidityRule` behind `HumidityRule`.
+- `app.humidity` – what counts as dry, hot air and how long a risk lasts. The rule is `ThresholdHumidityRule`
+  behind `HumidityRule`.
+- `app.water` – soil water per metre of roots, for the backend's water balance (not used here).
 - `app.cors-origins` / `FRONTEND_ORIGIN` – allowed frontend origins, `*` by default.
 
 ### Crops
 
-Each parcel has a crop, and each crop has its own thresholds. The crop keys are the same as in the backend.
+Each parcel has a crop; each crop goes through **phases on a fixed calendar** for the Orhei area (a phase
+starts on its `from` day and lasts until the next one; an early or late year can be 1-2 weeks off). The
+numbers come from extension services and FAO; sources and reasons are in `imagery/LOGIC.md`, section
+"Reguli pe culturi".
 
-| Crop | Frost warning | Frost critical | Humidity low | Humidity high |
-|---|---|---|---|---|
-| `wheat` (grâu) | 0 °C | -3 °C | 30% | 85% |
-| `barley` (orz) | 0 °C | -3 °C | 30% | 85% |
-| `corn` (porumb) | 3 °C | 0 °C | 35% | 85% |
-| `sunflower` (floarea-soarelui) | 1 °C | -3 °C | 25% | 80% |
-| `orchard` (livadă) | 2 °C | -1 °C | 35% | 85% |
-| `vineyard` (viță-de-vie) | 2 °C | -1 °C | 30% | 80% |
+| Crop | Frost (critical threshold by phase) | Disease watched (damp air) | Dry, hot air harms |
+|---|---|---|---|
+| `wheat` (grâu) | -11 °C tillering, -4 jointing, -2 boot, -1 heading and flowering, -2 grain fill; none after the harvest (15 July) | head blight: 48 damp hours in 7 days at 15-30 °C, 20 May - 15 June | 15 May - 10 July |
+| `corn` (porumb) | -2 °C from sowing to ripening; none after physiological maturity (20 September) | northern leaf blight: 6 damp hours in a row at 18-27 °C, 15 June - 31 August | 10 July - 31 August |
+| `sunflower` (floarea-soarelui) | -3 °C seedlings, -1 bud and flower, -4 seed fill; none from 25 August | white head rot: 48 damp hours in 3 days below 29 °C, 1-25 July | 1 July - 15 August |
+| `orchard` (livadă, apple) | -5 °C bud break, -2.8 bud, -2 flower, young and ripening fruit; none November - mid March | apple scab: 6 damp hours at 16-24 °C ... 28 hours from 4 °C, 1 April - 31 May | June - August |
+| `vineyard` (viță-de-vie) | -1 °C young shoots, -2 ripening grapes; none after the harvest (20 October) and while dormant | downy mildew: 4 hours at 95% or more, 13-29 °C, 15 May - 31 August | June - August |
 
-**These numbers are starting points for spring conditions, not verified agronomy**; the research
-teammate should check them. They are plain values in `application.yml`, as are the advice texts.
-A parcel with no crop, or a crop not listed, uses 2 °C / 0 °C and 30% / 85%.
+- **Frost** uses air temperature and the thresholds of the crop's phase on the reading's day: WARNING at
+  or below the warning threshold (or when falling fast towards it), CRITICAL at or below the critical one.
+  A phase may carry its own frost advice (ripening fruit get different advice than flowers).
+- **Disease risk** (`HIGH`): inside the disease's window, at least `hours` damp hours (humidity at or above
+  `min-humidity-pct`, standing in for wet leaves) among the last `within-hours`, at the condition's
+  temperatures. Hours are clock hours of the reading timestamps (hourly means).
+- **Dry, hot air** (`LOW`): inside the crop's dry window, humidity at most 30% at 25 °C or more ("suhovei"
+  in the glossary of the Moldovan weather service, without the wind, which is not measured).
+- Both risks last `hold-hours` (24) after their conditions were last met, so one rainy spell or one heat
+  wave is one alert.
 
-- Frost uses air temperature: WARNING at or below the crop's warning threshold (or when falling
-  fast towards it), CRITICAL at or below its critical threshold.
-- High humidity means fungal disease risk, and only counts at 10 °C or warmer, so a humid frost
-  night does not also raise a disease alert. Low humidity means drought stress.
+A parcel with no crop, or a crop not listed, gets frost alerts at 2 °C / 0 °C all year and nothing else.
 
 ### Replay CSV
 
-`timestamp,temperatureC,humidityPct`, one row per line, comma or semicolon separated. Timestamps
-like `2025-04-08T18:00` or `2025-04-08 18:00:00` are read as Chișinău local time; an offset or `Z`
-is also accepted. The bundled `replay/sample-frost-night.csv` is **made-up sample data**. To use the
-real night, point `REPLAY_FILE` at it, e.g. `$env:REPLAY_FILE = "file:C:/data/frost-night.csv"`.
-The file is re-read on every replay start, so it can be swapped without a restart.
+`timestamp,temperatureC,humidityPct[,precipitationMm]`, one row per line, comma or semicolon separated;
+lines starting with `#` are comments. Timestamps like `2025-04-08T18:00` or `2025-04-08 18:00:00` are read
+as Chișinău local time; an offset or `Z` is also accepted. The bundled `replay/sample-frost-night.csv` is
+**made-up sample data**; the real frost night is `backend/data/frost-night-orhei-2025-04-09.csv`
+(`$env:REPLAY_FILE = "file:../backend/data/frost-night-orhei-2025-04-09.csv"`). The file is re-read on
+every replay start, so it can be swapped without a restart.
 
 ## Alert behaviour
 
 - A frost episode runs from the first alert until the temperature is more than 1 °C above the
-  crop's warning threshold.
-- A humidity episode runs from the alert until humidity is 5 points back inside the crop's range.
-  It sends one message, and the same cooldown applies.
+  phase's warning threshold, or until frost does no harm in the phase.
+- A humidity episode runs from the alert until the rule no longer says HIGH (or LOW), i.e. 24 hours after
+  its conditions were last met. It sends one message, and the same cooldown applies.
 - Each level is sent once per episode. WARNING → CRITICAL is always sent.
 - A new episode's alert is suppressed if the same level was sent for that parcel within the cooldown.
 - The all-clear is sent only if an alert was actually sent in that episode.
@@ -154,4 +181,5 @@ The file is re-read on every replay start, so it can be swapped without a restar
 
 ## Tests
 
-`mvn test` – unit tests for the frost and humidity rules.
+`mvn test` – unit tests for the frost rule (thresholds by crop and phase, local days) and the humidity
+rule (damp hours, conditions, windows, the 24-hour hold, dry air).

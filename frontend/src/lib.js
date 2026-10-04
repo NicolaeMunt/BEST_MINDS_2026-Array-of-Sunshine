@@ -8,9 +8,15 @@ const query = new URLSearchParams(location.search);
 export const API = query.get('api') || (location.pathname.startsWith('/app/') ? '' : 'http://localhost:8000');
 export const START_PARCEL = query.get('parcel');
 
+/** The API's JSON; on an error status, an Error with .status and the API's .detail (its reason, if any). */
 export async function api(path, options) {
   const response = await fetch(API + path, options);
-  if (!response.ok) throw new Error('HTTP ' + response.status);
+  if (!response.ok) {
+    const error = new Error('HTTP ' + response.status);
+    error.status = response.status;
+    error.detail = (await response.json().catch(() => ({}))).detail;
+    throw error;
+  }
   return response.json();
 }
 

@@ -42,7 +42,7 @@ class Collector(threading.Thread):
             if first:
                 with db.get_conn() as conn:
                     self._last[parcel_id] = db.newest_timestamp(conn, parcel_id)
-            rows = [(db.ts_text(parse_ts(r["timestamp"])), r["temperatureC"], r["humidityPct"])
+            rows = [(db.ts_text(parse_ts(r["timestamp"])), r["temperatureC"], r["humidityPct"], r.get("precipitationMm"))
                     for r in sensors_client.readings(parcel_id, BACKFILL_MIN if first else RECENT_MIN)]
             # Only what came after the reading stored last; if that one is gone (mode switch, restart), everything.
             stamps = [row[0] for row in rows]

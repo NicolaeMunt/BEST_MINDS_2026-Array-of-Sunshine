@@ -1,6 +1,6 @@
-// One field: what the sensor means right now, the two numbers, the temperature over time and the alerts.
+// One field: what the sensor means right now, the two numbers, the soil water, the temperature over time and the alerts.
 import { html, useState, num, hm, when, day } from './lib.js';
-import { MODE, verdict, alertWord } from './labels.js';
+import { MODE, verdict, alertWord, phaseLine } from './labels.js';
 
 // Minutes since 1 May of this year: the whole season on one chart.
 const SEASON = Math.ceil((Date.now() - new Date(new Date().getFullYear(), 4, 1)) / 60000);
@@ -67,6 +67,21 @@ function TempChart({ readings, minutes, alerts }) {
   </svg>`;
 }
 
+/** How much water the roots are missing, from the sensor's temperature and rain since May (FAO-56). */
+function WaterSection({ water: w }) {
+  return html`<section className="section">
+    <h2>Apa din sol</h2>
+    ${!w.hasCrop ? html`<p>În faza „${w.phase}” nu e nimic de udat.</p>` : html`
+      <div className="figures">
+        <div className="figure"><b>${num(w.deficitMm, 0)}<small>mm</small></b><span>lipsesc din sol</span></div>
+        <div className="figure"><b>${num(w.readilyAvailableMm, 0)}<small>mm</small></b><span>de la cât lipsă suferă cultura</span></div>
+      </div>
+      <p>${w.irrigate ? `E timpul să uzi. Cultura iese din stres cu cel puțin ${num(w.amountMm, 0)} mm, adică ${num(w.amountMm * 10, 0)} m³ la hectar; solul se umple cu ${num(w.deficitMm, 0)} mm.`
+        : `Cultura mai are apă: udă când lipsesc peste ${num(w.readilyAvailableMm, 0)} mm.`}</p>`}
+    <p className="note">Socotit din temperatura și ploaia măsurate de senzor din 1 mai, după metoda FAO; nu știm dacă ai udat între timp.</p>
+  </section>`;
+}
+
 export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts }) {
   const s = sensor.latest, v = verdict(sensor), drop = s && s.dropLastHourC;
   const trend = drop == null ? '' : drop > 0.3 ? `Se răcește: cu ${num(drop)}° mai rece decât acum o oră.`
@@ -92,8 +107,11 @@ export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts }) {
         <div className="figure"><b>${num(s.humidityPct, 0)}<small>%</small></b><span>umiditatea aerului</span></div>
       </div>
       <p>${trend}</p>
+      ${phaseLine(s) && html`<p>${phaseLine(s)}</p>`}
       <p className="note">Măsurat ${when(s.timestamp)}.</p>
     </section>`}
+
+    ${sensor.water && html`<${WaterSection} water=${sensor.water} />`}
 
     <section className="section">
       <h2>Temperatura</h2>
@@ -116,7 +134,8 @@ export function SensorSheet({ sensor, readings, minutes, onMinutes, alerts }) {
         : html`<ul className="alerts">
           ${listed.map(a => html`<li key=${a.timestamp + a.type + a.level} className=${'is-' + alertWord(a).status}>
             <span className="stamp">${alertWord(a).word}</span>
-            <span className="alert-facts">${num(a.temperatureC)}°C, umiditate ${num(a.humidityPct, 0)}%</span>
+            <span className="alert-facts">${a.type === 'IRRIGATION' ? `lipsesc ${num(a.deficitMm, 0)} mm de apă în sol`
+              : `${num(a.temperatureC)}°C, umiditate ${num(a.humidityPct, 0)}%`}</span>
             <time>${day(a.timestamp, false)}, ${hm(new Date(a.timestamp))}</time>
           </li>`)}
         </ul>`}

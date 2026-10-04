@@ -1,5 +1,5 @@
 {
-  "rules_version": "bb8e95634d",
+  "rules_version": "45f95360f7",
   "results": [
     {
       "parcel_id": "6401204.045",
@@ -7,12 +7,12 @@
       "scene_id": "S2B_35TPN_20260504_0_L2A",
       "ndvi_median": 0.601,
       "ndmi_median": 0.073,
-      "affected_pct": 2.4,
+      "affected_pct": 1.1,
       "affected_sector": "S",
       "zone_count": 1,
       "zone_center": [
-        28.828277,
-        47.43373
+        28.82828,
+        47.43382
       ],
       "valid_pct": 100.0,
       "prev_scene_date": null,
@@ -36,19 +36,16 @@
       "scene_id": "S2C_35TPN_20260506_0_L2A",
       "ndvi_median": 0.597,
       "ndmi_median": 0.076,
-      "affected_pct": 2.4,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828409,
-        47.433727
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-05-04",
       "median_change": -0.004,
       "declined_pct": 0.0,
       "ndmi_change": 0.003,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-05-06.png",
       "photo_path": "/overlays/6401204.045_2026-05-06_rgb.png",
       "overlay_bounds": [
@@ -57,12 +54,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.60 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -96,12 +88,12 @@
       "scene_id": "S2C_35TPN_20260516_0_L2A",
       "ndvi_median": 0.693,
       "ndmi_median": 0.157,
-      "affected_pct": 5.1,
-      "affected_sector": "N",
-      "zone_count": 2,
+      "affected_pct": 1.9,
+      "affected_sector": "S",
+      "zone_count": 1,
       "zone_center": [
-        28.829512,
-        47.438749
+        28.828277,
+        47.43373
       ],
       "valid_pct": 100.0,
       "prev_scene_date": "2026-05-11",
@@ -151,9 +143,9 @@
       "scene_id": "S2C_35TPN_20260526_0_L2A",
       "ndvi_median": 0.596,
       "ndmi_median": 0.054,
-      "affected_pct": 7.4,
+      "affected_pct": 4.5,
       "affected_sector": "S",
-      "zone_count": 3,
+      "zone_count": 1,
       "zone_center": [
         28.828412,
         47.433817
@@ -172,12 +164,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.60 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -185,19 +172,16 @@
       "scene_id": "S2A_35TPN_20260531_1_L2A",
       "ndvi_median": 0.529,
       "ndmi_median": 0.031,
-      "affected_pct": 1.3,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828804,
-        47.433631
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-05-26",
       "median_change": -0.067,
       "declined_pct": 0.0,
       "ndmi_change": -0.023,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-05-31.png",
       "photo_path": "/overlays/6401204.045_2026-05-31_rgb.png",
       "overlay_bounds": [
@@ -206,12 +190,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -237,12 +216,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.56 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -276,19 +250,16 @@
       "scene_id": "S2B_35TPN_20260610_0_L2A",
       "ndvi_median": 0.546,
       "ndmi_median": 0.053,
-      "affected_pct": 1.6,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828428,
-        47.434267
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 65.1,
       "prev_scene_date": "2026-06-08",
       "median_change": -0.057,
       "declined_pct": 0.0,
       "ndmi_change": -0.037,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-06-10.png",
       "photo_path": "/overlays/6401204.045_2026-06-10_rgb.png",
       "overlay_bounds": [
@@ -297,12 +268,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.55 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -310,19 +276,19 @@
       "scene_id": "S2C_35TPN_20260618_0_L2A",
       "ndvi_median": 0.603,
       "ndmi_median": 0.033,
-      "affected_pct": 5.1,
+      "affected_pct": 3.2,
       "affected_sector": "S",
-      "zone_count": 1,
+      "zone_count": 2,
       "zone_center": [
-        28.828545,
-        47.433815
+        28.828671,
+        47.433633
       ],
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-10",
       "median_change": 0.057,
       "declined_pct": 0.0,
       "ndmi_change": -0.02,
-      "zone_confirmed": true,
+      "zone_confirmed": false,
       "overlay_path": "/overlays/6401204.045_2026-06-18.png",
       "photo_path": "/overlays/6401204.045_2026-06-18_rgb.png",
       "overlay_bounds": [
@@ -339,12 +305,12 @@
       "scene_id": "S2A_35TPN_20260620_2_L2A",
       "ndvi_median": 0.592,
       "ndmi_median": 0.065,
-      "affected_pct": 3.8,
+      "affected_pct": 2.5,
       "affected_sector": "S",
       "zone_count": 2,
       "zone_center": [
-        28.828428,
-        47.434267
+        28.8288,
+        47.433541
       ],
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-18",
@@ -360,12 +326,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -373,12 +334,12 @@
       "scene_id": "S2C_35TPN_20260625_0_L2A",
       "ndvi_median": 0.592,
       "ndmi_median": 0.037,
-      "affected_pct": 6.5,
+      "affected_pct": 2.5,
       "affected_sector": "S",
-      "zone_count": 3,
+      "zone_count": 2,
       "zone_center": [
-        28.828551,
-        47.433995
+        28.828557,
+        47.434175
       ],
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-20",
@@ -394,12 +355,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -425,12 +381,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.55 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -438,19 +389,16 @@
       "scene_id": "S2C_35TPN_20260628_0_L2A",
       "ndvi_median": 0.595,
       "ndmi_median": 0.041,
-      "affected_pct": 3.2,
-      "affected_sector": "S",
-      "zone_count": 2,
-      "zone_center": [
-        28.828428,
-        47.434267
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-27",
       "median_change": 0.041,
       "declined_pct": 0.0,
       "ndmi_change": -0.055,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-06-28.png",
       "photo_path": "/overlays/6401204.045_2026-06-28_rgb.png",
       "overlay_bounds": [
@@ -459,12 +407,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.60 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -472,19 +415,16 @@
       "scene_id": "S2A_35TPN_20260630_2_L2A",
       "ndvi_median": 0.567,
       "ndmi_median": 0.047,
-      "affected_pct": 1.4,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828425,
-        47.434177
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-28",
       "median_change": -0.028,
       "declined_pct": 0.0,
       "ndmi_change": 0.006,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-06-30.png",
       "photo_path": "/overlays/6401204.045_2026-06-30_rgb.png",
       "overlay_bounds": [
@@ -493,12 +433,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.57 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -506,19 +441,16 @@
       "scene_id": "S2B_35TPN_20260703_0_L2A",
       "ndvi_median": 0.545,
       "ndmi_median": 0.068,
-      "affected_pct": 1.1,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828428,
-        47.434267
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-30",
       "median_change": -0.022,
       "declined_pct": 0.0,
       "ndmi_change": 0.021,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-07-03.png",
       "photo_path": "/overlays/6401204.045_2026-07-03_rgb.png",
       "overlay_bounds": [
@@ -527,12 +459,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.55 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -540,19 +467,16 @@
       "scene_id": "S2C_35TPN_20260705_0_L2A",
       "ndvi_median": 0.549,
       "ndmi_median": 0.06,
-      "affected_pct": 1.5,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828428,
-        47.434267
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-07-03",
       "median_change": 0.004,
       "declined_pct": 0.0,
       "ndmi_change": -0.008,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-07-05.png",
       "photo_path": "/overlays/6401204.045_2026-07-05_rgb.png",
       "overlay_bounds": [
@@ -561,12 +485,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.55 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -592,12 +511,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.58 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -605,12 +519,12 @@
       "scene_id": "S2A_35TPN_20260717_0_L2A",
       "ndvi_median": 0.532,
       "ndmi_median": 0.037,
-      "affected_pct": 9.0,
+      "affected_pct": 4.7,
       "affected_sector": "N",
       "zone_count": 1,
       "zone_center": [
-        28.828457,
-        47.438946
+        28.828328,
+        47.439038
       ],
       "valid_pct": 87.9,
       "prev_scene_date": "2026-07-15",
@@ -627,10 +541,6 @@
         28.83042
       ],
       "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        },
         {
           "code": "possible_cloud",
           "text": "1 weak zone(s) and 1 declined zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
@@ -661,12 +571,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.56 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -692,12 +597,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -723,12 +623,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -754,12 +649,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -785,12 +675,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -816,12 +701,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.50 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -847,12 +727,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.50 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -860,19 +735,16 @@
       "scene_id": "S2A_35TPN_20260809_2_L2A",
       "ndvi_median": 0.534,
       "ndmi_median": -0.006,
-      "affected_pct": 0.9,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828668,
-        47.433543
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-07",
       "median_change": 0.03,
       "declined_pct": 0.0,
       "ndmi_change": 0.004,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-08-09.png",
       "photo_path": "/overlays/6401204.045_2026-08-09_rgb.png",
       "overlay_bounds": [
@@ -881,12 +753,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -894,19 +761,16 @@
       "scene_id": "S2B_35TPN_20260812_0_L2A",
       "ndvi_median": 0.52,
       "ndmi_median": 0.019,
-      "affected_pct": 1.4,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828671,
-        47.433633
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 74.4,
       "prev_scene_date": "2026-08-09",
       "median_change": -0.014,
       "declined_pct": 0.0,
       "ndmi_change": 0.025,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-08-12.png",
       "photo_path": "/overlays/6401204.045_2026-08-12_rgb.png",
       "overlay_bounds": [
@@ -915,16 +779,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        },
-        {
-          "code": "possible_cloud",
-          "text": "1 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -932,19 +787,16 @@
       "scene_id": "S2C_35TPN_20260814_0_L2A",
       "ndvi_median": 0.497,
       "ndmi_median": -0.02,
-      "affected_pct": 0.9,
-      "affected_sector": "N",
-      "zone_count": 1,
-      "zone_center": [
-        28.827899,
-        47.438145
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-12",
       "median_change": -0.023,
       "declined_pct": 0.0,
       "ndmi_change": -0.039,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-08-14.png",
       "photo_path": "/overlays/6401204.045_2026-08-14_rgb.png",
       "overlay_bounds": [
@@ -953,12 +805,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.50 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -984,12 +831,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.49 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1015,12 +857,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1046,12 +883,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.47 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1077,12 +909,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1090,12 +917,12 @@
       "scene_id": "S2C_35TPN_20260903_0_L2A",
       "ndvi_median": 0.525,
       "ndmi_median": 0.008,
-      "affected_pct": 7.4,
+      "affected_pct": 5.6,
       "affected_sector": "N",
       "zone_count": 1,
       "zone_center": [
-        28.82817,
-        47.438321
+        28.828041,
+        47.438413
       ],
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-29",
@@ -1111,12 +938,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1142,12 +964,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.47 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1173,12 +990,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.57 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1186,19 +998,16 @@
       "scene_id": "S2A_35TPN_20260908_1_L2A",
       "ndvi_median": 0.527,
       "ndmi_median": -0.046,
-      "affected_pct": 1.0,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828671,
-        47.433633
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-09-06",
       "median_change": -0.044,
       "declined_pct": 0.0,
       "ndmi_change": -0.039,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-09-08.png",
       "photo_path": "/overlays/6401204.045_2026-09-08_rgb.png",
       "overlay_bounds": [
@@ -1207,12 +1016,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.53 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1238,12 +1042,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.44 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1269,12 +1068,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.56 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1282,19 +1076,16 @@
       "scene_id": "S2C_35TPN_20260916_0_L2A",
       "ndvi_median": 0.57,
       "ndmi_median": -0.018,
-      "affected_pct": 1.0,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828671,
-        47.433633
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-09-15",
       "median_change": 0.013,
       "declined_pct": 0.0,
       "ndmi_change": -0.031,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-09-16.png",
       "photo_path": "/overlays/6401204.045_2026-09-16_rgb.png",
       "overlay_bounds": [
@@ -1303,12 +1094,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.57 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1316,19 +1102,16 @@
       "scene_id": "S2A_35TPN_20260918_0_L2A",
       "ndvi_median": 0.537,
       "ndmi_median": -0.031,
-      "affected_pct": 1.1,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828804,
-        47.433631
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-09-16",
       "median_change": -0.033,
       "declined_pct": 0.0,
       "ndmi_change": -0.013,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-09-18.png",
       "photo_path": "/overlays/6401204.045_2026-09-18_rgb.png",
       "overlay_bounds": [
@@ -1337,12 +1120,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.54 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1350,19 +1128,16 @@
       "scene_id": "S2B_35TPN_20261001_0_L2A",
       "ndvi_median": 0.592,
       "ndmi_median": 0.005,
-      "affected_pct": 1.2,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828671,
-        47.433633
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-09-18",
       "median_change": 0.056,
       "declined_pct": 0.0,
       "ndmi_change": 0.036,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-10-01.png",
       "photo_path": "/overlays/6401204.045_2026-10-01_rgb.png",
       "overlay_bounds": [
@@ -1371,12 +1146,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401204.045",
@@ -1384,19 +1154,16 @@
       "scene_id": "S2C_35TPN_20261003_0_L2A",
       "ndvi_median": 0.592,
       "ndmi_median": -0.01,
-      "affected_pct": 1.3,
-      "affected_sector": "S",
-      "zone_count": 1,
-      "zone_center": [
-        28.828671,
-        47.433633
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-10-01",
       "median_change": -0.0,
       "declined_pct": 0.0,
       "ndmi_change": -0.015,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401204.045_2026-10-03.png",
       "photo_path": "/overlays/6401204.045_2026-10-03_rgb.png",
       "overlay_bounds": [
@@ -1405,12 +1172,7 @@
         47.440089,
         28.83042
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1436,12 +1198,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.14 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1467,12 +1224,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.19 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1498,12 +1250,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.18 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1529,12 +1276,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1560,12 +1302,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1591,12 +1328,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1622,12 +1354,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.27 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1653,12 +1380,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.29 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1684,12 +1406,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.35 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1715,12 +1432,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.40 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -1746,12 +1458,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.52 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2151,12 +1858,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.54 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2182,12 +1884,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.47 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2213,12 +1910,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.45 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2244,12 +1936,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.37 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2275,12 +1962,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.33 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2306,12 +1988,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.31 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2337,12 +2014,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.29 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2368,12 +2040,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.33 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2400,10 +2067,6 @@
         28.873028
       ],
       "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.32 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        },
         {
           "code": "possible_cloud",
           "text": "3 weak zone(s) and 2 declined zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
@@ -2434,12 +2097,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.28 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2465,12 +2123,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.34 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2496,12 +2149,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.29 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2527,12 +2175,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.25 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2559,10 +2202,6 @@
         28.873028
       ],
       "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.27 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        },
         {
           "code": "possible_cloud",
           "text": "3 weak zone(s) and 1 declined zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
@@ -2593,12 +2232,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.28 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2624,12 +2258,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.26 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2655,12 +2284,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.101",
@@ -2686,12 +2310,7 @@
         47.407506,
         28.873028
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.22 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3063,16 +2682,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.55 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        },
-        {
-          "code": "whole_field_drop",
-          "text": "the whole parcel dropped by 0.28 NDVI since 2026-06-18 (ripening, harvest or drought; the image alone cannot tell)"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3098,12 +2708,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.47 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3129,12 +2734,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.48 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3160,12 +2760,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.39 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3191,12 +2786,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.35 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3222,12 +2812,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.33 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3253,12 +2838,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.30 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3284,12 +2864,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.32 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3315,12 +2890,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.29 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3346,12 +2916,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.31 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3377,12 +2942,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.27 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3408,12 +2968,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.24 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3439,12 +2994,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.24 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3470,12 +3020,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.25 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3501,12 +3046,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.24 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3532,12 +3072,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3563,12 +3098,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.22 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3594,12 +3124,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.25 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3625,12 +3150,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3656,12 +3176,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.16 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3687,12 +3202,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.17 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3718,12 +3228,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3749,12 +3254,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3780,12 +3280,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3811,12 +3306,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3842,12 +3332,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3873,12 +3358,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.23 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3904,12 +3384,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.31 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401307.102",
@@ -3935,12 +3410,7 @@
         47.411152,
         28.856232
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.32 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -3966,12 +3436,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.18 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -3997,12 +3462,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.21 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4028,12 +3488,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.19 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4059,12 +3514,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4090,12 +3540,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.19 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4121,12 +3566,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4152,12 +3592,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.20 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4183,12 +3618,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.24 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4214,12 +3644,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.24 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4245,12 +3670,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.32 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4276,12 +3696,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.40 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4307,12 +3722,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.37 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4814,12 +4224,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "whole_field_drop",
-          "text": "the whole parcel dropped by 0.10 NDVI since 2026-08-19 (ripening, harvest or drought; the image alone cannot tell)"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4845,12 +4250,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4876,12 +4276,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.49 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4907,12 +4302,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.44 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4938,12 +4328,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.46 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -4969,12 +4354,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.38 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -5000,12 +4380,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.37 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -5031,12 +4406,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.40 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -5062,12 +4432,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.38 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -5093,12 +4458,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.35 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.033",
@@ -5124,12 +4484,7 @@
         47.360008,
         28.851815
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.33 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5155,12 +4510,7 @@
         47.350813,
         28.852052
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5186,12 +4536,7 @@
         47.350813,
         28.852052
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.56 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5217,12 +4562,7 @@
         47.350813,
         28.852052
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.54 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5248,12 +4588,7 @@
         47.350813,
         28.852052
       ],
-      "warnings": [
-        {
-          "code": "low_vegetation",
-          "text": "parcel NDVI median 0.59 is below 0.6: the canopy is incomplete, weak zones may be uneven emergence or bare soil; the weak-pixel rule was validated at NDVI ~0.75"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5651,19 +4986,16 @@
       "scene_id": "S2B_35TPN_20260703_0_L2A",
       "ndvi_median": 0.722,
       "ndmi_median": 0.23,
-      "affected_pct": 5.2,
-      "affected_sector": "NE",
-      "zone_count": 2,
-      "zone_center": [
-        28.851039,
-        47.349138
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-06-30",
       "median_change": -0.06,
       "declined_pct": 0.0,
       "ndmi_change": -0.043,
-      "zone_confirmed": false,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401512.058_2026-07-03.png",
       "photo_path": "/overlays/6401512.058_2026-07-03_rgb.png",
       "overlay_bounds": [
@@ -5680,9 +5012,9 @@
       "scene_id": "S2C_35TPN_20260715_0_L2A",
       "ndvi_median": 0.725,
       "ndmi_median": 0.206,
-      "affected_pct": 9.7,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-07-03",
@@ -5706,9 +5038,9 @@
       "scene_id": "S2C_35TPN_20260718_0_L2A",
       "ndvi_median": 0.753,
       "ndmi_median": 0.194,
-      "affected_pct": 11.1,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-07-15",
@@ -5732,9 +5064,9 @@
       "scene_id": "S2C_35TPN_20260728_0_L2A",
       "ndvi_median": 0.687,
       "ndmi_median": 0.198,
-      "affected_pct": 13.5,
+      "affected_pct": 8.8,
       "affected_sector": "E",
-      "zone_count": 2,
+      "zone_count": 1,
       "zone_center": [
         28.850617,
         47.348425
@@ -5744,7 +5076,7 @@
       "median_change": -0.067,
       "declined_pct": 0.0,
       "ndmi_change": 0.004,
-      "zone_confirmed": true,
+      "zone_confirmed": false,
       "overlay_path": "/overlays/6401512.058_2026-07-28.png",
       "photo_path": "/overlays/6401512.058_2026-07-28_rgb.png",
       "overlay_bounds": [
@@ -5756,7 +5088,7 @@
       "warnings": [
         {
           "code": "possible_cloud",
-          "text": "2 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
+          "text": "1 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
         }
       ]
     },
@@ -5766,9 +5098,9 @@
       "scene_id": "S2A_35TPN_20260730_1_L2A",
       "ndvi_median": 0.719,
       "ndmi_median": 0.161,
-      "affected_pct": 10.9,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-07-28",
@@ -5792,9 +5124,9 @@
       "scene_id": "S2B_35TPN_20260802_0_L2A",
       "ndvi_median": 0.718,
       "ndmi_median": 0.152,
-      "affected_pct": 11.8,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-07-30",
@@ -5818,9 +5150,9 @@
       "scene_id": "S2C_35TPN_20260804_0_L2A",
       "ndvi_median": 0.678,
       "ndmi_median": 0.116,
-      "affected_pct": 11.2,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-02",
@@ -5844,9 +5176,9 @@
       "scene_id": "S2C_35TPN_20260807_0_L2A",
       "ndvi_median": 0.704,
       "ndmi_median": 0.135,
-      "affected_pct": 11.8,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-04",
@@ -5870,9 +5202,9 @@
       "scene_id": "S2A_35TPN_20260809_2_L2A",
       "ndvi_median": 0.712,
       "ndmi_median": 0.141,
-      "affected_pct": 11.8,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-07",
@@ -5896,19 +5228,16 @@
       "scene_id": "S2C_35TPN_20260814_0_L2A",
       "ndvi_median": 0.68,
       "ndmi_median": 0.166,
-      "affected_pct": 7.5,
-      "affected_sector": "N",
-      "zone_count": 2,
-      "zone_center": [
-        28.84947,
-        47.349703
-      ],
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
+      "zone_center": null,
       "valid_pct": 74.0,
       "prev_scene_date": "2026-08-09",
       "median_change": -0.032,
       "declined_pct": 0.0,
       "ndmi_change": 0.025,
-      "zone_confirmed": true,
+      "zone_confirmed": null,
       "overlay_path": "/overlays/6401512.058_2026-08-14.png",
       "photo_path": "/overlays/6401512.058_2026-08-14_rgb.png",
       "overlay_bounds": [
@@ -5917,12 +5246,7 @@
         47.350813,
         28.852052
       ],
-      "warnings": [
-        {
-          "code": "possible_cloud",
-          "text": "2 weak zone(s) within 100 m of cloud-masked pixels: possibly a cloud the mask missed"
-        }
-      ]
+      "warnings": []
     },
     {
       "parcel_id": "6401512.058",
@@ -5930,9 +5254,9 @@
       "scene_id": "S2A_35TPN_20260816_0_L2A",
       "ndvi_median": 0.683,
       "ndmi_median": 0.12,
-      "affected_pct": 11.4,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-14",
@@ -5956,9 +5280,9 @@
       "scene_id": "S2B_35TPN_20260819_0_L2A",
       "ndvi_median": 0.695,
       "ndmi_median": 0.149,
-      "affected_pct": 10.6,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-16",
@@ -5982,9 +5306,9 @@
       "scene_id": "S2B_35TPN_20260822_0_L2A",
       "ndvi_median": 0.677,
       "ndmi_median": 0.141,
-      "affected_pct": 10.6,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-19",
@@ -6008,9 +5332,9 @@
       "scene_id": "S2A_35TPN_20260829_1_L2A",
       "ndvi_median": 0.753,
       "ndmi_median": 0.178,
-      "affected_pct": 9.3,
-      "affected_sector": "scattered",
-      "zone_count": 4,
+      "affected_pct": 0.0,
+      "affected_sector": null,
+      "zone_count": 0,
       "zone_center": null,
       "valid_pct": 100.0,
       "prev_scene_date": "2026-08-22",

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
+import yaml
 from rasterio.features import rasterize
 from rasterio.warp import transform_geom
 
@@ -16,6 +17,9 @@ OUT = HERE / "out"
 EXPORTED_PARCELS = HERE / "parcels.geojson"
 SEED_PARCELS = HERE.parent / "backend" / "data" / "parcels.geojson"
 PARCELS = Path(os.getenv("PARCELS_FILE") or (EXPORTED_PARCELS if EXPORTED_PARCELS.exists() else SEED_PARCELS))
+# The crop calendar is the one the sensor alerts use (app.crops of sensors-alerts). The satellite reads only
+# each phase's season, to know when a low or falling NDVI is normal for the crop.
+CROPS_FILE = Path(os.getenv("CROPS_FILE") or HERE.parent / "sensors-alerts" / "src" / "main" / "resources" / "application.yml")
 
 # NDVI colour ramp for looking at images: grey (water, roads) -> brown (bare soil) -> yellow -> green.
 NDVI_STOPS = [
@@ -44,6 +48,26 @@ def load_parcels():
     """{parcel_id: GeoJSON feature} from the parcels file (lon/lat); parcel_id is the cadastral number."""
     features = json.loads(PARCELS.read_text(encoding="utf-8"))["features"]
     return {f["properties"]["parcel_id"]: f for f in features}
+
+
+def crop_calendar():
+    """{crop: [(first day MM-DD, phase name, season), ...]} in calendar order."""
+    crops = yaml.safe_load(CROPS_FILE.read_text(encoding="utf-8"))["app"]["crops"]
+    return {crop: [(str(p["from"]), p["name"], p.get("season", "growing")) for p in cfg.get("phases", [])]
+            for crop, cfg in crops.items()}
+
+
+def phase_on(calendar, crop, date):
+    """(phase name, season) of the crop on that day (YYYY-MM-DD); (None, "growing") for a crop without a calendar.
+    Before the first phase starts, last year's last phase still runs."""
+    phases = calendar.get(crop) or []
+    if not phases:
+        return None, "growing"
+    current = phases[-1]
+    for p in phases:
+        if p[0] <= date[5:]:
+            current = p
+    return current[1], current[2]
 
 
 def polygon_mask(geometry, transform, crs, shape):

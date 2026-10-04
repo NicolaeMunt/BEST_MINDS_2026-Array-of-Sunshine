@@ -84,10 +84,13 @@ function App() {
     try {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
-      if (kind !== 'reset') setMinutes(kind === 'replay' ? 1440 : 15);  // a replayed night needs the long chart
+      // A replayed night needs a day on the chart, a replayed spell a week.
+      if (kind !== 'reset') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 15);
       setReload(n => n + 1);
     } catch (e) {
-      setToast(String(e.message).includes('503') ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
+      // 409: nothing to replay for this crop; the API says why.
+      setToast(e.status === 409 && e.detail ? e.detail
+        : e.status === 503 ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
     }
   }
 

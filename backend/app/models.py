@@ -12,7 +12,7 @@ Priority = Literal["high", "medium", "low"]
 Mode = Literal["NORMAL", "FROST", "HUMID", "DRY", "REPLAY"]
 FrostLevel = Literal["OK", "WARNING", "CRITICAL"]
 HumidityLevel = Literal["OK", "LOW", "HIGH"]
-AlertType = Literal["FROST", "HUMIDITY_HIGH", "HUMIDITY_LOW"]
+AlertType = Literal["FROST", "HUMIDITY_HIGH", "HUMIDITY_LOW", "IRRIGATION"]
 
 
 class CamelModel(BaseModel):
@@ -32,6 +32,7 @@ class SensorReadingOut(CamelModel):
     temperature_c: float
     humidity_pct: float
     dew_point_c: float = Field(description="°C, Magnus formula")
+    precipitation_mm: float | None = Field(None, description="Rain since the previous reading, mm; null if not reported")
     min_temperature_c: float | None = Field(None, description="Lowest in this point's stretch of time (long charts)")
     max_temperature_c: float | None = Field(None, description="Highest in this point's stretch of time (long charts)")
 
@@ -49,22 +50,53 @@ class SensorLatestOut(SensorReadingOut):
     """Shared contract (parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel) + our additions."""
     frost_level: FrostLevel
     crop: str | None = Field(None, description="Crop key the sensors service applies thresholds for")
-    humidity_level: HumidityLevel | None = Field(None, description="Against the crop's humidity range")
+    humidity_level: HumidityLevel | None = Field(None, description="HIGH: disease risk (damp hours); LOW: dry, hot air")
     mode: Mode = Field(description="Simulator mode, as reported by sensors-alerts")
+    phase: str | None = Field(None, description="The crop's phase on the reading's day")
+    frost_warning_c: float | None = Field(None, description="Frost thresholds of that phase; null = frost does no harm then")
+    frost_critical_c: float | None = None
+    disease: str | None = Field(None, description="The disease the damp-air rule watches for that day; null outside its window")
     drop_last_hour_c: float | None = Field(description="How much colder than an hour ago (reading time); <0 = warming")
     frost: FrostAssessment
 
 
+class WaterDayOut(CamelModel):
+    date: date
+    phase: str | None = None
+    kc: float | None = Field(None, description="FAO-56 crop coefficient of the phase; null = no crop to water")
+    et0_mm: float = Field(description="Reference evapotranspiration of the day (Hargreaves), mm")
+    etc_mm: float = Field(description="Water the crop used that day, Kc x ET0, mm")
+    rain_mm: float
+    deficit_mm: float = Field(description="Water missing from the root zone at the end of the day, mm")
+    measured: bool = Field(description="false: no readings that day, counted as no rain and no use")
+
+
+class WaterStatusOut(CamelModel):
+    """Soil water balance on a day (FAO-56), from the sensor readings since 1 May; the field is assumed not irrigated."""
+    date: date
+    phase: str | None = None
+    has_crop: bool = Field(description="false: nothing to water in this phase (not sown, harvested, dormant)")
+    deficit_mm: float = Field(description="Water missing from the root zone, mm (1 mm = 10 m³/ha)")
+    readily_available_mm: float = Field(description="The crop suffers once the deficit passes this (FAO-56 RAW)")
+    total_available_mm: float = Field(description="All the water the roots can reach (FAO-56 TAW)")
+    irrigate: bool = Field(description="Time to water: the deficit has passed the readily available water")
+    amount_mm: float = Field(description="Least water that takes the crop out of stress, mm (deficit minus the readily "
+                                         "available water); 0 when no watering is needed")
+    days: list[WaterDayOut] | None = Field(None, description="The day-by-day balance since 1 May (water endpoint only)")
+
+
 class SensorParcelOut(CamelModel):
-    """A sensor location as configured in sensors-alerts, with its latest reading."""
+    """A sensor location as configured in sensors-alerts, with its latest reading and its soil water today."""
     id: str
     name: str
     crop: str | None = None
     latest: SensorLatestOut | None = Field(description="null until the sensor sends its first reading")
+    water: WaterStatusOut | None = Field(None, description="null for a crop without a water balance")
 
 
 class AlertOut(CamelModel):
-    """Shared contract + priority and title. Level OK is the all-clear; humidity alerts are WARNING or OK."""
+    """Shared contract + priority and title. Level OK is the all-clear; humidity and irrigation alerts are
+    WARNING or OK. IRRIGATION alerts come from the water balance here, not from sensors-alerts."""
     parcel_id: str
     parcel_name: str
     crop: str | None = None
@@ -77,6 +109,7 @@ class AlertOut(CamelModel):
     message: str
     priority: Priority
     title: str
+    deficit_mm: float | None = Field(None, description="IRRIGATION: water missing from the soil that day, mm")
 
 
 class DemoOut(CamelModel):
@@ -132,6 +165,9 @@ class ImageryResultBase(CamelModel):
 
 class ImageryResultOut(ImageryResultBase):
     rules_version: str = Field(description="Fingerprint of the analysis code that produced this result")
+    phase: str | None = Field(None, description="The crop's phase on the scene's day (crop calendar)")
+    season: Literal["dormant", "establishing", "growing", "maturing", "harvested"] | None = Field(
+        None, description="growing: low or falling NDVI is a warning; otherwise it is normal for the phase")
 
 
 class ImagerySkippedOut(CamelModel):

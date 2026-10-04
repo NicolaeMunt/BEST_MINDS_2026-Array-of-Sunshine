@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     temperature_c REAL NOT NULL,
     humidity_pct  REAL NOT NULL,
     received_at   TEXT NOT NULL,   -- when this API stored it; differs from timestamp for a replayed night
+    precipitation_mm REAL,         -- rain since the previous reading; NULL when the sensor does not say
     PRIMARY KEY (parcel_id, timestamp)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_readings_received ON sensor_readings(parcel_id, received_at);
@@ -60,18 +61,35 @@ def get_conn():
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        # Databases created before the rain column was added.
+        if "precipitation_mm" not in {row["name"] for row in conn.execute("PRAGMA table_info(sensor_readings)")}:
+            conn.execute("ALTER TABLE sensor_readings ADD COLUMN precipitation_mm REAL")
         conn.executescript(IMAGERY_SCHEMA)
 
 
 def add_readings(conn, parcel_id, readings, received_at):
-    """readings: (timestamp text, temperature, humidity). A reading stored before is replaced, so a night
-    replayed twice is kept once and counts as the newest data again."""
+    """readings: (timestamp text, temperature, humidity[, rain mm]). A reading stored before is replaced, so a
+    night replayed twice is kept once and counts as the newest data again."""
     conn.executemany(
-        "INSERT INTO sensor_readings (parcel_id, timestamp, temperature_c, humidity_pct, received_at) "
-        "VALUES (?, ?, ?, ?, ?) ON CONFLICT (parcel_id, timestamp) DO UPDATE SET "
-        "temperature_c = excluded.temperature_c, humidity_pct = excluded.humidity_pct, received_at = excluded.received_at",
-        [(parcel_id, ts, temperature, humidity, received_at) for ts, temperature, humidity in readings],
+        "INSERT INTO sensor_readings (parcel_id, timestamp, temperature_c, humidity_pct, precipitation_mm, received_at) "
+        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (parcel_id, timestamp) DO UPDATE SET "
+        "temperature_c = excluded.temperature_c, humidity_pct = excluded.humidity_pct, "
+        "precipitation_mm = excluded.precipitation_mm, received_at = excluded.received_at",
+        [(parcel_id, r[0], r[1], r[2], r[3] if len(r) > 3 else None, received_at) for r in readings],
     )
+
+
+def daily_weather(conn, parcel_id, start, end):
+    """One row per local day from start to end (dates, both included) that has readings: the lowest and highest
+    temperature, the lowest humidity, the rain and how many readings there were."""
+    first = ts_text(datetime(start.year, start.month, start.day, tzinfo=timezone.utc) - timedelta(seconds=LOCAL_OFFSET_SEC))
+    last = ts_text(datetime(end.year, end.month, end.day, tzinfo=timezone.utc) + timedelta(days=1, seconds=-LOCAL_OFFSET_SEC))
+    return conn.execute(
+        "SELECT date(timestamp, ?) AS day, MIN(temperature_c) AS t_min, MAX(temperature_c) AS t_max, "
+        "MIN(humidity_pct) AS hum_min, COALESCE(SUM(precipitation_mm), 0) AS rain_mm, COUNT(*) AS readings "
+        "FROM sensor_readings WHERE parcel_id = ? AND timestamp >= ? AND timestamp < ? GROUP BY 1 ORDER BY 1",
+        (f"+{LOCAL_OFFSET_SEC} seconds", parcel_id, first, last),
+    ).fetchall()
 
 
 def newest_timestamp(conn, parcel_id):

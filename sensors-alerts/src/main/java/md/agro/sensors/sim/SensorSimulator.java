@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.annotation.PreDestroy;
 import md.agro.sensors.alert.AlertService;
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.model.SensorMode;
 import md.agro.sensors.store.ParcelRegistry;
@@ -24,15 +25,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-/** One virtual sensor per parcel. Readings go straight into {@link AlertService}. */
+/**
+ * One virtual sensor per parcel. Readings go straight into {@link AlertService}.
+ * FROST ramps the live readings down past the frost threshold of today's phase. REPLAY plays the frost night
+ * CSV; HUMID and DRY play a real damp or hot, dry spell for the parcel's crop. Replayed readings carry the
+ * timestamps of the recording, so the rules see the hours and the crop phase of that time.
+ */
 @Service
 public class SensorSimulator {
 
     private static final Logger log = LoggerFactory.getLogger(SensorSimulator.class);
-    private static final ZoneId ZONE = ZoneId.of("Europe/Chisinau");
+    private static final ZoneId ZONE = CropCalendar.ZONE;
 
     private static final class Sensor {
         final String parcelId;
@@ -42,18 +49,27 @@ public class SensorSimulator {
         double lastTemp = Double.NaN;
         double lastHum = Double.NaN;
 
-        // FROST, HUMID and DRY move linearly from the values at the switch to a target.
+        // FROST moves linearly from the values at the switch to a target.
         Instant rampStart;
         double rampFromTemp;
         double rampFromHum;
         double rampToTemp;
         double rampToHum;
 
+        // REPLAY, HUMID and DRY play these rows; empty otherwise.
         List<ReplayData.Row> replay = List.of();
         int replayIndex;
+        double replaySecondsPerHour;
 
         Sensor(String parcelId) {
             this.parcelId = parcelId;
+        }
+    }
+
+    /** HUMID or DRY was asked for a crop that has no recorded spell of that kind. */
+    public static class NoEpisodeException extends RuntimeException {
+        public NoEpisodeException(String message) {
+            super(message);
         }
     }
 
@@ -131,49 +147,45 @@ public class SensorSimulator {
         ids.forEach(id -> setMode(id, mode));
     }
 
-    /** @throws IllegalStateException if REPLAY is requested and the CSV cannot be loaded */
+    /**
+     * @throws IllegalStateException if a replay CSV cannot be loaded
+     * @throws NoEpisodeException    if HUMID or DRY is asked for a crop without a recorded spell
+     */
     public void setMode(String parcelId, SensorMode mode) {
         Sensor s = sensor(parcelId);
         if (s == null) {
             throw new IllegalArgumentException("Unknown parcel " + parcelId);
         }
-        // Loaded on every start so the CSV can be swapped without a restart.
-        List<ReplayData.Row> rows = mode == SensorMode.REPLAY ? loadReplay() : List.of();
+        // Loaded on every start so the CSVs can be swapped without a restart.
+        List<ReplayData.Row> rows = switch (mode) {
+            case REPLAY -> load(cfg.replayFile());
+            case HUMID, DRY -> loadEpisode(parcelId, mode);
+            default -> List.of();
+        };
         int generation;
         synchronized (s) {
-            // Replay readings carry the timestamps of the recorded night; don't mix them with live ones.
-            if (mode == SensorMode.REPLAY || s.mode == SensorMode.REPLAY) {
+            // Replayed readings carry the timestamps of the recording; don't mix them with live ones.
+            if (!rows.isEmpty() || !s.replay.isEmpty()) {
                 store.clearReadings(parcelId);
             }
             s.mode = mode;
             generation = ++s.generation;
-            if (mode == SensorMode.FROST || mode == SensorMode.HUMID || mode == SensorMode.DRY) {
+            s.replay = rows;
+            s.replayIndex = 0;
+            s.replaySecondsPerHour = mode == SensorMode.REPLAY ? cfg.replaySecondsPerHour() : cfg.episodeSecondsPerHour();
+            if (mode == SensorMode.FROST) {
+                // The target goes past the critical threshold of today's phase, so the alert fires if frost can
+                // harm the crop now; when it cannot (not sown, harvested, dormant), nothing fires, as in the field.
+                AppProperties.Phase phase = CropCalendar.phase(parcels.cropFor(parcelId), Instant.now());
                 ThreadLocalRandom rnd = ThreadLocalRandom.current();
-                // Targets go past the thresholds of the parcel's crop, so the alert fires for any crop.
-                AppProperties.Crop crop = parcels.cropFor(parcelId);
                 s.rampStart = Instant.now();
                 s.rampFromTemp = Double.isNaN(s.lastTemp) ? normalTemp() : s.lastTemp;
                 s.rampFromHum = Double.isNaN(s.lastHum) ? normalHumidity(s.rampFromTemp) : s.lastHum;
-                switch (mode) {
-                    case FROST -> {
-                        s.rampToTemp = crop.frostCriticalC() - rnd.nextDouble(0.5, 2.0);
-                        s.rampToHum = rnd.nextDouble(87, 93);
-                    }
-                    case HUMID -> {
-                        s.rampToTemp = rnd.nextDouble(16, 19);
-                        s.rampToHum = Math.min(98, crop.humidityHighPct() + rnd.nextDouble(4, 9));
-                    }
-                    default -> {
-                        s.rampToTemp = rnd.nextDouble(30, 33);
-                        s.rampToHum = Math.max(8, crop.humidityLowPct() - rnd.nextDouble(5, 10));
-                    }
-                }
-            } else if (mode == SensorMode.REPLAY) {
-                s.replay = rows;
-                s.replayIndex = 0;
+                s.rampToTemp = (phase.frostHarms() ? phase.frostCriticalC() : -2) - rnd.nextDouble(0.5, 2.0);
+                s.rampToHum = rnd.nextDouble(87, 93);
             }
         }
-        log.info("{} -> {}", parcelId, mode);
+        log.info("{} -> {}{}", parcelId, mode, rows.isEmpty() ? "" : " (" + rows.size() + " rows from " + rows.get(0).timestamp() + ")");
         scheduleTick(s, generation, 0);
     }
 
@@ -185,34 +197,36 @@ public class SensorSimulator {
         long nextMs = intervalMs();
         try {
             Reading reading;
+            boolean finished = false;
             synchronized (s) {
                 if (s.generation != generation) {
                     return;
                 }
-                switch (s.mode) {
-                    case FROST, HUMID, DRY -> reading = rampReading(s);
-                    case REPLAY -> {
-                        if (s.replayIndex >= s.replay.size()) {
-                            reading = null;
-                        } else {
-                            ReplayData.Row row = s.replay.get(s.replayIndex++);
-                            reading = new Reading(s.parcelId, row.timestamp(), row.temperatureC(),
-                                    row.humidityPct());
-                            if (s.replayIndex < s.replay.size()) {
-                                long gapSec = Duration.between(row.timestamp(),
-                                        s.replay.get(s.replayIndex).timestamp()).getSeconds();
-                                nextMs = Math.max(50, Math.round(gapSec / 3600.0 * cfg.replaySecondsPerHour() * 1000));
-                            }
+                if (!s.replay.isEmpty()) {
+                    if (s.replayIndex >= s.replay.size()) {
+                        reading = null;
+                        finished = true;
+                    } else {
+                        ReplayData.Row row = s.replay.get(s.replayIndex++);
+                        reading = new Reading(s.parcelId, row.timestamp(), row.temperatureC(), row.humidityPct(),
+                                row.precipitationMm());
+                        if (s.replayIndex < s.replay.size()) {
+                            long gapSec = Duration.between(row.timestamp(),
+                                    s.replay.get(s.replayIndex).timestamp()).getSeconds();
+                            nextMs = Math.max(50, Math.round(gapSec / 3600.0 * s.replaySecondsPerHour * 1000));
                         }
                     }
-                    default -> reading = normalReading(s);
+                } else if (s.mode == SensorMode.FROST) {
+                    reading = rampReading(s);
+                } else {
+                    reading = normalReading(s);
                 }
                 if (reading != null) {
                     s.lastTemp = reading.temperatureC();
                     s.lastHum = reading.humidityPct();
                 }
             }
-            if (reading == null) {
+            if (finished) {
                 log.info("{} replay finished", s.parcelId);
                 setMode(s.parcelId, SensorMode.NORMAL);
                 return;
@@ -251,15 +265,28 @@ public class SensorSimulator {
         return 65 - (temp - 12) * 4;
     }
 
-    private List<ReplayData.Row> loadReplay() {
+    /** The recorded spell for the parcel's crop: replay/humid-wheat.csv and the like. */
+    private List<ReplayData.Row> loadEpisode(String parcelId, SensorMode mode) {
+        String crop = parcels.cropKey(parcelId);
+        String location = cfg.episodeFile().replace("{mode}", mode.name().toLowerCase()).replace("{crop}", crop);
+        Resource resource = resourceLoader.getResource(location);
+        if (crop.isEmpty() || !resource.exists()) {
+            String what = mode == SensorMode.HUMID ? "o perioadă umedă cu risc de boală" : "o perioadă de aer fierbinte și uscat";
+            throw new NoEpisodeException("Pentru %s nu am %s în 2026, deci nu am ce reda. Alege alt teren."
+                    .formatted(parcels.cropFor(parcelId).name(), what));
+        }
+        return load(location);
+    }
+
+    private List<ReplayData.Row> load(String location) {
         try {
-            List<ReplayData.Row> rows = ReplayData.load(resourceLoader.getResource(cfg.replayFile()), ZONE);
+            List<ReplayData.Row> rows = ReplayData.load(resourceLoader.getResource(location), ZONE);
             if (rows.isEmpty()) {
-                throw new IllegalStateException("Replay file has no usable rows: " + cfg.replayFile());
+                throw new IllegalStateException("Replay file has no usable rows: " + location);
             }
             return rows;
         } catch (IOException e) {
-            throw new IllegalStateException("Cannot read replay file " + cfg.replayFile(), e);
+            throw new IllegalStateException("Cannot read replay file " + location, e);
         }
     }
 

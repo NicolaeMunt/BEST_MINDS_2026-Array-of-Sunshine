@@ -1,9 +1,10 @@
 # Agronomicon
 
-Crop monitoring for farmers. The app shows the air sensors (per-crop frost and humidity alerts on
-Telegram, the readings stored with their timestamps, a web app that says in plain words what each sensor
-means) and, for every parcel, what the Sentinel-2 satellite saw since May: weak vegetation zones, the
-picture of the field and how it changed, refreshed once a day. The map in the web app is still to come.
+Crop monitoring for farmers. The app shows the air sensors (frost, disease-risk and dry-air alerts on
+Telegram that follow each crop's phase, the readings stored with their timestamps, when to water from the
+soil water balance, a web app that says in plain words what each sensor means) and, for every parcel, what
+the Sentinel-2 satellite saw since May: weak vegetation zones, the picture of the field and how it changed,
+refreshed once a day. The map in the web app is still to come.
 
 ## Start everything
 
@@ -13,9 +14,13 @@ Needs JDK 21+, Maven and Python 3.11+.
 powershell -ExecutionPolicy Bypass -File start.ps1
 ```
 
-This builds and starts `sensors-alerts`, creates the virtual environments of the backend and of the
-satellite job (`imagery/.venv`, with rasterio), starts the API and opens http://localhost:8000/. Each
-service runs in its own window; close the windows to stop. `-NoBrowser` skips the browser.
+This builds and starts `sensors-alerts` (rebuilt when its code or crop rules changed), creates or updates
+the virtual environments of the backend and of the satellite job (`imagery/.venv`, with rasterio), starts
+the API and opens http://localhost:8000/. Each service runs in its own window; close the windows to stop.
+`-NoBrowser` skips the browser.
+
+A `backend/sensors.db` made before the real-weather sample season still holds the invented one: delete it
+and `start.ps1` creates it again with the new season.
 
 For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `sensors-alerts/README.md`).
 
@@ -36,7 +41,7 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 | Web app → API | Everything the page shows; the page only talks to the API | `frontend/src/` |
 | API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
 | sensors-alerts → API → SQLite | Every reading and alert, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
-| sensors-alerts → Telegram | Frost and humidity alerts with crop-specific advice | `sensors-alerts/.env` |
+| sensors-alerts → Telegram | Frost, disease-risk and dry-air alerts with advice for the crop's phase | `sensors-alerts/.env` |
 | API → satellite job | The parcels (polygons) as `imagery/parcels.geojson`; the job runs as its own process | `backend/app/imagery.py` |
 | satellite job → API → SQLite | `imagery/out/imagery.json`: one result per parcel and scene, and the scenes skipped for clouds | `backend/app/imagery.py` |
 | API → web app | Parcels, the satellite result as of any day, the season history, the PNGs at `/overlays/` | `backend/app/main.py` |
@@ -65,17 +70,35 @@ locations themselves (ID, name, crop) are configured in `sensors-alerts/src/main
 Alerts are stored the same way, in `sensor_alerts` (sensor, time sent, type, level, the readings at that
 moment and the text sent to the farmer), and `GET /alerts` reads them from there.
 
+### Crop rules
+
+Every crop goes through phases on a fixed calendar (Orhei area), kept in one place: `app.crops` in
+`sensors-alerts/src/main/resources/application.yml`. The sensors service, the API and the satellite job all
+read it. Per phase it gives the frost thresholds (none when frost does no harm: not sown, harvested,
+dormant), the disease the damp-air rule watches for (hours of damp air at its temperatures, e.g. apple scab,
+downy mildew, head blight), the days when dry, hot air harms the crop, and the FAO-56 crop coefficient for
+the water balance. The numbers come from extension services, FAO and the Moldovan weather service; the
+sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi".
+
+### Soil water
+
+`backend/app/water.py` keeps a soil water balance per parcel (FAO-56) from the stored temperature and rain:
+the crop uses water every day, the rain gives it back, and once the deficit passes what the crop can use
+without stress the web app says it is time to water and how much. The irrigation alerts come from that
+balance and are listed with the others (not sent on Telegram). The field is assumed not irrigated.
+
 ### Sample season
 
-So there is a history to show, `backend/data/` holds a sample season for the five demo sensors:
-`sensor-history-sample.csv` (hourly readings since 1 May) and `alert-history-sample.csv` (the alerts those
-readings raise under the crop thresholds). **The numbers are invented, not measured**: a late frost in
-May, rainy spells, two heat waves and the first autumn frost.
+So there is a history to show, `backend/data/` holds the season of the five demo parcels **from real
+weather**, the same season the satellite saw: `sensor-history-sample.csv` (hourly temperature, humidity
+and rain since 1 May, Open-Meteo reanalysis at each parcel, CC BY 4.0; not a sensor in the field) and
+`alert-history-sample.csv` (the alerts the crop rules raise on it: a damp first week of June with head
+blight risk on the wheat, apple scab in May, downy mildew on the vine, a hot, dry August).
 
 ```powershell
 cd backend
 .venv\Scripts\python.exe load_sample.py   # into sensors.db; start.ps1 does this for a new database
-.venv\Scripts\python.exe make_sample.py   # rewrites the two files, up to yesterday
+.venv\Scripts\python.exe make_sample.py   # downloads the weather and rewrites the files, up to yesterday
 ```
 
 ### The web app
@@ -87,9 +110,10 @@ Components are written with htm templates (`html\`<div>...</div>\``) instead of 
 
 Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
 each), those with a problem first. The selected field opens with one coloured block that says what is
-happening and what to do (frost, air too humid or too dry, or all fine), then the temperature and
-humidity now, then the temperature over time (now, a day, a week or since May) with every alert marked
-on it and listed underneath, one line each.
+happening and what to do (frost, disease risk, hot and dry air, time to water, or all fine), then the
+temperature and humidity now with the crop's phase, then the water in the soil, then the temperature over
+time (now, a day, a week or since May) with every alert marked on it and listed underneath, one line each.
+The demo menu can replay a real frost night and real damp or hot, dry spells of 2026.
 
 ## Parcels and satellite results
 
@@ -121,7 +145,7 @@ what it is: `imagery/LOGIC.md`.
 | Method | Path | What |
 |---|---|---|
 | GET | `/parcels`, `/parcels/{id}` | Parcels with cadastral number, crop and polygon |
-| GET | `/parcels/{id}/imagery?date=2026-07-15` | The newest scene taken on that day or before, how old it is, and the scenes skipped for clouds since |
+| GET | `/parcels/{id}/imagery?date=2026-07-15` | The newest scene taken on that day or before (with the crop's phase that day), how old it is, and the scenes skipped for clouds since |
 | GET | `/parcels/{id}/imagery/history?from=&to=` | Every result and skipped scene of the season, oldest first |
 | GET | `/overlays/{file}` | Overlay (weak zones) and photo PNGs; `overlayBounds` = [S, W, N, E] |
 | POST | `/imagery/refresh` | Run the satellite job now (202; 409 if running) |
@@ -142,6 +166,7 @@ what it is: `imagery/LOGIC.md`.
 - The map (Leaflet) with the satellite overlay is not in the web app yet; the API already serves everything
   it needs.
 - The drone and soil reports and the priority score were removed from the API for now.
-- The satellite rules are validated on field crops; for the orchard and the vineyard the per-crop rules are
-  still to be written (see `imagery/LOGIC.md`).
+- The crop calendar is fixed by date; an early or late year can be 1-2 weeks off. Telling the phase from
+  the satellite curve (e.g. "harvested") would fix that for the field crops.
+- The water balance does not know when the farmer watered: there is no way to enter it yet.
 - `frontend/AgroMonitor.html` is the earlier static mobile prototype; it does not use the API.

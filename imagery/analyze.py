@@ -6,13 +6,16 @@ For every parcel of the parcels file (common.PARCELS) and every scene cached for
   3. valid_pct = share of the shrunken parcel left after the mask; below MIN_VALID_PCT the
      scene is skipped for that parcel and listed under "skipped" with the reason
   4. ndvi_median of the valid pixels; a pixel is weak if its NDVI is more than DROP_NDVI below it
-  5. weak zones (8-connected) smaller than MIN_ZONE_PX are dropped; affected_pct is the share of
-     valid pixels left in weak zones after that cleanup
+  5. weak zones (8-connected) smaller than MIN_ZONE_PX are dropped, and in orchards and vineyards
+     (ROW_CROPS) first the strips narrower than ROW_OPENING_PX pixels (the grass between the rows);
+     affected_pct is the share of valid pixels left in weak zones after that cleanup
   6. affected_sector: compass direction from the parcel centre to the centre of the largest zone
      (C when it is in the inner third of the parcel radius), or "scattered" when the largest zone
      holds less of the weak area than SCATTERED_BELOW_PCT; zone_count; zone_center as [lon, lat]
   7. overlay and photo for the map, reprojected to Web Mercator (the web map's projection) on a
      DISPLAY_RES_M grid by copying pixels, so they line up with the map and stay sharp
+  8. warnings; low_vegetation (below the crop's NDVI) and whole_field_drop only in the crop's growing
+     season (crop calendar of sensors-alerts): before and after it, low or falling NDVI is normal
 
 Writes out/imagery.json ({"rules_version", "results": [...], "skipped": [...]}), out/overlays/<parcel>_<date>.png
 and <parcel>_<date>_rgb.png; with --check-images also out/<parcel>/mask.png and weak.png, every date side by side.
@@ -31,10 +34,10 @@ import rasterio.transform
 from PIL import Image, ImageDraw, ImageFont
 from rasterio.transform import Affine, from_origin
 from rasterio.warp import Resampling, reproject, transform, transform_bounds, transform_geom
-from scipy.ndimage import binary_dilation, distance_transform_edt, label
+from scipy.ndimage import binary_dilation, binary_opening, distance_transform_edt, label
 
-from common import HERE, OUT, load_index, load_parcels, ndvi, polygon_mask, polygon_pixels, read_asset, \
-    reflectance, to_10m
+from common import HERE, OUT, crop_calendar, load_index, load_parcels, ndvi, phase_on, polygon_mask, polygon_pixels, \
+    read_asset, reflectance, to_10m
 
 SCL_KEEP = [4, 5, 6]     # vegetation, bare soil, water; any other class is suspicious in a field
 WIDEN_M = 20             # the mask grows by one 20 m SCL pixel around everything thrown away
@@ -58,7 +61,15 @@ PHOTO_GAIN, PHOTO_GAMMA = 1.6, 0.8 # one fixed brightening of ESA's true-colour 
 OUTSIDE, NORMAL, WEAK, HIDDEN = 0, 1, 2, 3
 
 LOW_VEGETATION_NDVI = 0.6 # below this median the canopy is incomplete; the weak rule was validated at ~0.75
+# A 10 m pixel of a vineyard or an orchard mixes the rows with the grass between them, so their NDVI stays lower.
+CROP_LOW_VEGETATION_NDVI = {"vineyard": 0.4, "orchard": 0.5}
+# Rows and alleys of grass: weak strips under 3 pixels (30 m) wide are dropped there, compact patches stay.
+ROW_CROPS = {"orchard", "vineyard"}
+ROW_OPENING_PX = 3
 WHOLE_PARCEL_DROP = 0.10  # parcel median fell by more than this since the previous scene
+# low_vegetation and whole_field_drop are warnings only while the crop should be green; before it has grown
+# (or in winter) and once it ripens or is harvested, a low or falling NDVI is normal (crop calendar, common.py).
+WARN_SEASONS = {"growing"}
 MAX_GAP_DAYS = 30         # an older previous scene says little about what changed
 CLOUD_NEAR_M = 100        # a declined zone this close to masked pixels may be a cloud the mask missed
 PIXEL_M = 10
@@ -165,11 +176,13 @@ def remove_small_zones(weak, min_px):
     return keep[labels]
 
 
-def weak_zones(ndvi_map, valid):
-    """Parcel median, weak pixels before cleanup and weak pixels left after removing small zones."""
+def weak_zones(ndvi_map, valid, rows=False):
+    """Parcel median, weak pixels before cleanup and weak pixels left after removing small zones. With rows
+    (orchard, vineyard), weak strips narrower than ROW_OPENING_PX pixels go first: the grass between the rows."""
     median = float(np.median(ndvi_map[valid]))
     raw = valid & (ndvi_map < median - DROP_NDVI)
-    return median, raw, remove_small_zones(raw, MIN_ZONE_PX)
+    kept = binary_opening(raw, structure=np.ones((ROW_OPENING_PX, ROW_OPENING_PX), bool)) if rows else raw
+    return median, raw, remove_small_zones(kept, MIN_ZONE_PX)
 
 
 def direction_of(row, col, centre, radius_px):
@@ -279,9 +292,10 @@ def warning(code, text):
     return {"code": code, "text": text}
 
 
-def change_since(prev, cur, date):
+def change_since(prev, cur, date, season="growing", phase=None):
     """prev_scene_date, median_change and declined_pct for the result, the warnings they raise
-    (stale_previous, whole_field_drop) and the declined pixels (None for the first scene)."""
+    (stale_previous; whole_field_drop while the crop should be green) and the declined pixels (None for the
+    first scene)."""
     if prev is None:
         return {"prev_scene_date": None, "median_change": None, "declined_pct": None}, [], None
     median_change, declined, both = compare_with_previous(prev, cur)
@@ -290,10 +304,11 @@ def change_since(prev, cur, date):
     if gap > MAX_GAP_DAYS:
         warnings.append(warning("stale_previous",
                                 f"previous scene is {gap} days older ({prev['date']}): the comparison says little"))
-    if median_change < -WHOLE_PARCEL_DROP:
+    if median_change < -WHOLE_PARCEL_DROP and season in WARN_SEASONS:
         warnings.append(warning("whole_field_drop",
-                                f"the whole parcel dropped by {-median_change:.2f} NDVI since {prev['date']} "
-                                f"(ripening, harvest or drought; the image alone cannot tell)"))
+                                f"the whole parcel dropped by {-median_change:.2f} NDVI since {prev['date']} while the "
+                                f"crop should still be green ({phase or 'no crop calendar'}): hail, drought, early "
+                                f"drying or mowing; the image alone cannot tell"))
     change = {"prev_scene_date": prev["date"], "median_change": round(median_change, 3),
               "declined_pct": round(100 * declined.sum() / both.sum(), 1)}
     return change, warnings, declined
@@ -330,7 +345,8 @@ def render_weak(parcel_id, panels):
             draw.text((6, 4 + 22 * k), line, font=font, fill="white", stroke_width=3, stroke_fill="black")
         images.append(img)
     legend = (f"red: weak (more than {DROP_NDVI} below the median), in zones of {MIN_ZONE_PX}+ px   "
-              f"yellow: weak but in zones under {MIN_ZONE_PX} px, dropped   grey: NDVI, light = denser")
+              f"yellow: weak but dropped (zones under {MIN_ZONE_PX} px; in orchards and vineyards also strips "
+              f"under {ROW_OPENING_PX} px wide)   grey: NDVI, light = denser")
     return sheet(images, legend, OUT / parcel_id / "weak.png")
 
 
@@ -355,11 +371,12 @@ def render_masks(parcel_id, panels):
     return sheet(images, legend, OUT / parcel_id / "mask.png")
 
 
-def rules_version():
-    """Short fingerprint of the analysis code: it changes whenever a rule changes."""
+def rules_version(calendar):
+    """Short fingerprint of the analysis code and the crop calendar: it changes whenever a rule changes."""
     digest = hashlib.sha1()
     for name in RULES_FILES:
         digest.update((HERE / name).read_bytes())
+    digest.update(json.dumps(calendar, sort_keys=True).encode())
     return digest.hexdigest()[:10]
 
 
@@ -368,8 +385,10 @@ def main():
     ap.add_argument("--check-images", action="store_true", help="also write out/<parcel>/mask.png and weak.png")
     args = ap.parse_args()
     results, skipped = [], []
+    calendar = crop_calendar()
     OVERLAYS.mkdir(parents=True, exist_ok=True)
     for parcel_id, parcel in load_parcels().items():
+        crop = parcel["properties"].get("crop")
         panels, weak_panels = [], []
         grid = display_grid(parcel["geometry"])
         prev = None  # previous accepted scene of this parcel
@@ -388,6 +407,7 @@ def main():
                       f"{'':6s} {'':8s} {'':8s} {'':5s} {'':9s}  {'':16s}  SKIPPED: {reason}")
                 continue
             a = analyze_scene(parcel_id, parcel, scene)
+            phase, season = phase_on(calendar, crop, date)
             warnings = []
             if a["n_inner"] < LOW_CONFIDENCE_PX:
                 warnings.append(warning("low_pixel_count", f"low confidence: only {a['n_inner']} pixels after the "
@@ -405,19 +425,20 @@ def main():
                                 "valid_pct": a["valid_pct"], "reason": reason})
                 status = "SKIPPED: " + reason
             else:
-                median, a["weak_raw"], a["weak"] = weak_zones(a["ndvi"], a["valid"])
+                median, a["weak_raw"], a["weak"] = weak_zones(a["ndvi"], a["valid"], rows=crop in ROW_CROPS)
                 a["median"] = median
                 raw_pct = 100 * a["weak_raw"].sum() / a["n_valid"]
                 affected_pct = round(100 * a["weak"].sum() / a["n_valid"], 1)
                 sector, n_zones, center, main_zone = zone_location(a["weak"], a["inner"], a["transform"], a["crs"])
-                if median < LOW_VEGETATION_NDVI:
+                low_ndvi = CROP_LOW_VEGETATION_NDVI.get(crop, LOW_VEGETATION_NDVI)
+                if median < low_ndvi and season in WARN_SEASONS:
                     warnings.append(warning("low_vegetation",
-                                            f"parcel NDVI median {median:.2f} is below {LOW_VEGETATION_NDVI}: the "
-                                            f"canopy is incomplete, weak zones may be uneven emergence or bare soil; "
-                                            f"the weak-pixel rule was validated at NDVI ~0.75"))
+                                            f"parcel NDVI median {median:.2f} is below {low_ndvi} for {crop} while it "
+                                            f"should be green ({phase or 'no crop calendar'}): poor growth, early drying "
+                                            f"or bare patches; the weak-pixel rule was validated at NDVI ~0.75"))
 
                 ndmi_median = round(float(np.nanmedian(a["ndmi"][a["valid"]])), 3)
-                change, change_warnings, declined = change_since(prev, a, date)
+                change, change_warnings, declined = change_since(prev, a, date, season, phase)
                 change["ndmi_change"] = None if prev is None else round(ndmi_median - prev["ndmi_median"], 3)
                 # The main zone is confirmed when it overlaps weak pixels of the previous accepted scene.
                 change["zone_confirmed"] = (None if prev is None or main_zone is None
@@ -438,7 +459,7 @@ def main():
                                 "zone_center": center, "valid_pct": a["valid_pct"], **change,
                                 "overlay_path": f"/overlays/{overlay_name}", "photo_path": f"/overlays/{photo_name}",
                                 "overlay_bounds": grid[3], "warnings": warnings})
-                status = "accepted" + ("; " + ", ".join(w["code"] for w in warnings) if warnings else "")
+                status = f"accepted ({phase or '-'})" + ("; " + ", ".join(w["code"] for w in warnings) if warnings else "")
                 numbers = (f"{median:6.3f} {raw_pct:7.1f}% {affected_pct:7.1f}% {n_zones:5d} {str(sector):>9s}  "
                            f"{str(center):16s}")
                 weak_panels.append(([date, f"median {median:.3f}", f"affected {affected_pct}%, sector {sector}",
@@ -452,7 +473,7 @@ def main():
                 print(f"  weak zones image: {render_weak(parcel_id, weak_panels)}")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps({"rules_version": rules_version(), "results": results, "skipped": skipped},
+    OUTPUT.write_text(json.dumps({"rules_version": rules_version(calendar), "results": results, "skipped": skipped},
                                  indent=2, ensure_ascii=False))
     print(f"written {OUTPUT}: {len(results)} results, {len(skipped)} skipped")
 

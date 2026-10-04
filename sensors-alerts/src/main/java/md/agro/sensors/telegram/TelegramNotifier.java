@@ -14,6 +14,7 @@ import jakarta.annotation.PreDestroy;
 import md.agro.sensors.alert.AlertNotifier;
 import md.agro.sensors.alert.Messages;
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.Reading;
 import md.agro.sensors.store.ParcelRegistry;
@@ -170,13 +171,11 @@ public class TelegramNotifier implements AlertNotifier {
         }
         Reading r = st.get().reading();
         AppProperties.Crop crop = parcels.cropFor(parcel.get().id());
-        return ("%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n"
-                + "Praguri %s: îngheț %s / %s °C · umiditate %.0f–%.0f%%").formatted(
+        return "%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n%s".formatted(
                 parcel.get().name(), parcel.get().id(), crop.name(), Messages.num(r.temperatureC()),
                 r.humidityPct(), Messages.status(st.get().humidity()),
                 Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()),
-                crop.name(), Messages.num(crop.frostWarningC()), Messages.num(crop.frostCriticalC()),
-                crop.humidityLowPct(), crop.humidityHighPct());
+                Messages.phase(CropCalendar.phase(crop, r.timestamp())));
     }
 
     private final class Bot extends TelegramLongPollingBot {

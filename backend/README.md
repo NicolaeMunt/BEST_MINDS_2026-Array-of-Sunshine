@@ -15,14 +15,14 @@ frontend ──> Agronomicon API :8000 ──> sensors-alerts :8081  (показ
 1. sensors-alerts (JDK 21+, Maven), с реальной ночью для реплея:
    ```powershell
    cd sensors-alerts
-   $env:REPLAY_FILE = "file:../backend/data/frost-night-chisinau-2020-04-01.csv"
+   $env:REPLAY_FILE = "file:../backend/data/frost-night-orhei-2025-04-09.csv"
    $env:FROST_COOLDOWN_SECONDS = "30"    # для репетиций
    mvn spring-boot:run                   # или: java -jar target/sensors-alerts-0.1.0.jar
    ```
 2. API:
    ```bash
    cd backend
-   pip install -r requirements.txt
+   pip install -r requirements.txt       # PyYAML: правила культур читаются из application.yml sensors-alerts
    uvicorn app.main:app --port 8000      # sensors.db создаётся сам
    ```
 
@@ -63,25 +63,41 @@ sensors-alerts держит в памяти только последние по
 
 ## Пример сезона
 
-Чтобы было что показать, в `data/` лежит пример сезона для пяти демо-датчиков. **Цифры придуманы, не измерены**:
-поздний заморозок в мае, дождливые периоды, две волны жары и первый осенний заморозок.
+Чтобы было что показать, в `data/` лежит сезон для пяти демо-участков **по реальной погоде 2026 года**:
+Open-Meteo Historical Weather API (реанализ ERA5, CC BY 4.0) в центре каждого участка. Это не измерения
+датчика в поле, но тот же сезон, что видел спутник: дождливая первая неделя июня, жаркий и сухой август.
 
 | | |
 |---|---|
-| `data/sensor-history-sample.csv` | показания раз в час с 1 мая: `parcelId,timestamp,temperatureC,humidityPct` |
-| `data/alert-history-sample.csv` | оповещения, которые эти показания вызвали бы по порогам культур |
+| `data/sensor-history-sample.csv` | показания раз в час с 1 мая: `parcelId,timestamp,temperatureC,humidityPct,precipitationMm` |
+| `data/alert-history-sample.csv` | оповещения, которые эти показания вызвали бы по правилам культур (70 за сезон) |
 | `python load_sample.py` | загружает оба файла в базу (можно запускать повторно); `start.ps1` делает это для новой базы |
-| `python make_sample.py` | пересоздаёт файлы до вчерашнего дня; пороги культур скопированы из `application.yml` |
+| `python make_sample.py` | скачивает погоду до вчерашнего дня (нужен интернет) и пересоздаёт файлы, эпизоды для демо HUMID/DRY (`sensors-alerts/src/main/resources/replay/`) и ночь заморозка |
+
+Правила культур (фазы, пороги заморозка, болезни, сухой воздух, параметры воды) читаются из `app.crops` в
+`sensors-alerts/src/main/resources/application.yml` (`app/crops.py`), поэтому история считается теми же
+правилами, что и живые оповещения. Если база создана со старым придуманным сезоном, удалите
+`backend/sensors.db`: `start.ps1` создаст её заново с новым.
+
+## Водный баланс и полив
+
+`app/water.py` считает водный баланс почвы каждого участка по методу FAO-56 из сохранённых показаний:
+ET0 по Hargreaves из минимальной и максимальной температуры дня, коэффициент культуры Kc фазы, дождь
+возвращает воду. Когда дефицит превышает легкодоступную воду (RAW = p × TAW), пора поливать.
+Предполагается неорошаемое поле с полной почвой на 1 мая. Оповещения `IRRIGATION` (день, когда дефицит
+перешёл порог, и день, когда дождь вернул воду) вычисляются из баланса и отдаются в `GET /alerts`
+вместе с остальными; в Telegram они не уходят.
 
 ## Эндпоинты
 
 | | |
 |---|---|
-| `GET /sensors/parcels` | датчики (`id`, `name`, `crop`) с последним показанием в `latest` (`null`, пока показаний нет) |
+| `GET /sensors/parcels` | датчики (`id`, `name`, `crop`) с последним показанием в `latest` (`null`, пока показаний нет) и водой в почве сегодня в `water` |
 | `GET /sensors/parcels/{id}/latest` | контракт sensors-alerts + `mode`, `dropLastHourC`, `frost` (приоритет, рекомендация, причины) |
 | `GET /sensors/parcels/{id}/readings?minutes=60` | сохранённые показания из базы + `dewPointC`. До 2 часов — сами показания (не больше 300, равномерно прорежены); дольше — по точке на 5 минут, час или день со средним и `minTemperatureC` / `maxTemperatureC` |
-| `GET /alerts?parcelId={id}` | сохранённые оповещения из базы, новые первыми: контракт + `priority`, `title`; уровень `OK` — отбой тревоги |
-| `POST /demo/{frost\|humid\|dry\|replay\|normal}/{parcelId}` | → sensors-alerts: режим симулятора |
+| `GET /sensors/parcels/{id}/water?date=` | водный баланс на дату: дефицит, RAW, TAW, нужно ли поливать (`irrigate`) и сколько минимум (`amountMm`), плюс баланс по дням с 1 мая |
+| `GET /alerts?parcelId={id}&type=ALL` | оповещения, новые первыми: сохранённые + `IRRIGATION` из баланса; контракт + `priority`, `title`; уровень `OK` — отбой тревоги. `type`: `FROST`, `HUMIDITY`, `IRRIGATION`, `ALL` |
+| `POST /demo/{frost\|humid\|dry\|replay\|normal}/{parcelId}` | → sensors-alerts: режим симулятора; `409` с причиной, если для культуры нет эпизода HUMID/DRY |
 | `POST /demo/reset` | → sensors-alerts: всё в NORMAL, оповещения и cooldowns очищены |
 
 Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
@@ -91,7 +107,9 @@ sensors-alerts держит в памяти только последние по
 ```jsonc
 { "parcelId": "6401512.058", "timestamp": "2026-10-03T14:24:41.6Z", "temperatureC": -2.8, "humidityPct": 57,
   "dewPointC": -10.1, "frostLevel": "CRITICAL",          // OK | WARNING | CRITICAL (из sensors-alerts)
-  "crop": "orchard", "humidityLevel": "OK",              // OK | LOW | HIGH для культуры
+  "crop": "orchard", "humidityLevel": "OK",              // OK | HIGH (риск болезни) | LOW (сухой горячий воздух)
+  "phase": "coacere și recoltare", "frostWarningC": 0.0, "frostCriticalC": -2.0,  // фаза культуры и её пороги
+  "disease": null,                                        // болезнь, за которой следят в этот день
   "mode": "REPLAY",                                       // NORMAL | FROST | HUMID | DRY | REPLAY
   "dropLastHourC": 1.2,                                   // на сколько холоднее, чем час назад
   "frost": { "frostLevel": "CRITICAL", "score": 95, "priority": "high", "title": "Îngheț",
@@ -120,5 +138,7 @@ sensors-alerts держит в памяти только последние по
 CRITICAL → high), рекомендацию и причины: ниже/около нуля, остывание за последний час, иней или
 «чёрный» заморозок (сухой воздух, точка росы далеко ниже температуры).
 
-`data/frost-night-chisinau-2020-04-01.csv` — реальная ночь с заморозком (Кишинёв, 1–2 апреля 2020, до −4°C)
-в формате реплея sensors-alerts. Источник: Open-Meteo Historical Weather API (ERA5), CC BY 4.0.
+`data/frost-night-orhei-2025-04-09.csv` — реальная ночь с заморозком у сада под Оргеевом (8–9 апреля 2025,
+до −3,2 °C, яблони в фазе бутонов), в формате реплея sensors-alerts; её использует `start.ps1`.
+`data/frost-night-chisinau-2020-04-01.csv` — прежняя ночь (Кишинёв, 1–2 апреля 2020, до −4 °C): по календарю
+культур она приходится до чувствительных фаз. Источник обеих: Open-Meteo Historical Weather API (ERA5), CC BY 4.0.

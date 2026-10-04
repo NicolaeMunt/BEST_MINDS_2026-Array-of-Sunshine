@@ -22,6 +22,9 @@ Pentru fiecare parcelă și fiecare scenă Sentinel-2:
 8. orice motiv de prudență apare în `warnings`, cu un cod fix.
 9. totul rulează singur o dată pe zi pe server, iar rezultatele rămân în baza de date ca istoric, pe
    fiecare parcelă identificată prin numărul ei cadastral.
+10. regulile depind de faza culturii, pe un calendar comun cu alertele senzorilor: un NDVI mic sau în
+   scădere e avertisment doar cât cultura ar trebui să fie verde; via și livada au prag propriu și un
+   filtru pentru iarba dintre rânduri.
 
 ## Cadrul pentru hackathon
 
@@ -606,3 +609,151 @@ locuri de configurat.
   decât normal pentru cultură s-ar putea semnala doar cu o curbă așteptată pe cultură.
 - **Grâul, 5 iunie:** o zonă slabă la marginea unui nor e marcată corect cu `possible_cloud`.
 - **Porumbul:** sănătos tot sezonul, cel mult 2,3% slab.
+
+Rezolvate în secțiunea următoare: avertismentele urmează faza culturii, via și livada au prag propriu,
+iar livada și via au filtrul de formă pentru rânduri.
+
+## Reguli pe culturi: totul depinde de faza culturii
+
+**Ideea.** Pericolul depinde de faza în care e cultura, nu doar de cultură: −1 °C e grav pentru grâul în
+înflorire și nu contează pentru grâul strâns. Regulile vechi aveau un singur prag pe tot sezonul. Ele dădeau
+alerte când nu mai era nimic de stricat (înghețul din 29 septembrie la toate cele 5 parcele) și erau prea
+blânde exact în fazele sensibile.
+
+**Calendarul fazelor (ales: calendar fix pe cultură).** Fiecare cultură are fazele ei, cu data de
+început pentru zona Orhei, în `sensors-alerts/src/main/resources/application.yml`. Același fișier e citit
+de serviciul de senzori (Java), de API (bilanțul apei, istoricul) și de pipeline-ul de satelit, deci
+pragurile nu se pot dezalinia.
+
+Am respins două variante:
+- grade-zile din temperatura senzorului: cer data semănatului;
+- faza ghicită din curba satelitului: merge doar pentru culturile de câmp.
+
+Prețul: într-un an timpuriu sau târziu, calendarul poate greși cu 1–2 săptămâni.
+
+Datele vin din surse și din ce a văzut satelitul în 2026:
+- grâul se coace de la ~20 iunie (la noi: 25 iunie) și se strânge în iulie (FAO GIEWS);
+- floarea-soarelui înflorește în iulie și se usucă de la ~20 iulie;
+- porumbul se usucă de la ~15 august (la noi: 16 august) și se strânge din octombrie (FAO);
+- via dezmugurește în a treia decadă a lui aprilie și înflorește în prima decadă a lui iunie (Institutul
+  Național de Viticultură și Vinificație);
+- mărul înflorește în masă pe 25 aprilie – 10 mai (agroexpert.md).
+
+**Înghețul pe faze.** Pragurile critice sunt temperaturile la care începe paguba, din surse:
+
+| Cultură | Faza | Prag critic | Sursa |
+|---|---|---|---|
+| Grâu | alungire / burduf / spicuire–înflorire / formarea boabelor | −4 / −2 / −1 / −2 °C, câte 2 ore | Kansas State, C646 |
+| Porumb | până la 5 frunze, punctul de creștere e sub pământ | −2 °C câteva ore (la 0 °C mor doar frunzele) | Purdue |
+| Porumb | după maturitatea fiziologică (de la ~20 septembrie) | înghețul nu mai scade recolta | Purdue |
+| Floarea-soarelui | cotiledoane – 4 frunze / buton–înflorire / umplerea semințelor | −3 / −1 / −4 °C | Manitoba, NDSU/SDSU |
+| Măr | dezmugurire / buton / înflorire și fructe tinere / fructe în coacere | −5 / −2,8 / −2 / −2 °C | Iowa State după WSU (10% flori moarte, 30 min); Penn State pentru fructe |
+| Vie | lăstari tineri / struguri în coacere | −1 / −2 °C | WSU, Penn State |
+
+Avertizarea vine de obicei cu 2 °C înainte de pragul critic. În nopțile calme mugurii sunt mai reci decât
+aerul, deci e nevoie de timp pentru pornit protecția. În fazele fără prag (repaus, nesemănat, după
+recoltare), înghețul nu dă alertă.
+
+Pe istoricul inventat de dinainte, efectul ar fi fost:
+- dispăreau alertele din 29 septembrie la grâu, floarea-soarelui și porumb;
+- porumbul tânăr primea 4 nopți CRITICAL la 0…−1,6 °C, temperaturi pe care le suportă; rămânea doar
+  noaptea de −3 °C.
+
+Sfatul de îngheț poate fi și pe fază. Merele în coacere și strugurii primesc alt sfat decât florile.
+
+**Riscul de boală: ore de aer umed, nu o citire.** O singură citire umedă nu înseamnă boală: ciupercile au
+nevoie de frunze ude câteva ore, la o anumită temperatură, într-o anumită fază. Senzorul nu măsoară
+frunza udă, așa că folosim umiditatea aerului de cel puțin 90% (95% la vie) ca aproximare. Regula: cel
+puțin N ore umede din ultimele W, la temperatura bolii, doar în fereastra ei.
+
+| Cultură | Boala | Condiția | Când | Sursa |
+|---|---|---|---|---|
+| Grâu | fuzarioza spicului | 48 din ultimele 168 de ore, 15–30 °C | 20 mai – 15 iunie | modelele de risc FHB (De Wolf și alții) |
+| Porumb | helmintosporioză | 6 ore la rând, 18–27 °C | 15 iunie – 31 august | Univ. Minnesota, Crop Protection Network |
+| Floarea-soarelui | putregai alb pe calatidiu | 48 din ultimele 72 de ore, sub 29 °C | 1–25 iulie (înflorire) | NDSU, SDSU |
+| Livadă | rapăn | 6 ore la 16–24 °C, 12 ore de la 9 °C, 15 ore de la 7 °C, 28 de ore de la 4 °C | 1 aprilie – 31 mai | tabelul Mills revizuit, Penn State |
+| Vie | mană | 4 ore la rând cu cel puțin 95%, 13–29 °C | 15 mai – 31 august | APS, NSW DPI |
+
+Prima variantă închidea riscul imediat ce condiția nu mai era îndeplinită. Pe date reale, la porumb pe
+24 iunie, alerta a venit la 02:00, iar „riscul a trecut” la 04:00, deși umiditatea era 99%: doar
+temperatura coborâse sub 18 °C. De aceea **riscul rămâne 24 de ore după ultima oră în care condiția a fost
+îndeplinită**. Așa, o perioadă ploioasă dă o singură alertă, iar fermierul are timp să trateze.
+
+**Aerul fierbinte și uscat.** Regula veche alerta la umiditate scăzută, la orice temperatură. Acum alerta
+pornește la umiditate ≤ 30% **și** temperatură ≥ 25 °C. Aceasta e definiția suhoveiului din glosarul
+serviciului meteo al Moldovei (meteo.md). Vântul de peste 5 m/s din definiție nu îl măsurăm.
+
+Alerta e activă doar în fazele în care strică:
+- grâul: până la recoltare;
+- porumbul: înflorire și umplerea boabelor;
+- floarea-soarelui: iulie – mijlocul lui august;
+- livada și via: iunie–august.
+
+Și această alertă ține 24 de ore. Senzorul vede aerul, nu solul, deci mesajul spune „aer fierbinte și
+uscat”, nu „sol uscat”.
+
+**Când trebuie udat: bilanțul apei din sol (FAO-56).** În fiecare zi cultura consumă Kc × ET0, iar ploaia
+dă apă înapoi:
+- ET0 vine din temperatura minimă și maximă a zilei (Hargreaves, FAO-56 ecuația 52), deci ajunge
+  senzorul nostru.
+- Kc e coeficientul fazei (FAO-56, tabelul 12).
+- Solul ține 170 mm de apă pe metru de rădăcini (FAO-56, tabelul 19, lut prăfos).
+- Adâncimea rădăcinilor e mijlocul intervalului din FAO-56, tabelul 22.
+- Cultura suferă când lipsesc peste p × apa totală (p din același tabel). Atunci vine „E timpul să udați”.
+- Pornim pe 1 mai cu solul plin, după ploile de primăvară.
+- Nu știm dacă fermierul a udat, deci presupunem un câmp neirigat.
+
+Prima încercare a folosit adâncimea minimă a rădăcinilor (1 m la porumb). Satelitul a arătat că era greșit:
+modelul spunea că porumbul a rămas fără apă pe 24 iulie, dar NDVI-ul lui a stat la 0,86 până la jumătatea
+lui august. Cu mijlocul intervalului FAO, modelul și satelitul se potrivesc:
+
+| Cultură | De udat din | Sol aproape gol din | Ce a văzut satelitul |
+|---|---|---|---|
+| Floarea-soarelui | 6 iulie | 2 august | NDVI scade de la sfârșitul lui iulie; 0,54 pe 4 august |
+| Porumb | 16 iulie | 3 august | NDVI scade de la 16 august |
+| Livadă | 30 iunie | 24 iulie | iarba dintre rânduri se usucă din iulie |
+| Vie | 18 iulie | – | – |
+| Grâu | – (strâns înainte) | – | – |
+
+Cantitatea afișată e cât trebuie ca să iasă cultura din stres: deficitul minus pragul. Să umpli tot solul
+ar cere de 2 ori mai mult, iar „udați 255 mm” nu e un sfat realist.
+
+**Istoricul și demo-ul, pe vreme reală.** Sezonul exemplu era inventat și avea vârfuri de umiditate de o
+singură oră, deci regulile de boală n-ar fi dat nimic pe el. Acum e vremea reală din 2026 la fiecare
+parcelă, de la Open-Meteo (reanaliză ERA5, CC BY 4.0, aceeași sursă ca noaptea de îngheț), și se
+potrivește zi cu zi cu satelitul. Nu e o măsurătoare din câmp, iar ERA5 netezește minimele nopții.
+
+Pe 2026, regulile dau 70 de alerte în loc de 230:
+- risc de fuzarioză la grâu: 8–14 iunie, după săptămâna ploioasă 1–7 iunie;
+- rapăn la livadă: de 3 ori în mai;
+- mană la vie: de 8 ori;
+- helmintosporioză la porumb: de 4 ori;
+- aer fierbinte și uscat: 1–23 august;
+- risc de îngheț la livadă și vie: 1 și 3 mai.
+
+Butoanele de demo „zile umede” și „zile de arșiță” redau accelerat prima perioadă reală din 2026 cu alertă
+pentru cultura parcelei. Unde n-a existat o asemenea perioadă, demo-ul spune cinstit că nu are ce reda:
+- floarea-soarelui n-a avut nicio perioadă umedă în înflorire, pentru că iulie a fost secetos;
+- grâul n-a avut nicio zi de arșiță înainte de recoltare.
+
+Noaptea reală de îngheț e acum 8–9 aprilie 2025: −3,2 °C la livadă, când mărul era în buton (prag
+−2,8 °C). Noaptea din 1 aprilie 2020 cădea înainte de fazele sensibile ale culturilor noastre.
+
+**Pe satelit:**
+- `low_vegetation` și `whole_field_drop` sunt avertismente doar cât cultura ar trebui să fie verde
+  (sezonul `growing` din calendar). Înainte de răsărire și după coacere, un NDVI mic sau în scădere e
+  normal. API-ul arată faza la fiecare scenă (`phase`, `season`).
+- Pragul `low_vegetation` e pe cultură: vie 0,4, livadă 0,5, câmp 0,6. Pixelul de 10 m amestecă rândul cu
+  iarba dintre rânduri (OENO One), iar via noastră a stat între 0,44 și 0,69 tot sezonul.
+- La livadă și vie, zonele slabe mai înguste de 3 pixeli (30 m) se elimină înainte de curățarea zonelor
+  mici. Acelea sunt alei și benzi de iarbă; petele compacte de pomi bolnavi rămân. Filtrul nu se aplică la
+  culturile de câmp, unde ar șterge zonele mici reale (la floarea-soarelui, 28 iunie: 0,9% → 0).
+
+Ce s-a schimbat pe 2026:
+- `low_vegetation`: de la 122 la 0. Toate cădeau în faze în care un NDVI mic e normal; în fazele de
+  creștere, nicio cultură n-a coborât sub prag.
+- `whole_field_drop`: de la 2 la 0. Ambele erau maturare normală (grâul pe 25 iunie, porumbul pe 22
+  august).
+- Rețeaua de iarbă din livadă: de la 5–13,5% la 0, în 13 din 14 scene. Pe 28 iulie rămâne o pată de 8,8%
+  lângă un nor, deja marcată `possible_cloud`.
+- Toate cele 18 marcaje de zonă rămase cad pe roșu.

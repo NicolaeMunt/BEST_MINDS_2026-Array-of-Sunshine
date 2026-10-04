@@ -31,13 +31,16 @@ if (Test-Port 8081) {
     Write-Host "Port 8081 is already in use: assuming sensors-alerts is running."
 } else {
     $jar = Join-Path $sensors "target\sensors-alerts-0.1.0.jar"
-    if (-not (Test-Path $jar)) {
-        Write-Host "Building sensors-alerts (first run takes a few minutes) ..."
+    # Rebuilt when a source file or the crop rules (application.yml) are newer than the jar.
+    $stale = (Test-Path $jar) -and [bool](Get-ChildItem (Join-Path $sensors "src\main") -Recurse -File |
+        Where-Object { $_.LastWriteTime -gt (Get-Item $jar).LastWriteTime } | Select-Object -First 1)
+    if (-not (Test-Path $jar) -or $stale) {
+        Write-Host "Building sensors-alerts (the first build takes a few minutes) ..."
         Push-Location $sensors
         try { & mvn -q -B -DskipTests package; if ($LASTEXITCODE -ne 0) { throw "Maven build failed" } }
         finally { Pop-Location }
     }
-    $env:REPLAY_FILE = "file:../backend/data/frost-night-chisinau-2020-04-01.csv"
+    $env:REPLAY_FILE = "file:../backend/data/frost-night-orhei-2025-04-09.csv"
     if (-not $env:FROST_COOLDOWN_SECONDS) { $env:FROST_COOLDOWN_SECONDS = "30" }
     # Started in sensors-alerts so it finds .env (Telegram token) and telegram-chats.txt.
     Start-Process java -ArgumentList "-jar", "target\sensors-alerts-0.1.0.jar" -WorkingDirectory $sensors
@@ -57,6 +60,15 @@ if (-not (Test-Path $imageryPy)) {
     & python -m venv (Join-Path $imagery ".venv")
     & $imageryPy -m pip install -q -r (Join-Path $imagery "requirements.txt")
     if ($LASTEXITCODE -ne 0) { throw "pip install for imagery failed" }
+}
+# Environments made before the crop rules came need PyYAML (both read sensors-alerts' application.yml).
+foreach ($env_ in @(@($py, $backend), @($imageryPy, $imagery))) {
+    & $env_[0] -c "import yaml" 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Updating the packages of $($env_[1]) ..."
+        & $env_[0] -m pip install -q -r (Join-Path $env_[1] "requirements.txt")
+        if ($LASTEXITCODE -ne 0) { throw "pip install failed in $($env_[1])" }
+    }
 }
 if (Test-Port 8000) {
     Write-Host "Port 8000 is already in use: assuming the API is running."

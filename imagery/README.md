@@ -35,6 +35,11 @@ python -m venv .venv
 Fără `parcels.geojson` (exportul API-ului), scripturile citesc `../backend/data/parcels.geojson`, fișierul
 din care se încarcă baza de date. Alt fișier se poate da prin variabila `PARCELS_FILE`.
 
+Calendarul culturilor (fazele, cu ce e normal în fiecare) vine din `app.crops` din
+`../sensors-alerts/src/main/resources/application.yml`, același fișier din care iau pragurile alertele
+senzorilor. Pipeline-ul citește doar sezonul fiecărei faze (`growing`, `maturing` și celelalte). Alt fișier
+se poate da prin `CROPS_FILE`.
+
 **Descărcarea** merge dată cu dată, cu toate parcelele odată. Parcelele vecine folosesc aceleași bucăți
 ale fișierelor satelitului, iar GDAL le ține în memorie, deci se descarcă o singură dată. Pentru scenele
 în care sub 50% din parcelă poate fi senin se citește doar harta de nori; benzile nu se mai descarcă, iar
@@ -62,7 +67,7 @@ câmpului** și pe **un singur lot** (vezi LOGIC.md: K10 și grâul au arătat c
 
 ```json
 {
-  "rules_version": "bb8e95634d",
+  "rules_version": "45f95360f7",
   "results": [
     {
       "parcel_id": "6401307.101",
@@ -95,12 +100,12 @@ câmpului** și pe **un singur lot** (vezi LOGIC.md: K10 și grâul au arătat c
 
 | Câmp | Ce înseamnă |
 |---|---|
-| `rules_version` | Amprenta codului de analiză (`analyze.py`, `common.py`). Se schimbă când se schimbă o regulă, ca istoricul din bază să știe cu ce reguli a fost calculat fiecare rând. |
+| `rules_version` | Amprenta codului de analiză (`analyze.py`, `common.py`) și a calendarului culturilor. Se schimbă când se schimbă o regulă, ca istoricul din bază să știe cu ce reguli a fost calculat fiecare rând. |
 | `parcel_id` | Numărul cadastral al parcelei (fictiv în demo). |
 | `scene_id` | Scena Sentinel-2 din care vine rezultatul. |
 | `ndvi_median` | NDVI-ul tipic al parcelei în acea scenă (mediana pixelilor curați). |
 | `ndmi_median` | NDMI-ul tipic al parcelei: apa din frunze (nu din sol). Doar context, fără etichetă de stres de apă. |
-| `affected_pct` | Procentul din partea vizibilă a parcelei aflat în zone slabe: NDVI cu peste 0,10 sub `ndvi_median`, în zone de cel puțin 10 pixeli (0,1 ha). |
+| `affected_pct` | Procentul din partea vizibilă a parcelei aflat în zone slabe: NDVI cu peste 0,10 sub `ndvi_median`, în zone de cel puțin 10 pixeli (0,1 ha). La livadă și vie, fără fâșiile mai înguste de 30 m (iarba dintre rânduri). |
 | `affected_sector` | Unde e zona slabă cea mai mare, ca direcție de la centrul parcelei: `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`; `C` = centru; `scattered` = mai multe zone fără una dominantă; `null` = nicio zonă. |
 | `zone_count` | Numărul de zone slabe. |
 | `zone_center` | `[lon, lat]` al pixelului din zona cea mai mare aflat cel mai aproape de centrul ei (deci mereu pe zonă), pentru un marcaj pe hartă; `null` când nu e nicio zonă sau sectorul e `scattered`. |
@@ -117,15 +122,18 @@ câmpului** și pe **un singur lot** (vezi LOGIC.md: K10 și grâul au arătat c
 | Cod de avertisment | Când apare |
 |---|---|
 | `low_pixel_count` | sub 200 de pixeli în parcelă după micșorarea de 20 m |
-| `low_vegetation` | mediana NDVI sub 0,6 (început de sezon sau câmp recoltat; regula de pixel slab e validată la ~0,75) |
+| `low_vegetation` | mediana NDVI sub pragul culturii (câmp 0,6, livadă 0,5, vie 0,4), doar cât cultura ar trebui să fie verde (sezonul `growing` din calendar): creștere slabă, uscare mai devreme decât normal sau goluri |
 | `possible_cloud` | o zonă slabă sau înrăutățită la sub 100 m de pixeli aruncați de masca de nori |
-| `whole_field_drop` | mediana NDVI a scăzut cu peste 0,10 față de scena anterioară |
+| `whole_field_drop` | mediana NDVI a scăzut cu peste 0,10 față de scena anterioară, doar în sezonul `growing` (la coacere și recoltare scăderea e normală) |
 | `stale_previous` | scena anterioară e la peste 30 de zile |
 
 `skipped` conține scenele în care sub 50% din parcelă e vizibil. În bază merg în `imagery_skipped`, nu ca
 rezultate, iar API-ul le arată la data aleasă ca „aici au fost nori”.
 
-În API aceleași câmpuri ies în camelCase (`ndviMedian`, `affectedPct`, …), ca restul API-ului.
+În API aceleași câmpuri ies în camelCase (`ndviMedian`, `affectedPct`, …), ca restul API-ului. API-ul mai
+adaugă `phase` (faza culturii în ziua scenei, de exemplu „coacere”) și `season` (`dormant`, `establishing`,
+`growing`, `maturing`, `harvested`), din calendarul culturilor: în afara lui `growing`, un NDVI mic sau în
+scădere e normal.
 
 ## Fișiere
 
@@ -133,7 +141,7 @@ rezultate, iar API-ul le arată la data aleasă ca „aici au fost nori”.
 |---|---|
 | `fetch.py` | Descarcă din Earth Search doar fereastra fiecărei parcele, în `cache/`. Singurul pas cu internet. |
 | `analyze.py` | Tot pipeline-ul de analiză, doar din `cache/`. |
-| `common.py` | Citirea cache-ului, a parcelelor și funcții comune. |
+| `common.py` | Citirea cache-ului, a parcelelor, a calendarului culturilor și funcții comune. |
 | `push.py` | Trimite `out/imagery.json` la API, pentru o rulare de mână. |
 | `check_map.py` | Verifică alinierea pe hartă, ca în Leaflet. |
 | `season_chart.py` | Graficul sezonului fiecărei parcele, doar din `imagery.json`. |

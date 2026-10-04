@@ -6,7 +6,8 @@ const FILTERS = [['all', 'Toate'], ['critical', 'Risc mare'], ['warning', 'Risc 
 const PERIODS = [[7, 'ultimele 7 zile'], [30, 'ultimele 30 de zile'], [null, 'tot sezonul']];
 
 function facts(a) {
-  if (a.type === 'IRRIGATION') return `lipsesc ${num(a.deficitMm, 0)} mm de apă în sol`;
+  // The soil probe's advice has no deficit, only the moisture in its message.
+  if (a.type === 'IRRIGATION') return a.deficitMm != null ? `lipsesc ${num(a.deficitMm, 0)} mm de apă în sol` : 'solul e prea uscat';
   if (a.type === 'SOWING') return `solul are ${num(a.temperatureC)}°C la 5 cm`;
   return `${num(a.temperatureC)}°C, umiditate ${num(a.humidityPct, 0)}%`;
 }

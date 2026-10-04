@@ -177,7 +177,7 @@ def readings(conn, parcel_id, minutes):
 
 def readings_summary(conn, parcel_id, minutes, bucket_sec):
     """The same window as readings(), one row per bucket_sec of time: the first timestamp, the average
-    temperature and humidity, the lowest and highest temperature. Day-long buckets follow local days."""
+    temperature and humidity, the lowest and highest of each. Day-long buckets follow local days."""
     newest = newest_timestamp(conn, parcel_id)
     if not newest:
         return []
@@ -185,7 +185,8 @@ def readings_summary(conn, parcel_id, minutes, bucket_sec):
     return conn.execute(
         "SELECT parcel_id, MIN(timestamp) AS timestamp, AVG(temperature_c) AS temperature_c, "
         "AVG(humidity_pct) AS humidity_pct, MIN(temperature_c) AS min_temperature_c, "
-        "MAX(temperature_c) AS max_temperature_c FROM sensor_readings "
+        "MAX(temperature_c) AS max_temperature_c, MIN(humidity_pct) AS min_humidity_pct, "
+        "MAX(humidity_pct) AS max_humidity_pct FROM sensor_readings "
         "WHERE parcel_id = ? AND timestamp BETWEEN ? AND ? "
         "GROUP BY (CAST(strftime('%s', timestamp) AS INTEGER) + ?) / ? ORDER BY 2",
         (parcel_id, start, newest, LOCAL_OFFSET_SEC if bucket_sec >= 86400 else 0, bucket_sec),
@@ -345,10 +346,11 @@ def upsert_user(conn, user_id, name, created_at):
 
 
 def upsert_parcels(conn, rows):
-    """rows: dicts with PARCEL_COLUMNS as keys. A parcel stored before takes the new values but keeps created_at,
-    and keeps its crop once the farmer has set it (crop_confirmed)."""
+    """rows: dicts with PARCEL_COLUMNS as keys. A parcel stored before takes the new values but keeps created_at and
+    its owner (a demo parcel given to an account stays with it), and keeps its crop once the farmer has set it
+    (crop_confirmed)."""
     updates = ", ".join(f"{c} = excluded.{c}" for c in PARCEL_COLUMNS
-                        if c not in ("id", "created_at", "crop", "crop_confirmed", "sowing_date"))
+                        if c not in ("id", "user_id", "created_at", "crop", "crop_confirmed", "sowing_date"))
     conn.executemany(
         f"{_insert('parcels', PARCEL_COLUMNS)} ON CONFLICT (id) DO UPDATE SET {updates}, "
         "crop = CASE WHEN parcels.crop_confirmed = 1 THEN parcels.crop ELSE excluded.crop END, "

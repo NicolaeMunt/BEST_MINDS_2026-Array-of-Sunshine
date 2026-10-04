@@ -11,7 +11,7 @@ export function Topbar({ user, page, onSignOut }) {
     </a>
     <nav className="topbar-nav">
       ${link('', 'Terenurile')}
-      ${link('profile', 'Profilul')}
+      ${page !== 'profile' && link('profile', 'Profilul')}
       ${user.role === 'admin' && link('admin', 'Administrare')}
       <button className="btn btn-small btn-quiet" onClick=${onSignOut}>Ieși</button>
     </nav>

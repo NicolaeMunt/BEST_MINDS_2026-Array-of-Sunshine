@@ -50,15 +50,16 @@ def parcels():
     return _call("GET", "/sensors/parcels") or []
 
 
+def register(parcel_id, name, crop, sowing_date=None):
+    """Adds a parcel or updates its name, crop and sowing date (the crop's rules follow them); sensors-alerts starts
+    a simulated sensor for a new one."""
+    return _call("PUT", _parcel_path(parcel_id), body={"name": name, "crop": crop, "sowingDate": sowing_date})
+
+
 def latest(parcel_id):
     """{parcelId, timestamp, temperatureC, humidityPct, precipitationMm, dewPointC, frostLevel, crop, humidityLevel,
     mode, phase, frostWarningC, frostCriticalC, disease} or None."""
     return _call("GET", _parcel_path(parcel_id) + "/latest")
-
-
-def register_parcel(parcel_id, name, crop, sowing_date=None):
-    """Tells sensors-alerts the parcel's name, crop and sowing date, so its rules follow them."""
-    return _call("PUT", _parcel_path(parcel_id), body={"name": name, "crop": crop, "sowingDate": sowing_date})
 
 
 def readings(parcel_id, minutes):

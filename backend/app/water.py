@@ -28,7 +28,7 @@ SOIL_SEASON_START = (4, 1)  # soil readings are looked at from 1 April (sowing);
 
 def latitude(conn, parcel_id):
     row = db.parcel(conn, parcel_id)
-    if not row:
+    if not row or not row["geometry"]:  # a user's parcel has no polygon until it gets one
         return DEFAULT_LATITUDE
     ring = json.loads(row["geometry"])["coordinates"][0]
     return sum(lat for _, lat in ring) / len(ring)

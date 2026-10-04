@@ -1,12 +1,13 @@
 """Copies the readings and alerts of the sensors-alerts service into the database, so they build up a
-history and survive that service's restarts (it keeps only the last ones in memory)."""
+history and survive that service's restarts (it keeps only the last ones in memory). Also keeps the users'
+parcels registered there: that service forgets them when it restarts. Sends the watering and sowing advice."""
 import logging
 import os
 import threading
 import time
 from datetime import datetime, timedelta, timezone
 
-from . import crops, db, sensors_client, sowing, water
+from . import accounts, crops, db, sensors_client, sowing, water
 from .frost import dew_point
 from .sensors import parse_ts
 from .sensors_client import SensorsUnavailable
@@ -46,10 +47,30 @@ class Collector(threading.Thread):
                 log.exception("Collecting sensor readings failed")
             self._stopped.wait(POLL_SEC)
 
+    def sync_parcels(self):
+        """Registers every user parcel sensors-alerts does not know, and every parcel it knows by an old name, crop
+        or sowing date: sensors-alerts starts with the crops of its configuration, and forgets the users' parcels
+        and the farmers' crops and sowing dates when it restarts. Returns the parcels the service has that are in
+        the database: a deleted parcel's sensor runs on until the service restarts, and is left out."""
+        known = {p["id"]: p for p in sensors_client.parcels()}
+        owned = {f["id"] for f in accounts.account_parcels()}
+        with db.get_conn() as conn:
+            rows = db.parcels(conn)
+        for row in rows:
+            p = known.get(row["id"])
+            if (not p and row["id"] not in owned) or not row["crop"]:
+                continue  # a demo parcel without a sensor stays without one
+            if not p or (p.get("name"), p.get("crop"), p.get("sowingDate")) != (row["name"], row["crop"], row["sowing_date"]):
+                known[row["id"]] = sensors_client.register(row["id"], row["name"], row["crop"], row["sowing_date"]) \
+                    or {"id": row["id"]}
+                log.info("%s registered in sensors-alerts: %s, sown %s", row["id"], row["crop"], row["sowing_date"])
+        stored = {row["id"] for row in rows}
+        return [p for p in known.values() if p["id"] in stored]
+
     def collect(self):
-        sensor_parcels = sensors_client.parcels()
-        self.sync_crops(sensor_parcels)
-        for parcel in sensor_parcels:
+        parcels = self.sync_parcels()
+        wanted = {p["id"] for p in parcels}
+        for parcel in parcels:
             parcel_id = parcel["id"]
             first = parcel_id not in self._last
             if first:
@@ -81,22 +102,11 @@ class Collector(threading.Thread):
                    "type": a.get("type") or "FROST", "level": a["level"], "parcel_name": a["parcelName"],
                    "crop": a.get("crop"), "temperature_c": a["temperatureC"], "humidity_pct": a["humidityPct"],
                    "dew_point_c": a["dewPointC"], "message": a["message"], "received_at": now}
-                  for a in sensors_client.alerts()]
+                  for a in sensors_client.alerts() if a["parcelId"] in wanted]
         if alerts:
             with db.get_conn() as conn:
                 db.add_alerts(conn, alerts)
 
-    def sync_crops(self, sensor_parcels):
-        """sensors-alerts starts with the crops of its configuration; the crops and sowing dates set on the account
-        page are in the database, so a parcel that differs there is registered again (after each restart of that
-        service)."""
-        with db.get_conn() as conn:
-            stored = {row["id"]: row for row in db.parcels(conn)}
-        for p in sensor_parcels:
-            row = stored.get(p["id"])
-            if row and row["crop"] and (row["crop"] != p.get("crop") or row["sowing_date"] != p.get("sowingDate")):
-                sensors_client.register_parcel(p["id"], row["name"], row["crop"], row["sowing_date"])
-                log.info("Crop of %s set to %s, sown %s, in sensors-alerts", p["id"], row["crop"], row["sowing_date"])
 
     def send_advice(self):
         """Watering and sowing advice of today and yesterday that was not sent yet goes to sensors-alerts, which

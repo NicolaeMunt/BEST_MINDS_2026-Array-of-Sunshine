@@ -116,6 +116,48 @@ ET0 по Hargreaves из минимальной и максимальной те
 | `POST /demo/{frost\|humid\|dry\|replay\|normal\|irrigate}/{parcelId}` | → sensors-alerts: режим симулятора, `irrigate` — полив (влажность почвы растёт без дождя); `409` с причиной |
 | `POST /demo/reset` | → sensors-alerts: всё в NORMAL, оповещения и cooldowns очищены |
 
+Датчики, показания, оповещения и демо работают и без входа. С заголовком `Authorization: Bearer <token>`
+`/sensors/parcels` и `/parcels` отдают сначала свои участки пользователя (`own: true`, `areaHa`), потом демо-участки
+(владелец «Fermier demo», войти под ним нельзя). Чужие участки на всех эндпоинтах (датчики, оповещения, спутник,
+вода) отвечают `404`.
+
+### Аккаунты и участки (`app/accounts.py`)
+
+Пользователь участки только видит. Добавляет, меняет и удаляет их администратор (роль `admin`) по
+официальным документам. Администратором аккаунт делает `python make_admin.py <email>` (`--remove` — обратно).
+
+| | |
+|---|---|
+| `POST /auth/register` | `{name, email, phone, password}` → `{token, user}`, вход сразу. Пароль от 8 символов |
+| `POST /auth/login` | `{email, password}` → `{token, user}`; в `user` есть `role`: `user` или `admin` |
+| `POST /auth/logout` | удаляет сессию токена |
+| `GET /me`, `PUT /me` | профиль `{name, email, phone}`; все три поля обязательны |
+| `PUT /me/password` | `{current, new}` |
+| `GET /me/fields` | свои участки, только чтение |
+| `GET /admin/users?q=` | **admin**: все пользователи, новые первыми, с `fieldCount` и `totalAri`; `q` — часть имени, email или телефона |
+| `GET /admin/users/{id}` | **admin**: `{user, fields}` |
+| `POST /admin/users/{id}/fields` | **admin**: участок из документа; его ID — кадастровый номер, регистрируется в sensors-alerts |
+| `PUT /admin/fields/{id}`, `DELETE /admin/fields/{id}` | **admin**: изменить / удалить (вместе с показаниями и оповещениями) |
+
+Участок из документа: `{name, crop, areaAri, cadastralNumber, location, docType, docNumber, docDate, coordinates}`.
+`coordinates` — углы контура `[[lat, lon], ...]`, не меньше 3, все в Молдове; хранится как GeoJSON Polygon в
+`parcels.geometry`. После добавления или нового контура API сразу запускает спутниковую обработку (новый контур
+стирает старые результаты и кэш снимков участка). В ответе ещё `outlineAri` — площадь контура, для сверки с актом.
+`areaAri` — площадь в арах (1 га = 100 ар), в ответе ещё `areaHa`. `cadastralNumber` — цифры и точки
+(`0100415.123`), один участок на номер. `docType`: `titlu` (титул), `extras` (выписка из Регистра недвижимости),
+`vanzare`, `donatie`, `mostenire`, `arenda`, `altul`. `docDate` — `YYYY-MM-DD`, с 1990 года по сегодня.
+`crop` — ключ из `app.crops`: `wheat`, `barley`, `corn`, `sunflower`, `orchard`, `vineyard`.
+
+Ошибки: `400` (или `409` для занятого email или кадастрового номера, `401` для неверного пароля) с телом
+`{"detail": "...", "fields": {"cadastralNumber": "..."}}`, тексты на румынском. Не администратор на
+`/admin/...` получает `403`, без входа — `401`.
+
+Таблицы в той же `sensors.db`: `users` (у аккаунта email — уникален, хранится в нижнем регистре, — телефон,
+пароль scrypt и `role`; у владельца демо-участков их нет), `sessions` (хранится SHA-256 токена, не сам токен;
+30 дней), `parcels` (участок пользователя — такая же строка, как демо: `id` — кадастровый номер, менять нельзя;
+данные документа в колонках `area_ari`, `location`, `doc_type`, `doc_number`, `doc_date`, `added_by` — кто внёс;
+контур в `geometry`, как у демо). Колонки, появившиеся позже, `init_db` добавляет в старую базу сам.
+
 Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
 `readings` и `/alerts` продолжают отдавать то, что уже сохранено.
 

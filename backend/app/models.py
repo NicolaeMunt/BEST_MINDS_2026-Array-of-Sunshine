@@ -99,10 +99,12 @@ class WaterStatusOut(CamelModel):
 
 
 class SensorParcelOut(CamelModel):
-    """A sensor location as configured in sensors-alerts, with its latest reading and its soil water today."""
+    """A parcel with a sensor, a demo one or the signed-in user's own, with its latest reading and its soil water today."""
     id: str
     name: str
     crop: str | None = None
+    own: bool = Field(False, description="The signed-in user's own parcel, not a demo one")
+    area_ha: float | None = None
     latest: SensorLatestOut | None = Field(description="null until the sensor sends its first reading")
     water: WaterStatusOut | None = Field(None, description="null for a crop without a water balance")
 
@@ -125,18 +127,85 @@ class AlertOut(CamelModel):
     deficit_mm: float | None = Field(None, description="IRRIGATION: water missing from the soil that day, mm")
 
 
+# ---------- accounts ----------
+# Inputs are plain strings: accounts.py checks them and answers in Romanian, field by field.
+
+class RegisterIn(CamelModel):
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+    password: str = ""
+
+
+class LoginIn(CamelModel):
+    email: str = ""
+    password: str = ""
+
+
+class ProfileIn(CamelModel):
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+
+
+class PasswordIn(CamelModel):
+    current: str = ""
+    new: str = ""
+
+
 class UserOut(CamelModel):
     id: int
-    name: str = Field(description="What the app shows: first and last name")
-    first_name: str | None = None
-    last_name: str | None = None
-    email: str | None = None
+    name: str
+    email: str
+    phone: str
+    role: Literal["user", "admin"] = "user"
+    created_at: datetime
 
 
-class UserIn(CamelModel):
-    first_name: str = Field("", max_length=60)
-    last_name: str = Field("", max_length=60)
-    email: str = Field("", max_length=120)
+class AdminUserOut(UserOut):
+    field_count: int
+    total_ari: float = Field(description="Total area of the user's fields, in ares")
+
+
+class SessionOut(CamelModel):
+    token: str = Field(description="Send it back as 'Authorization: Bearer <token>'")
+    user: UserOut
+
+
+class FieldIn(CamelModel):
+    """A field as written in the official document; entered by an administrator."""
+    name: str = ""
+    crop: str = ""
+    area_ari: str | float | None = Field(None, description="Area from the document, in ares (1 ha = 100 ari)")
+    cadastral_number: str = ""
+    location: str = Field("", description="Village and district")
+    doc_type: str = Field("", description="titlu | extras | vanzare | donatie | mostenire | arenda | altul")
+    doc_number: str = ""
+    doc_date: str = Field("", description="YYYY-MM-DD")
+    coordinates: list[list[float]] | None = Field(None, description="The outline's corners, [[lat, lon], ...], at least 3")
+
+
+class FieldOut(CamelModel):
+    id: str = Field(description="The cadastral number: the parcel's ID here and in sensors-alerts")
+    user_id: int
+    name: str
+    crop: str
+    area_ari: float | None = None
+    area_ha: float | None = None
+    cadastral_number: str | None = None
+    location: str | None = None
+    doc_type: str | None = None
+    doc_number: str | None = None
+    doc_date: str | None = None
+    coordinates: list[list[float]] = Field([], description="The outline's corners, [[lat, lon], ...]")
+    sowing_date: str | None = Field(None, description="Set by the farmer on the profile page, YYYY-MM-DD")
+    outline_ari: float | None = Field(None, description="Area of the outline, in ares: to compare with the document")
+    created_at: datetime
+
+
+class AdminUserDetailOut(CamelModel):
+    user: UserOut
+    fields: list[FieldOut]
 
 
 class CropIn(CamelModel):

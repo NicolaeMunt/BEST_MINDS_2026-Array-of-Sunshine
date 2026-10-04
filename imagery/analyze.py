@@ -475,7 +475,7 @@ def main():
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps({"rules_version": rules_version(calendar), "results": results, "skipped": skipped},
-                                 indent=2, ensure_ascii=False))
+                                 indent=2, ensure_ascii=False), encoding="utf-8")  # Romanian names: not the Windows code page
     print(f"written {OUTPUT}: {len(results)} results, {len(skipped)} skipped")
 
 

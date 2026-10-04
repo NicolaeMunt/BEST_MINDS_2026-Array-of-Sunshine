@@ -47,6 +47,8 @@ app:
   # dry:      the days when dry, hot air (app.humidity) harms the crop.
   # water:    root depth (FAO-56 table 22, middle of the range) and the share of the soil water the crop can
   #           use without stress (FAO-56 p).
+  # sowing:   the days when the backend says "poți semăna" once the soil at seed depth has had a daily mean
+  #           of at least min-soil-temp-c for `days` days in a row.
   crops:
     wheat:
       name: grâu
@@ -98,6 +100,8 @@ app:
         to: "08-31"
         advice: Risc de polenizare slabă și boabe puține pe știulete. Irigați dacă este posibil.
       water: { root-depth-m: 1.35, depletion-fraction: 0.55 }
+      # Corn germinates once the soil at planting depth stays at 10 °C or more (Purdue, Iowa State).
+      sowing: { from: "04-01", to: "05-31", min-soil-temp-c: 10, days: 3 }
     sunflower:
       name: floarea-soarelui
       frost-advice: Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața.
@@ -122,6 +126,8 @@ app:
         to: "08-15"
         advice: Risc de semințe seci în calatidiu. Urmăriți umiditatea solului.
       water: { root-depth-m: 1.15, depletion-fraction: 0.45 }
+      # Even emergence needs the soil near 10 °C (NDSU).
+      sowing: { from: "04-01", to: "05-31", min-soil-temp-c: 10, days: 3 }
     orchard:
       name: livadă
       frost-advice: Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația.
@@ -180,7 +186,7 @@ app:
     interval-seconds: 5
     # How long the FROST mode takes to reach its target temperature.
     frost-ramp-seconds: 60
-    # classpath:... or file:... (timestamp,temperatureC,humidityPct[,precipitationMm])
+    # classpath:... or file:... (timestamp,temperatureC,humidityPct[,precipitationMm,soilTemperatureC,soilMoisturePct])
     replay-file: ${REPLAY_FILE:classpath:replay/sample-frost-night.csv}
     # 1 hour of the CSV is replayed in this many real seconds.
     replay-seconds-per-hour: 10
@@ -189,6 +195,12 @@ app:
     episode-file: classpath:replay/{mode}-{crop}.csv
     episode-seconds-per-hour: 0.5
     max-readings-per-parcel: 720
+    # The soil probe of the live sensors: moisture at ~20 cm (% of the soil volume) until a replay or a
+    # watering changes it; the soil temperature at ~5 cm follows the air slowly (soil-lag-hours).
+    soil-moisture-pct: 23
+    soil-lag-hours: 6
+    # A watering (POST /demo/irrigate) brings the soil moisture up to app.water.field-capacity-pct in this time.
+    watering-seconds: 30
 
   frost:
     # WARNING also when less than falling-margin-c above the crop's warning threshold and
@@ -209,10 +221,13 @@ app:
     # dry, hot air), so one rainy spell or one heat wave is one alert and the farmer has time to act.
     hold-hours: 24
 
-  # Read by the backend's water balance (backend/app/water.py), not by this service.
+  # The soil of the parcels: silt loam, FAO-56 table 19 (field capacity 0.27, wilting point 0.10 m3/m3).
+  # The backend's water advice uses it (backend/app/water.py); this service only for the demo watering.
   water:
-    # Water the soil holds for plants per metre of roots: FAO-56 table 19, silt loam (0.27 - 0.10 m3/m3).
-    soil-water-mm-per-m: 170
+    field-capacity-pct: 27
+    wilting-point-pct: 10
+    # A watering seen by the soil sensor: moisture up by this many points within 6 hours with under 2 mm of rain.
+    watering-rise-pct: 3
 
   telegram:
     token: ${TELEGRAM_BOT_TOKEN:}

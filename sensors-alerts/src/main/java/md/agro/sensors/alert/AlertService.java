@@ -138,6 +138,27 @@ public class AlertService {
         }
     }
 
+    /**
+     * An alert decided elsewhere (the backend's irrigation advice): stored and sent like the others. The same
+     * alert (parcel, time, type, level) is sent once, so the backend may repeat it.
+     *
+     * @return false if it had been sent already
+     */
+    public synchronized boolean sendExternal(Alert alert) {
+        boolean known = store.alerts(alert.parcelId()).stream().anyMatch(a -> a.timestamp().equals(alert.timestamp())
+                && a.type() == alert.type() && a.level() == alert.level());
+        if (known) {
+            return false;
+        }
+        store.addAlert(alert);
+        try {
+            notifier.send(alert);
+        } catch (RuntimeException e) {
+            log.error("Notifier failed for {}", alert.parcelId(), e);
+        }
+        return true;
+    }
+
     /** Clears alerts, episodes and cooldowns. */
     public synchronized void reset() {
         episodes.clear();

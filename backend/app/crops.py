@@ -31,8 +31,20 @@ def humidity_settings():
     return config().get("humidity", {})
 
 
+def soil():
+    """Field capacity and wilting point of the parcels' soil, % of the soil volume."""
+    w = config().get("water", {})
+    return float(w.get("field-capacity-pct", 27)), float(w.get("wilting-point-pct", 10))
+
+
 def soil_water_mm_per_m():
-    return float(config().get("water", {}).get("soil-water-mm-per-m", 170))
+    """Water the soil holds for plants per metre of roots: 1% of the volume over 1 m is 10 mm."""
+    fc, wp = soil()
+    return (fc - wp) * 10
+
+
+def watering_rise_pct():
+    return float(config().get("water", {}).get("watering-rise-pct", 3))
 
 
 def _month_day(day):

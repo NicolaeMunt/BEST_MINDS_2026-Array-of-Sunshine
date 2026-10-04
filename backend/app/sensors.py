@@ -5,7 +5,7 @@ come from the water balance (see water.py)."""
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import crops, db, water
+from . import crops, db, sowing, water
 from . import sensors_client as client
 from .frost import assess_frost, dew_point, drop_last_hour
 
@@ -20,7 +20,8 @@ ALERT_TITLE = {
     ("HUMIDITY_HIGH", "OK"): "Riscul de boală a trecut",
     ("HUMIDITY_LOW", "OK"): "A trecut aerul fierbinte și uscat",
     ("IRRIGATION", "WARNING"): "E timpul să udați",
-    ("IRRIGATION", "OK"): "Ploaia a refăcut apa din sol",
+    ("IRRIGATION", "OK"): "Solul are din nou apă",
+    ("SOWING", "WARNING"): "Poți semăna",
 }
 # Chart resolution: (window up to this many minutes, seconds per point); 0 = the readings themselves.
 SUMMARY_STEPS = [(120, 0), (2 * 24 * 60, 300), (14 * 24 * 60, 3600)]
@@ -100,17 +101,22 @@ def parcels():
 
 
 def alerts(parcel_id=None, type_="ALL"):
-    """Stored alerts and the irrigation alerts of the season, newest first, with priority and title.
-    type_: FROST | HUMIDITY | IRRIGATION | ALL."""
+    """Stored alerts and the season's watering and sowing advice, newest first, with priority and title.
+    type_: FROST | HUMIDITY | IRRIGATION | SOWING | ALL."""
     with db.get_conn() as conn:
-        rows = [] if type_ == "IRRIGATION" else db.alerts(conn, parcel_id, type_)
+        rows = db.alerts(conn, parcel_id, type_)
         out = [{"parcelId": a["parcel_id"], "parcelName": a["parcel_name"], "crop": a["crop"], "type": a["type"],
                 "level": a["level"], "temperatureC": a["temperature_c"], "humidityPct": a["humidity_pct"],
                 "dewPointC": a["dew_point_c"], "timestamp": a["timestamp"], "message": a["message"]} for a in rows]
-        if type_ in ("IRRIGATION", "ALL"):
+        if type_ in ("IRRIGATION", "SOWING", "ALL"):
+            # The whole season's advice, computed; what was already sent to Telegram is stored too: keep it once.
+            stored = {(a["parcelId"], a["timestamp"], a["type"], a["level"]) for a in out}
             for p in db.parcels(conn):
                 if parcel_id in (None, p["id"]):
-                    out += water.alerts(conn, {"id": p["id"], "name": p["name"], "crop": p["crop"]}, today(), dew_point)
+                    parcel = {"id": p["id"], "name": p["name"], "crop": p["crop"]}
+                    advice = (water.alerts(conn, parcel, today(), dew_point) if type_ != "SOWING" else []) + \
+                        (sowing.alerts(conn, parcel, today()) if type_ != "IRRIGATION" else [])
+                    out += [a for a in advice if (a["parcelId"], a["timestamp"], a["type"], a["level"]) not in stored]
     out.sort(key=lambda a: a["timestamp"], reverse=True)
     return [{**a, "priority": ALERT_PRIORITY.get(a["level"], "low"),
              "title": ALERT_TITLE.get((a["type"], a["level"]), a["level"])} for a in out]

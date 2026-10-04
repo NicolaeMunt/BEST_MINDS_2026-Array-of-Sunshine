@@ -52,10 +52,14 @@ Invoke-RestMethod -Method Post http://localhost:8081/demo/replay/6401512.058
 Invoke-RestMethod -Method Post http://localhost:8081/demo/humid/6401307.102
 Invoke-RestMethod -Method Post http://localhost:8081/demo/dry/6401512.033
 
-# 4. One parcel back to normal weather: the all-clear messages are sent
+# 4. A watering: the soil moisture rises to field capacity in 30 s, with no rain. After the dry spell above
+#    (the soil stays as dry as it was then), the backend says "E timpul să udați" and then sees the watering.
+Invoke-RestMethod -Method Post http://localhost:8081/demo/irrigate/6401512.058
+
+# 5. One parcel back to normal weather: the all-clear messages are sent
 Invoke-RestMethod -Method Post http://localhost:8081/demo/normal/6401307.102
 
-# 5. Everything back to normal, alerts and cooldowns cleared (no all-clear messages)
+# 6. Everything back to normal, alerts and cooldowns cleared (no all-clear messages)
 Invoke-RestMethod -Method Post http://localhost:8081/demo/reset
 ```
 
@@ -93,9 +97,11 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 |---|---|---|
 | GET | `/sensors/parcels` | the parcels this service has sensors for: `id, name, crop` |
 | PUT | `/sensors/parcels/{id}` | body `{"name": ..., "crop": ...}`: adds the parcel (it gets a sensor) or updates its name and crop. The backend calls this for its parcels |
-| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, dewPointC, frostLevel, crop, humidityLevel, mode, phase, frostWarningC, frostCriticalC, disease` |
-| GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct, precipitationMm` |
+| GET | `/sensors/parcels/{id}/latest` | `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, soilTemperatureC, soilMoisturePct, dewPointC, frostLevel, crop, humidityLevel, mode, phase, frostWarningC, frostCriticalC, disease` |
+| GET | `/sensors/parcels/{id}/readings?minutes=60` | list of `parcelId, timestamp, temperatureC, humidityPct, precipitationMm, soilTemperatureC, soilMoisturePct` |
 | GET | `/alerts?parcelId={id}&type=FROST` | newest first: `parcelId, parcelName, crop, type, level, temperatureC, humidityPct, dewPointC, timestamp, message` |
+| POST | `/sensors/parcels/{id}/advice` | body `{"type": "IRRIGATION" or "SOWING", "timestamp", "level", "temperatureC", "humidityPct", "dewPointC", "message"}`: watering or sowing advice from the backend, stored and sent to Telegram like the alerts; the same advice again answers `{"sent": false}` |
+| POST | `/demo/irrigate/{parcelId}` | a watering: the live soil moisture rises to field capacity (no rain); 409 while a replay runs |
 | POST | `/demo/frost/{parcelId}` | switches the parcel to FROST |
 | POST | `/demo/humid/{parcelId}` | HUMID: replays the crop's real damp spell; 409 if it has none |
 | POST | `/demo/dry/{parcelId}` | DRY: replays the crop's real hot, dry spell; 409 if it has none |
@@ -110,9 +116,15 @@ powershell -ExecutionPolicy Bypass -File demo\demo.ps1
 `disease` is the disease the damp-air rule watches for that day, `null` outside its window.
 `/alerts` without `parcelId` returns all parcels.
 
-Alert `type` is `FROST`, `HUMIDITY_HIGH` or `HUMIDITY_LOW`; humidity alerts have level `WARNING`
-(or `OK` for the all-clear). **`/alerts` returns only frost alerts unless asked otherwise**, because
-existing clients title every alert as a frost alert: use `type=HUMIDITY` or `type=ALL` for the rest.
+Alert `type` is `FROST`, `HUMIDITY_HIGH`, `HUMIDITY_LOW`, or `IRRIGATION` / `SOWING` (advice from the
+backend); humidity and advice alerts have level `WARNING` (or `OK` for the all-clear). **`/alerts` returns only
+frost alerts unless asked otherwise**, because existing clients title every alert as a frost alert: use
+`type=HUMIDITY`, `IRRIGATION`, `SOWING` or `ALL` for the rest.
+
+**The sensor.** Each parcel has one virtual station: air temperature and humidity, rain, and a soil probe with
+the soil temperature at ~5 cm (seed depth) and the soil moisture at ~20 cm (% of the soil volume). Live, the
+soil temperature follows the air with a lag of 6 hours and the moisture stays where the last replay left it (23%
+at start-up) until a watering raises it; replays carry the recorded soil.
 
 During a replay the reading timestamps are those of the recording, and `minutes` is counted back from
 the newest reading. Switching into or out of a replay clears that parcel's readings.
@@ -128,7 +140,8 @@ the newest reading. Switching into or out of a replay clears that parcel's readi
 - `app.frost` – falling-fast rule, all-clear margin and cooldown. The rule is `ThresholdFrostRule` behind `FrostRule`.
 - `app.humidity` – what counts as dry, hot air and how long a risk lasts. The rule is `ThresholdHumidityRule`
   behind `HumidityRule`.
-- `app.water` – soil water per metre of roots, for the backend's water balance (not used here).
+- `app.water` – the soil (field capacity and wilting point, FAO-56 silt loam) and what counts as a watering; the
+  backend's water advice uses it, this service only for the demo watering.
 - `app.cors-origins` / `FRONTEND_ORIGIN` – allowed frontend origins, `*` by default.
 
 ### Crops
@@ -161,7 +174,8 @@ A parcel with no crop, or a crop not listed, gets frost alerts at 2 °C / 0 °C 
 
 ### Replay CSV
 
-`timestamp,temperatureC,humidityPct[,precipitationMm]`, one row per line, comma or semicolon separated;
+`timestamp,temperatureC,humidityPct[,precipitationMm,soilTemperatureC,soilMoisturePct]`, one row per line, comma
+or semicolon separated;
 lines starting with `#` are comments. Timestamps like `2025-04-08T18:00` or `2025-04-08 18:00:00` are read
 as Chișinău local time; an offset or `Z` is also accepted. The bundled `replay/sample-frost-night.csv` is
 **made-up sample data**; the real frost night is `backend/data/frost-night-orhei-2025-04-09.csv`

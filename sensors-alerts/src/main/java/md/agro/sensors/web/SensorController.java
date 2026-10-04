@@ -37,11 +37,17 @@ public class SensorController {
      * @param disease        the disease the damp-air rule watches for on that day; null outside its window
      */
     public record LatestResponse(String parcelId, Instant timestamp, double temperatureC, double humidityPct,
-            double precipitationMm, double dewPointC, FrostLevel frostLevel, String crop, HumidityLevel humidityLevel,
-            SensorMode mode, String phase, Double frostWarningC, Double frostCriticalC, String disease) {
+            double precipitationMm, Double soilTemperatureC, Double soilMoisturePct, double dewPointC,
+            FrostLevel frostLevel, String crop, HumidityLevel humidityLevel, SensorMode mode, String phase,
+            Double frostWarningC, Double frostCriticalC, String disease) {
     }
 
     public record ParcelRequest(String name, String crop) {
+    }
+
+    /** Advice from the backend (IRRIGATION: soil water, SOWING: soil warm enough), to be sent like the alerts. */
+    public record AdviceRequest(AlertType type, Instant timestamp, FrostLevel level, double temperatureC,
+            double humidityPct, double dewPointC, String message) {
     }
 
     private final ParcelRegistry parcels;
@@ -69,7 +75,7 @@ public class SensorController {
         AppProperties.Disease disease = crop.disease();
         boolean diseaseWatched = disease != null && CropCalendar.within(disease.from(), disease.to(), r.timestamp());
         return new LatestResponse(r.parcelId(), r.timestamp(), r.temperatureC(), r.humidityPct(), r.precipitationMm(),
-                Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level(),
+                r.soilTemperatureC(), r.soilMoisturePct(), Math.round(st.assessment().dewPointC() * 10) / 10.0, st.assessment().level(),
                 parcels.cropKey(id), st.humidity(), simulator.mode(id), phase.name(), phase.frostWarningC(),
                 phase.frostCriticalC(), diseaseWatched ? disease.name() : null);
     }
@@ -107,9 +113,31 @@ public class SensorController {
         return switch (type.toUpperCase()) {
             case "ALL" -> alerts.toList();
             case "FROST" -> alerts.filter(a -> a.type() == AlertType.FROST).toList();
-            case "HUMIDITY" -> alerts.filter(a -> a.type() != AlertType.FROST).toList();
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type must be FROST, HUMIDITY or ALL");
+            case "HUMIDITY" -> alerts.filter(a -> a.type() == AlertType.HUMIDITY_HIGH || a.type() == AlertType.HUMIDITY_LOW)
+                    .toList();
+            case "IRRIGATION" -> alerts.filter(a -> a.type() == AlertType.IRRIGATION).toList();
+            case "SOWING" -> alerts.filter(a -> a.type() == AlertType.SOWING).toList();
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "type must be FROST, HUMIDITY, IRRIGATION, SOWING or ALL");
         };
+    }
+
+    /**
+     * The backend's advice for a parcel (IRRIGATION or SOWING): stored and sent to Telegram like the other alerts.
+     * Sending the same advice again does nothing ({"sent": false}).
+     */
+    @PostMapping("/sensors/parcels/{id}/advice")
+    public Map<String, Object> advice(@PathVariable String id, @RequestBody AdviceRequest body) {
+        requireParcel(id);
+        if (body.type() != AlertType.IRRIGATION && body.type() != AlertType.SOWING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type must be IRRIGATION or SOWING");
+        }
+        if (body.timestamp() == null || body.level() == null || body.message() == null || body.message().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "timestamp, level and message are required");
+        }
+        Alert alert = new Alert(id, parcels.name(id), parcels.cropKey(id), body.type(), body.level(),
+                body.temperatureC(), body.humidityPct(), body.dewPointC(), body.timestamp(), body.message());
+        return Map.of("sent", alertService.sendExternal(alert));
     }
 
     @PostMapping("/demo/frost/{parcelId}")
@@ -134,6 +162,18 @@ public class SensorController {
         return switchMode(parcelId, SensorMode.REPLAY);
     }
 
+    /** Demo watering: the soil moisture rises to field capacity, without rain; 409 while a replay runs. */
+    @PostMapping("/demo/irrigate/{parcelId}")
+    public Map<String, Object> irrigate(@PathVariable String parcelId) {
+        requireParcel(parcelId);
+        try {
+            simulator.irrigate(parcelId);
+        } catch (SensorSimulator.DemoRefusedException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
+        }
+        return Map.of("parcelId", parcelId, "mode", simulator.mode(parcelId));
+    }
+
     /** Back to normal weather for one parcel; unlike reset, the all-clear messages are sent. */
     @PostMapping("/demo/normal/{parcelId}")
     public Map<String, Object> normal(@PathVariable String parcelId) {
@@ -152,7 +192,7 @@ public class SensorController {
         requireParcel(parcelId);
         try {
             simulator.setMode(parcelId, mode);
-        } catch (SensorSimulator.NoEpisodeException e) {
+        } catch (SensorSimulator.DemoRefusedException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);

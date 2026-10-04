@@ -28,6 +28,7 @@ DEMO_MESSAGES = {
     "dry": ("DRY", "Redau accelerat o perioadă reală de aer fierbinte și uscat din 2026"),
     "replay": ("REPLAY", "Redarea nopții reale de îngheț a pornit"),
     "normal": ("NORMAL", "Terenul a revenit la vremea normală"),
+    "irrigate": (None, "Am udat terenul: umiditatea solului urcă spre capacitatea de câmp"),
 }
 
 
@@ -35,6 +36,7 @@ DEMO_MESSAGES = {
 async def lifespan(app):
     db.init_db()
     imagery.load_seed()
+    imagery.load_saved_output()
     collector = Collector()
     collector.start()
     app.state.updater = imagery.Updater()
@@ -102,8 +104,8 @@ def soil_water(parcel_id: str, day: date | None = Query(None, alias="date", desc
 
 @app.get("/alerts", response_model=list[AlertOut])
 def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId"),
-                  type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|IRRIGATION|ALL)$")):
-    """Frost, humidity and irrigation alerts, newest first. Level OK is the all-clear."""
+                  type_: str = Query("ALL", alias="type", pattern="^(FROST|HUMIDITY|IRRIGATION|SOWING|ALL)$")):
+    """Frost, humidity, watering and sowing alerts, newest first. Level OK is the all-clear."""
     return sensors.alerts(parcel_id, type_)
 
 
@@ -111,17 +113,21 @@ def recent_alerts(parcel_id: str | None = Query(None, alias="parcelId"),
 
 @app.post("/demo/{kind}/{parcel_id}", response_model=DemoOut)
 def demo(kind: str, parcel_id: str):
-    """kind: frost | humid | dry | replay | normal (normal sends the all-clear messages)."""
+    """kind: frost | humid | dry | replay | normal (normal sends the all-clear messages) | irrigate (a watering
+    the soil probe sees; the mode does not change)."""
     if kind not in DEMO_MESSAGES:
         raise HTTPException(404, f"Unknown demo scenario {kind}")
     try:
         answer = sensors_client.demo(kind, parcel_id)
-    except SensorsConflict as e:  # the crop has no recorded spell of that kind
+    except SensorsConflict as e:  # no recorded spell for the crop, or a replay running
         raise HTTPException(409, str(e)) from e
     if answer is None:
         raise HTTPException(404, f"Parcel {parcel_id} unknown to the sensors service")
     mode, message = DEMO_MESSAGES[kind]
-    sensors.set_mode(parcel_id, mode)
+    if mode is None:  # irrigate keeps the parcel's mode
+        mode = answer.get("mode", "NORMAL")
+    else:
+        sensors.set_mode(parcel_id, mode)
     return {"parcel_id": parcel_id, "mode": mode, "message": message}
 
 

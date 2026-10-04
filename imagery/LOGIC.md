@@ -757,3 +757,49 @@ Ce s-a schimbat pe 2026:
 - Rețeaua de iarbă din livadă: de la 5–13,5% la 0, în 13 din 14 scene. Pe 28 iulie rămâne o pată de 8,8%
   lângă un nor, deja marcată `possible_cloud`.
 - Toate cele 18 marcaje de zonă rămase cad pe roșu.
+
+## Senzorul de sol: temperatura la 5 cm și umiditatea la 20 cm
+
+**De ce.** Senzorul de aer nu vede udarea: apa ajunge direct în sol, iar bilanțul calculat presupunea mereu
+un câmp neudat. Acum fiecare stație are și o sondă de sol, care măsoară:
+- temperatura solului la ~5 cm, adâncimea semințelor;
+- umiditatea solului la ~20 cm, ca procent de apă din volumul solului.
+
+Datele sezonului vin tot din Open-Meteo (ERA5-Land, straturile 0–7 cm și 7–28 cm), de la 1 aprilie, ca să se
+vadă și semănatul.
+
+**Udarea după senzor.** Pragul vine din aceleași valori FAO-56 ca bilanțul (lut prăfos: capacitate de câmp
+27%, punct de ofilire 10%): cultura suferă sub capacitatea de câmp − p × (capacitatea de câmp − punctul de
+ofilire). Asta înseamnă 17,6% la porumb și grâu, 18,5% la livadă și 19,4% la floarea-soarelui și vie.
+
+Am ales pragurile FAO, nu o calibrare pe fiecare parcelă: e mai simplu, și senzorul spune același lucru ca
+bilanțul. Pe 2026, cele două au dat date apropiate pentru „de udat”:
+
+| Cultură | Senzor | Bilanț |
+|---|---|---|
+| Floarea-soarelui | 1 iulie | 6 iulie |
+| Livadă | 7 iulie | 30 iunie |
+| Porumb | 11 iulie | 16 iulie |
+
+Când senzorul a raportat în ultimele două zile, decizia e a lui; altfel rămâne bilanțul.
+
+**Udarea văzută de senzor.** Umiditatea crește cu cel puțin 3 puncte în 6 ore și n-a plouat (sub 2 mm) în
+ultimele 48 de ore. Prima variantă căuta ploaie doar în ultimele 6 ore și a găsit „udări” false în mai și
+iunie: ploaia ajunge la 20 cm cu întârziere. Cu 48 de ore nu mai apare nicio udare falsă pe tot sezonul.
+
+Două corecturi au venit din teste:
+- Alerta pornea și se oprea când umiditatea stătea chiar la prag. Acum iese din „de udat” abia la 2 puncte
+  peste prag.
+- În ultimele 6 ore aplicația folosește ultima citire din fiecare minut, nu media orei. Altfel o udare făcută
+  în aceeași oră cu uscarea se pierdea în medie.
+
+**„Poți semăna”.** Porumbul și floarea-soarelui răsar uniform când solul de la adâncimea semințelor stă la
+cel puțin 10 °C (Purdue, Iowa State, NDSU). Regula: media zilei ≥ 10 °C la 5 cm, trei zile la rând, în
+aprilie–mai. Cele trei zile sunt alegerea noastră pentru „constant”, pentru că sursele nu dau un număr. În
+2026, la Orhei, regula a dat 5 aprilie. Spre deosebire de calendarul fix, ea urmează solul parcelei, deci
+merge și în nordul, și în sudul Moldovei.
+
+**Demo.** Butonul „S-a udat” ridică umiditatea solului la capacitatea de câmp în 30 de secunde, fără ploaie.
+Testat pe livadă:
+1. După „zile de arșiță”, solul rămâne la 17,2%, așa că aplicația trimite „E timpul să udați”.
+2. După „S-a udat”, solul urcă la 27%, iar aplicația trimite singură „S-a udat”.

@@ -4,7 +4,7 @@ Crop monitoring for farmers. The app shows the air sensors (frost, disease-risk 
 Telegram that follow each crop's phase, the readings stored with their timestamps, when to water from the
 soil water balance, a web app that says in plain words what each sensor means) and, for every parcel, what
 the Sentinel-2 satellite saw since May: weak vegetation zones, the picture of the field and how it changed,
-refreshed once a day. The map in the web app is still to come.
+refreshed once a day, on a map of the fields.
 
 ## Start everything
 
@@ -41,7 +41,7 @@ For Telegram alerts put the bot token in `sensors-alerts/.env` first (see `senso
 | Web app → API | Everything the page shows; the page only talks to the API | `frontend/src/` |
 | API → sensors-alerts | Sensor locations, latest reading, frost and humidity levels, alerts, demo scenarios | `backend/app/sensors_client.py` |
 | sensors-alerts → API → SQLite | Every reading and alert, copied every 5 s and stored with its timestamp | `backend/app/collector.py` |
-| sensors-alerts → Telegram | Frost, disease-risk and dry-air alerts with advice for the crop's phase | `sensors-alerts/.env` |
+| sensors-alerts → Telegram | Frost, disease-risk and dry-air alerts with advice for the crop's phase, and the API's irrigation alerts | `sensors-alerts/.env` |
 | API → satellite job | The parcels (polygons) as `imagery/parcels.geojson`; the job runs as its own process | `backend/app/imagery.py` |
 | satellite job → API → SQLite | `imagery/out/imagery.json`: one result per parcel and scene, and the scenes skipped for clouds | `backend/app/imagery.py` |
 | API → web app | Parcels, the satellite result as of any day, the season history, the PNGs at `/overlays/` | `backend/app/main.py` |
@@ -80,18 +80,21 @@ downy mildew, head blight), the days when dry, hot air harms the crop, and the F
 the water balance. The numbers come from extension services, FAO and the Moldovan weather service; the
 sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi".
 
-### Soil water
+### Soil, watering and sowing
 
-`backend/app/water.py` keeps a soil water balance per parcel (FAO-56) from the stored temperature and rain:
-the crop uses water every day, the rain gives it back, and once the deficit passes what the crop can use
-without stress the web app says it is time to water and how much. The irrigation alerts come from that
-balance and are listed with the others (not sent on Telegram). The field is assumed not irrigated.
+Each sensor also has a soil probe: soil temperature at ~5 cm and soil moisture at ~20 cm.
+`backend/app/water.py` says when to water: from the soil moisture against the soil's limits (FAO-56) when the
+probe reports, which also sees a watering (moisture up without rain); otherwise from a soil water balance of
+the temperature and the rain. `backend/app/sowing.py` says "poți semăna" when the soil at seed depth stays at
+10 °C or more for three days (corn, sunflower). This advice is listed with the alerts and, once an hour (and
+right after the soil moisture jumps), handed to sensors-alerts, which sends it to Telegram like its own.
 
 ### Sample season
 
 So there is a history to show, `backend/data/` holds the season of the five demo parcels **from real
-weather**, the same season the satellite saw: `sensor-history-sample.csv` (hourly temperature, humidity
-and rain since 1 May, Open-Meteo reanalysis at each parcel, CC BY 4.0; not a sensor in the field) and
+weather**, the same season the satellite saw: `sensor-history-sample.csv` (hourly temperature, humidity, rain,
+soil temperature and soil moisture since 1 April, Open-Meteo reanalysis at each parcel, CC BY 4.0; not a sensor
+in the field) and
 `alert-history-sample.csv` (the alerts the crop rules raise on it: a damp first week of June with head
 blight risk on the wheat, apple scab in May, downy mildew on the vine, a hot, dry August).
 
@@ -112,8 +115,14 @@ Written for farmers: large type, plain words, no jargon. The left column lists t
 each), those with a problem first. The selected field opens with one coloured block that says what is
 happening and what to do (frost, disease risk, hot and dry air, time to water, or all fine), then the
 temperature and humidity now with the crop's phase, then the water in the soil, then the temperature over
-time (now, a day, a week or since May) with every alert marked on it and listed underneath, one line each.
-The demo menu can replay a real frost night and real damp or hot, dry spells of 2026.
+time (now, a day, a week or since April) with every alert marked on it and listed underneath, one line each.
+Under the numbers, "Ce vede satelitul": the field on a map (Leaflet, in `frontend/vendor/`) with the
+Sentinel-2 picture, the weak zones in red, the main zone and the sensor, a sentence in plain words (what was
+seen, how old the picture is, what is normal for the crop's phase), a "Du-mă acolo" link for navigation, and
+the season's passes (clear or cloudy) to pick any day; `?day=2026-07-20` in the address opens that day. A small
+map in the side column shows all the fields in their status colour. The map background (OpenStreetMap) needs the
+internet; without it the satellite picture stays. The demo menu can replay a real frost night and real damp or
+hot, dry spells of 2026, and water a field.
 
 ## Parcels and satellite results
 
@@ -163,10 +172,9 @@ what it is: `imagery/LOGIC.md`.
 
 ## Not wired yet
 
-- The map (Leaflet) with the satellite overlay is not in the web app yet; the API already serves everything
-  it needs.
 - The drone and soil reports and the priority score were removed from the API for now.
 - The crop calendar is fixed by date; an early or late year can be 1-2 weeks off. Telling the phase from
   the satellite curve (e.g. "harvested") would fix that for the field crops.
-- The water balance does not know when the farmer watered: there is no way to enter it yet.
+- Without a soil probe, the water balance does not know when the farmer watered.
+- The soil limits are those of a silt loam for every parcel; a sandy or clay field would need its own.
 - `frontend/AgroMonitor.html` is the earlier static mobile prototype; it does not use the API.

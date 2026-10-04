@@ -22,8 +22,11 @@ def stamp(text):
 
 def main():
     db.init_db()
+    def optional(r, key):
+        return float(r[key]) if r.get(key) not in (None, "") else None
+
     readings = [(r["parcelId"], stamp(r["timestamp"]), float(r["temperatureC"]), float(r["humidityPct"]),
-                 float(r["precipitationMm"]) if r.get("precipitationMm") not in (None, "") else None)
+                 optional(r, "precipitationMm"), optional(r, "soilTemperatureC"), optional(r, "soilMoisturePct"))
                 for r in rows(READINGS_FILE)]
     alerts = [{"parcel_id": a["parcelId"], "timestamp": stamp(a["timestamp"]), "type": a["type"], "level": a["level"],
                "parcel_name": a["parcelName"], "crop": a["crop"], "temperature_c": float(a["temperatureC"]),
@@ -31,8 +34,8 @@ def main():
                "received_at": stamp(a["timestamp"])} for a in rows(ALERTS_FILE)]
     with db.get_conn() as conn:
         # Each reading is stored as if it had arrived when it was measured, so live readings stay the newest.
-        for parcel_id, ts, temperature, humidity, rain in readings:
-            db.add_readings(conn, parcel_id, [(ts, temperature, humidity, rain)], ts)
+        for parcel_id, ts, *values in readings:
+            db.add_readings(conn, parcel_id, [(ts, *values)], ts)
         db.add_alerts(conn, alerts)
     print(f"Loaded {len(readings)} readings and {len(alerts)} alerts into {db.DB_PATH}")
 

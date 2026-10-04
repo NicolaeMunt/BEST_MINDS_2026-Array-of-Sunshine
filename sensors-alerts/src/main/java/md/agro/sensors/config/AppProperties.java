@@ -13,6 +13,7 @@ public record AppProperties(
         @DefaultValue Simulator simulator,
         @DefaultValue Frost frost,
         @DefaultValue Humidity humidity,
+        @DefaultValue Water water,
         @DefaultValue Telegram telegram,
         @DefaultValue("*") List<String> corsOrigins) {
 
@@ -78,7 +79,10 @@ public record AppProperties(
     }
 
     /**
-     * @param episodeFile HUMID and DRY replay this file; {mode} becomes humid or dry, {crop} the crop key
+     * @param episodeFile     HUMID and DRY replay this file; {mode} becomes humid or dry, {crop} the crop key
+     * @param soilMoisturePct soil moisture of the live sensors until a replay or a watering changes it
+     * @param soilLagHours    the live soil temperature follows the air this slowly
+     * @param wateringSeconds a demo watering brings the soil moisture up to field capacity in this time
      */
     public record Simulator(
             @DefaultValue("5") double intervalSeconds,
@@ -87,7 +91,17 @@ public record AppProperties(
             @DefaultValue("10") double replaySecondsPerHour,
             @DefaultValue("classpath:replay/{mode}-{crop}.csv") String episodeFile,
             @DefaultValue("0.5") double episodeSecondsPerHour,
-            @DefaultValue("720") int maxReadingsPerParcel) {
+            @DefaultValue("720") int maxReadingsPerParcel,
+            @DefaultValue("23") double soilMoisturePct,
+            @DefaultValue("6") double soilLagHours,
+            @DefaultValue("30") double wateringSeconds) {
+    }
+
+    /** The soil of the parcels (FAO-56 silt loam); here only the demo watering uses it. */
+    public record Water(
+            @DefaultValue("27") double fieldCapacityPct,
+            @DefaultValue("10") double wiltingPointPct,
+            @DefaultValue("3") double wateringRisePct) {
     }
 
     /** Frost settings shared by all crops; the temperature thresholds themselves are per crop and phase. */

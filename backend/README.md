@@ -69,7 +69,7 @@ Open-Meteo Historical Weather API (реанализ ERA5, CC BY 4.0) в цент
 
 | | |
 |---|---|
-| `data/sensor-history-sample.csv` | показания раз в час с 1 мая: `parcelId,timestamp,temperatureC,humidityPct,precipitationMm` |
+| `data/sensor-history-sample.csv` | показания раз в час с 1 апреля: `parcelId,timestamp,temperatureC,humidityPct,precipitationMm,soilTemperatureC,soilMoisturePct` (почва: ERA5-Land, температура 0–7 см, влажность 7–28 см) |
 | `data/alert-history-sample.csv` | оповещения, которые эти показания вызвали бы по правилам культур (70 за сезон) |
 | `python load_sample.py` | загружает оба файла в базу (можно запускать повторно); `start.ps1` делает это для новой базы |
 | `python make_sample.py` | скачивает погоду до вчерашнего дня (нужен интернет) и пересоздаёт файлы, эпизоды для демо HUMID/DRY (`sensors-alerts/src/main/resources/replay/`) и ночь заморозка |
@@ -79,14 +79,26 @@ Open-Meteo Historical Weather API (реанализ ERA5, CC BY 4.0) в цент
 правилами, что и живые оповещения. Если база создана со старым придуманным сезоном, удалите
 `backend/sensors.db`: `start.ps1` создаст её заново с новым.
 
-## Водный баланс и полив
+## Полив и посев
+
+Если у участка есть датчик почвы (данные за последние два дня), решение о поливе принимается по влажности почвы:
+культура страдает, когда влажность ниже `ПВ − p × (ПВ − ВЗ)` (FAO-56, пылеватый суглинок: ПВ 27%, ВЗ 10%).
+Полив виден сам: влажность растёт больше чем на 3 пункта за 6 часов без дождя за последние 48 часов.
+Без датчика почвы — водный баланс ниже. `app/sowing.py`: «можно сеять», когда средняя за день температура почвы на
+5 см держится не ниже 10 °C три дня подряд в окне сева культуры (кукуруза, подсолнечник; `sowing` в
+`application.yml`). Оповещения `IRRIGATION` и `SOWING` вычисляются, показываются в `GET /alerts` и раз в час
+(и сразу при скачке влажности почвы) уходят в Telegram через sensors-alerts (`POST /sensors/parcels/{id}/advice`).
+
+## Водный баланс (без датчика почвы)
 
 `app/water.py` считает водный баланс почвы каждого участка по методу FAO-56 из сохранённых показаний:
 ET0 по Hargreaves из минимальной и максимальной температуры дня, коэффициент культуры Kc фазы, дождь
 возвращает воду. Когда дефицит превышает легкодоступную воду (RAW = p × TAW), пора поливать.
 Предполагается неорошаемое поле с полной почвой на 1 мая. Оповещения `IRRIGATION` (день, когда дефицит
 перешёл порог, и день, когда дождь вернул воду) вычисляются из баланса и отдаются в `GET /alerts`
-вместе с остальными; в Telegram они не уходят.
+вместе с остальными. Раз в час (`ADVICE_CHECK_SEC`, по умолчанию 3600; сразу при старте и при скачке влажности почвы)
+коллектор передаёт новые оповещения за сегодня и вчера в sensors-alerts, который отправляет их в Telegram;
+затем они хранятся в `sensor_alerts` и повторно не отправляются.
 
 ## Эндпоинты
 
@@ -95,9 +107,9 @@ ET0 по Hargreaves из минимальной и максимальной те
 | `GET /sensors/parcels` | датчики (`id`, `name`, `crop`) с последним показанием в `latest` (`null`, пока показаний нет) и водой в почве сегодня в `water` |
 | `GET /sensors/parcels/{id}/latest` | контракт sensors-alerts + `mode`, `dropLastHourC`, `frost` (приоритет, рекомендация, причины) |
 | `GET /sensors/parcels/{id}/readings?minutes=60` | сохранённые показания из базы + `dewPointC`. До 2 часов — сами показания (не больше 300, равномерно прорежены); дольше — по точке на 5 минут, час или день со средним и `minTemperatureC` / `maxTemperatureC` |
-| `GET /sensors/parcels/{id}/water?date=` | водный баланс на дату: дефицит, RAW, TAW, нужно ли поливать (`irrigate`) и сколько минимум (`amountMm`), плюс баланс по дням с 1 мая |
-| `GET /alerts?parcelId={id}&type=ALL` | оповещения, новые первыми: сохранённые + `IRRIGATION` из баланса; контракт + `priority`, `title`; уровень `OK` — отбой тревоги. `type`: `FROST`, `HUMIDITY`, `IRRIGATION`, `ALL` |
-| `POST /demo/{frost\|humid\|dry\|replay\|normal}/{parcelId}` | → sensors-alerts: режим симулятора; `409` с причиной, если для культуры нет эпизода HUMID/DRY |
+| `GET /sensors/parcels/{id}/water?date=` | вода на дату: источник (`sensor` / `balance`), влажность почвы и порог, нужно ли поливать (`irrigate`) и сколько минимум (`amountMm`), замеченные поливы, плюс баланс по дням с 1 мая |
+| `GET /alerts?parcelId={id}&type=ALL` | оповещения, новые первыми: сохранённые + `IRRIGATION` из баланса; контракт + `priority`, `title`; уровень `OK` — отбой тревоги. `type`: `FROST`, `HUMIDITY`, `IRRIGATION`, `SOWING`, `ALL` |
+| `POST /demo/{frost\|humid\|dry\|replay\|normal\|irrigate}/{parcelId}` | → sensors-alerts: режим симулятора, `irrigate` — полив (влажность почвы растёт без дождя); `409` с причиной |
 | `POST /demo/reset` | → sensors-alerts: всё в NORMAL, оповещения и cooldowns очищены |
 
 Если sensors-alerts не отвечает, эндпоинты `/sensors/parcels`, `latest` и `/demo` возвращают `503`;
@@ -120,7 +132,8 @@ ET0 по Hargreaves из минимальной и максимальной те
 ## Участки и спутник
 
 Участки (кадастровый номер, название, культура, полигон) берутся из `data/parcels.geojson` и при старте
-записываются в базу (`users`, `parcels`). Модуль `app/imagery.py` раз в день запускает спутниковый
+записываются в базу (`users`, `parcels`). Если в базе ещё нет результатов спутника, при старте загружается последний
+сохранённый `imagery/out/imagery.json`, чтобы карта работала и без интернета. Модуль `app/imagery.py` раз в день запускает спутниковый
 конвейер `imagery/` отдельным процессом (своё окружение `imagery/.venv` с rasterio) и сохраняет его
 результат в `imagery_results`, `imagery_warnings`, `imagery_skipped`; каждый запуск записывается в
 `imagery_runs`. Эндпоинты `/parcels`, `/parcels/{id}/imagery?date=`, `/parcels/{id}/imagery/history`,

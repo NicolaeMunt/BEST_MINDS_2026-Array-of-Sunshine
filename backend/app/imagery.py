@@ -108,6 +108,22 @@ def import_data(data):
         return db.import_imagery(conn, data["results"], data["skipped"], data["rules_version"], _now())
 
 
+def load_saved_output():
+    """At start-up: a database without satellite results gets the last job output kept in the repository
+    (imagery/out/imagery.json), so the map works offline before the first daily run."""
+    with db.get_conn() as conn:
+        if conn.execute("SELECT 1 FROM imagery_results LIMIT 1").fetchone():
+            return 0
+    if not OUTPUT.exists():
+        return 0
+    data = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    if unknown_parcels(data):
+        return 0
+    new = import_data(data)
+    log.info("Loaded %d saved satellite scene dates from %s", new, OUTPUT)
+    return new
+
+
 def unknown_parcels(data):
     """Parcel IDs in a job output that the database does not know."""
     ids = {r["parcel_id"] for r in data["results"]} | {s["parcel_id"] for s in data["skipped"]}

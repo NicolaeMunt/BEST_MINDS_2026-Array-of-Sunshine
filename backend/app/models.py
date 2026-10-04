@@ -12,7 +12,7 @@ Priority = Literal["high", "medium", "low"]
 Mode = Literal["NORMAL", "FROST", "HUMID", "DRY", "REPLAY"]
 FrostLevel = Literal["OK", "WARNING", "CRITICAL"]
 HumidityLevel = Literal["OK", "LOW", "HIGH"]
-AlertType = Literal["FROST", "HUMIDITY_HIGH", "HUMIDITY_LOW", "IRRIGATION"]
+AlertType = Literal["FROST", "HUMIDITY_HIGH", "HUMIDITY_LOW", "IRRIGATION", "SOWING"]
 
 
 class CamelModel(BaseModel):
@@ -33,6 +33,8 @@ class SensorReadingOut(CamelModel):
     humidity_pct: float
     dew_point_c: float = Field(description="°C, Magnus formula")
     precipitation_mm: float | None = Field(None, description="Rain since the previous reading, mm; null if not reported")
+    soil_temperature_c: float | None = Field(None, description="Soil at ~5 cm; null without a soil probe")
+    soil_moisture_pct: float | None = Field(None, description="Soil water at ~20 cm, % of the soil volume; null without a soil probe")
     min_temperature_c: float | None = Field(None, description="Lowest in this point's stretch of time (long charts)")
     max_temperature_c: float | None = Field(None, description="Highest in this point's stretch of time (long charts)")
 
@@ -71,17 +73,28 @@ class WaterDayOut(CamelModel):
     measured: bool = Field(description="false: no readings that day, counted as no rain and no use")
 
 
+class WateringOut(CamelModel):
+    time: datetime = Field(description="Hour the soil moisture rose without rain")
+    from_pct: float
+    to_pct: float
+
+
 class WaterStatusOut(CamelModel):
-    """Soil water balance on a day (FAO-56), from the sensor readings since 1 May; the field is assumed not irrigated."""
+    """Whether to water on a day: from the soil probe when it reported in the last two days (a watering shows up
+    in it), else from the soil water balance since 1 May (FAO-56), which takes the field as not watered."""
     date: date
     phase: str | None = None
     has_crop: bool = Field(description="false: nothing to water in this phase (not sown, harvested, dormant)")
+    source: Literal["sensor", "balance"]
+    soil_moisture_pct: float | None = Field(None, description="sensor: latest soil moisture at ~20 cm, %")
+    threshold_pct: float | None = Field(None, description="sensor: the crop suffers below this soil moisture, %")
+    field_capacity_pct: float | None = Field(None, description="sensor: the soil is full at this moisture, %")
+    waterings: list[WateringOut] = Field([], description="sensor: waterings seen in the last 14 days, newest first")
     deficit_mm: float = Field(description="Water missing from the root zone, mm (1 mm = 10 m³/ha)")
     readily_available_mm: float = Field(description="The crop suffers once the deficit passes this (FAO-56 RAW)")
     total_available_mm: float = Field(description="All the water the roots can reach (FAO-56 TAW)")
     irrigate: bool = Field(description="Time to water: the deficit has passed the readily available water")
-    amount_mm: float = Field(description="Least water that takes the crop out of stress, mm (deficit minus the readily "
-                                         "available water); 0 when no watering is needed")
+    amount_mm: float = Field(description="Least water that takes the crop out of stress, mm; 0 when no watering is needed")
     days: list[WaterDayOut] | None = Field(None, description="The day-by-day balance since 1 May (water endpoint only)")
 
 

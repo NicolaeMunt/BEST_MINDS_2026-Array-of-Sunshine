@@ -35,7 +35,9 @@ export function verdict(sensor) {
   }
   if (w && w.irrigate) {
     return { status: 'warning', word: 'De udat', title: 'E timpul să uzi',
-      text: `În sol lipsesc ${num(w.deficitMm, 0)} mm de apă. Cultura iese din stres cu cel puțin ${num(w.amountMm, 0)} mm, adică ${num(w.amountMm * 10, 0)} m³ la hectar.` };
+      text: (w.source === 'sensor' ? `Solul are doar ${num(w.soilMoisturePct, 0)}% apă; cultura suferă sub ${num(w.thresholdPct, 0)}%. `
+        : `În sol lipsesc ${num(w.deficitMm, 0)} mm de apă. `)
+        + `Cultura iese din stres cu cel puțin ${num(w.amountMm, 0)} mm, adică ${num(w.amountMm * 10, 0)} m³ la hectar.` };
   }
   if (s.temperatureC <= 0) {
     return { status: 'ok', word: 'E bine', title: 'E sub zero, dar cultura rezistă',
@@ -57,5 +59,6 @@ export function alertWord(alert) {
   if (alert.type === 'HUMIDITY_HIGH') return { status: 'warning', word: 'Risc de boală' };
   if (alert.type === 'HUMIDITY_LOW') return { status: 'warning', word: 'Arșiță' };
   if (alert.type === 'IRRIGATION') return { status: 'warning', word: 'De udat' };
+  if (alert.type === 'SOWING') return { status: 'ok', word: 'Poți semăna' };
   return alert.level === 'CRITICAL' ? { status: 'critical', word: 'Îngheț' } : { status: 'warning', word: 'Risc de îngheț' };
 }

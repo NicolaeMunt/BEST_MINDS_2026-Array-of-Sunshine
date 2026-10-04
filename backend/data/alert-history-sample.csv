@@ -1,5 +1,11 @@
-# Real weather, not measured by a sensor in the field: 2026-05-01 to 2026-10-03, hourly, UTC. Source: Open-Meteo Historical Weather API (reanalysis), https://open-meteo.com, CC BY 4.0. Alerts: the crop rules of sensors-alerts. Written by make_sample.py.
+# Real weather, not measured by a sensor in the field: 2026-04-01 to 2026-10-03, hourly, UTC. Source: Open-Meteo Historical Weather API (reanalysis), https://open-meteo.com, CC BY 4.0. Alerts: the crop rules of sensors-alerts. Written by make_sample.py.
 parcelId,parcelName,crop,type,level,timestamp,temperatureC,humidityPct,dewPointC,message
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,WARNING,2026-04-11T02:00:00Z,-0.3,79,-3.5,"⚠️ Risc de îngheț – Lotul de Floarea-soarelui (floarea-soarelui)
+Temperatura: -0.3 °C (faza „semănat și răsărire”, prag critic -3.0 °C)
+Umiditate: 79% · Punct de rouă: -3.5 °C
+Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața."
+6401307.101,Lotul de Floarea-soarelui,sunflower,FROST,OK,2026-04-11T05:00:00Z,2.2,71,-2.5,"✅ Pericol trecut – Lotul de Floarea-soarelui (floarea-soarelui)
+Temperatura: 2.2 °C"
 6401307.101,Lotul de Floarea-soarelui,sunflower,HUMIDITY_LOW,WARNING,2026-08-01T11:00:00Z,31.3,30,11.7,"🌵 Aer fierbinte și uscat – Lotul de Floarea-soarelui (floarea-soarelui)
 Umiditate: 30% · Temperatura: 31.3 °C
 Risc de semințe seci în calatidiu. Urmăriți umiditatea solului."
@@ -15,6 +21,18 @@ Aer umed (90% sau mai mult) 48 din ultimele 168 ore · acum 92%, 15.9 °C
 Spicele au stat ude mult timp în înflorire. Verificați lanul și pregătiți tratamentul fungicid."
 6401307.102,Câmpul Mare,wheat,HUMIDITY_HIGH,OK,2026-06-14T04:00:00Z,15.6,74,11.0,"✅ Riscul de fuzarioza spicului a trecut – Câmpul Mare (grâu)
 Umiditate: 74% · Temperatura: 15.6 °C"
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-04-22T03:00:00Z,1.3,86,-0.8,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
+Temperatura: 1.3 °C (faza „dezmugurire și lăstari tineri”, prag critic -1.0 °C)
+Umiditate: 86% · Punct de rouă: -0.8 °C
+Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
+6401204.045,Via Nord,vineyard,FROST,OK,2026-04-22T05:00:00Z,5.4,71,0.6,"✅ Pericol trecut – Via Nord (viță-de-vie)
+Temperatura: 5.4 °C"
+6401204.045,Via Nord,vineyard,FROST,WARNING,2026-04-27T02:00:00Z,1.8,55,-6.3,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
+Temperatura: 1.8 °C (faza „dezmugurire și lăstari tineri”, prag critic -1.0 °C)
+Umiditate: 55% · Punct de rouă: -6.3 °C
+Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea."
+6401204.045,Via Nord,vineyard,FROST,OK,2026-04-27T05:00:00Z,3.3,57,-4.4,"✅ Pericol trecut – Via Nord (viță-de-vie)
+Temperatura: 3.3 °C"
 6401204.045,Via Nord,vineyard,FROST,WARNING,2026-05-01T02:00:00Z,1.3,71,-3.4,"⚠️ Risc de îngheț – Via Nord (viță-de-vie)
 Temperatura: 1.3 °C (faza „dezmugurire și lăstari tineri”, prag critic -1.0 °C)
 Umiditate: 71% · Punct de rouă: -3.4 °C
@@ -132,6 +150,18 @@ Aer umed (90% sau mai mult) 6 din ultimele 6 ore · acum 98%, 18.4 °C
 Frunzele au stat ude la căldură. Căutați pete lungi, cenușii pe frunzele de jos."
 6401512.033,Lanul de Porumb,corn,HUMIDITY_HIGH,OK,2026-08-27T06:00:00Z,16.1,98,15.8,"✅ Riscul de helmintosporioză a trecut – Lanul de Porumb (porumb)
 Umiditate: 98% · Temperatura: 16.1 °C"
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-04-22T02:00:00Z,1.8,80,-1.3,"⚠️ Risc de îngheț – Livada Sud (livadă)
+Temperatura: 1.8 °C (faza „înflorire și legarea fructelor”, prag critic -2.0 °C)
+Umiditate: 80% · Punct de rouă: -1.3 °C
+Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
+6401512.058,Livada Sud,orchard,FROST,OK,2026-04-22T05:00:00Z,5.1,73,0.7,"✅ Pericol trecut – Livada Sud (livadă)
+Temperatura: 5.1 °C"
+6401512.058,Livada Sud,orchard,FROST,WARNING,2026-04-27T02:00:00Z,2.0,55,-6.1,"⚠️ Risc de îngheț – Livada Sud (livadă)
+Temperatura: 2.0 °C (faza „înflorire și legarea fructelor”, prag critic -2.0 °C)
+Umiditate: 55% · Punct de rouă: -6.1 °C
+Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația."
+6401512.058,Livada Sud,orchard,FROST,OK,2026-04-27T05:00:00Z,3.3,56,-4.7,"✅ Pericol trecut – Livada Sud (livadă)
+Temperatura: 3.3 °C"
 6401512.058,Livada Sud,orchard,FROST,WARNING,2026-05-01T03:00:00Z,1.3,71,-3.4,"⚠️ Risc de îngheț – Livada Sud (livadă)
 Temperatura: 1.3 °C (faza „înflorire și legarea fructelor”, prag critic -2.0 °C)
 Umiditate: 71% · Punct de rouă: -3.4 °C

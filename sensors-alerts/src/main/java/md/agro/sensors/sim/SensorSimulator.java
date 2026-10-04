@@ -48,6 +48,13 @@ public class SensorSimulator {
         int generation;
         double lastTemp = Double.NaN;
         double lastHum = Double.NaN;
+        // The soil probe: NaN until the first reading.
+        double soilTemp = Double.NaN;
+        double soilMoisture = Double.NaN;
+        Instant lastSoilAt;
+        // A demo watering raises the soil moisture from wateringFrom to field capacity, starting at wateringStart.
+        Instant wateringStart;
+        double wateringFrom;
 
         // FROST moves linearly from the values at the switch to a target.
         Instant rampStart;
@@ -66,15 +73,16 @@ public class SensorSimulator {
         }
     }
 
-    /** HUMID or DRY was asked for a crop that has no recorded spell of that kind. */
-    public static class NoEpisodeException extends RuntimeException {
-        public NoEpisodeException(String message) {
+    /** A demo the parcel cannot show now (no recorded spell for its crop, a replay running); the message says why. */
+    public static class DemoRefusedException extends RuntimeException {
+        public DemoRefusedException(String message) {
             super(message);
         }
     }
 
     private final ParcelRegistry parcels;
     private final AppProperties.Simulator cfg;
+    private final AppProperties.Water water;
     private final AlertService alertService;
     private final SensorStore store;
     private final ResourceLoader resourceLoader;
@@ -87,6 +95,7 @@ public class SensorSimulator {
             ResourceLoader resourceLoader) {
         this.parcels = parcels;
         this.cfg = props.simulator();
+        this.water = props.water();
         this.alertService = alertService;
         this.store = store;
         this.resourceLoader = resourceLoader;
@@ -148,8 +157,29 @@ public class SensorSimulator {
     }
 
     /**
+     * Demo watering: the live soil moisture rises to field capacity over wateringSeconds, with no rain, so the
+     * backend sees the watering in the soil readings.
+     *
+     * @throws DemoRefusedException while a replay runs (its recorded soil would overwrite the watering)
+     */
+    public void irrigate(String parcelId) {
+        Sensor s = sensor(parcelId);
+        if (s == null) {
+            throw new IllegalArgumentException("Unknown parcel " + parcelId);
+        }
+        synchronized (s) {
+            if (!s.replay.isEmpty()) {
+                throw new DemoRefusedException("Acum se redă o perioadă înregistrată. Udă după ce se termină redarea.");
+            }
+            s.wateringStart = Instant.now();
+            s.wateringFrom = Double.isNaN(s.soilMoisture) ? cfg.soilMoisturePct() : s.soilMoisture;
+        }
+        log.info("{} watered", parcelId);
+    }
+
+    /**
      * @throws IllegalStateException if a replay CSV cannot be loaded
-     * @throws NoEpisodeException    if HUMID or DRY is asked for a crop without a recorded spell
+     * @throws DemoRefusedException  if HUMID or DRY is asked for a crop without a recorded spell
      */
     public void setMode(String parcelId, SensorMode mode) {
         Sensor s = sensor(parcelId);
@@ -208,8 +238,16 @@ public class SensorSimulator {
                         finished = true;
                     } else {
                         ReplayData.Row row = s.replay.get(s.replayIndex++);
+                        // The recorded soil, if the file has it; the live probe then goes on from there.
+                        if (row.soilTemperatureC() != null) {
+                            s.soilTemp = row.soilTemperatureC();
+                        }
+                        if (row.soilMoisturePct() != null) {
+                            s.soilMoisture = row.soilMoisturePct();
+                        }
+                        s.wateringStart = null;
                         reading = new Reading(s.parcelId, row.timestamp(), row.temperatureC(), row.humidityPct(),
-                                row.precipitationMm());
+                                row.precipitationMm(), row.soilTemperatureC(), row.soilMoisturePct());
                         if (s.replayIndex < s.replay.size()) {
                             long gapSec = Duration.between(row.timestamp(),
                                     s.replay.get(s.replayIndex).timestamp()).getSeconds();
@@ -242,7 +280,7 @@ public class SensorSimulator {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
         double temp = normalTemp() + rnd.nextDouble(-0.15, 0.15);
         double hum = normalHumidity(temp) + rnd.nextDouble(-1, 1);
-        return new Reading(s.parcelId, Instant.now(), round1(temp), round1(clamp(hum, 30, 98)));
+        return withSoil(s, round1(temp), round1(clamp(hum, 30, 98)));
     }
 
     private Reading rampReading(Sensor s) {
@@ -251,7 +289,33 @@ public class SensorSimulator {
         double p = Math.min(1, elapsed / Math.max(1, cfg.frostRampSeconds()));
         double temp = s.rampFromTemp + (s.rampToTemp - s.rampFromTemp) * p + rnd.nextDouble(-0.1, 0.1);
         double hum = s.rampFromHum + (s.rampToHum - s.rampFromHum) * p + rnd.nextDouble(-0.5, 0.5);
-        return new Reading(s.parcelId, Instant.now(), round1(temp), round1(clamp(hum, 5, 99)));
+        return withSoil(s, round1(temp), round1(clamp(hum, 5, 99)));
+    }
+
+    /**
+     * A live reading with the soil probe: the soil temperature follows the air with a lag of soilLagHours (it
+     * starts at the day's mean, 12 °C); the moisture stays where it is unless a watering is raising it.
+     */
+    private Reading withSoil(Sensor s, double airTemp, double humidity) {
+        Instant now = Instant.now();
+        if (Double.isNaN(s.soilTemp)) {
+            s.soilTemp = 12;
+        } else if (s.lastSoilAt != null) {
+            double hours = Duration.between(s.lastSoilAt, now).toMillis() / 3_600_000.0;
+            s.soilTemp += (airTemp - s.soilTemp) * Math.min(1, hours / Math.max(0.01, cfg.soilLagHours()));
+        }
+        s.lastSoilAt = now;
+        if (Double.isNaN(s.soilMoisture)) {
+            s.soilMoisture = cfg.soilMoisturePct();
+        }
+        if (s.wateringStart != null) {
+            double p = Math.min(1, Duration.between(s.wateringStart, now).toMillis() / 1000.0 / Math.max(1, cfg.wateringSeconds()));
+            s.soilMoisture = s.wateringFrom + (water.fieldCapacityPct() - s.wateringFrom) * p;
+            if (p >= 1) {
+                s.wateringStart = null;
+            }
+        }
+        return new Reading(s.parcelId, now, airTemp, humidity, 0, round1(s.soilTemp), round1(s.soilMoisture));
     }
 
     /** Spring day: coldest (6 °C) around 03:00, warmest (18 °C) around 15:00. */
@@ -272,7 +336,7 @@ public class SensorSimulator {
         Resource resource = resourceLoader.getResource(location);
         if (crop.isEmpty() || !resource.exists()) {
             String what = mode == SensorMode.HUMID ? "o perioadă umedă cu risc de boală" : "o perioadă de aer fierbinte și uscat";
-            throw new NoEpisodeException("Pentru %s nu am %s în 2026, deci nu am ce reda. Alege alt teren."
+            throw new DemoRefusedException("Pentru %s nu am %s în 2026, deci nu am ce reda. Alege alt teren."
                     .formatted(parcels.cropFor(parcelId).name(), what));
         }
         return load(location);

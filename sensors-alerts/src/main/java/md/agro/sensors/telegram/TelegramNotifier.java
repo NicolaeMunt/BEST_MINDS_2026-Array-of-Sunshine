@@ -171,10 +171,12 @@ public class TelegramNotifier implements AlertNotifier {
         }
         Reading r = st.get().reading();
         AppProperties.Crop crop = parcels.cropFor(parcel.get().id());
-        return "%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C\nStare: %s\n%s".formatted(
+        String soil = r.soilMoisturePct() == null ? "" : "\nSol: %s °C la 5 cm, umiditate %.0f%% la 20 cm".formatted(
+                Messages.num(r.soilTemperatureC()), r.soilMoisturePct());
+        return "%s (%s) – %s\nTemperatura: %s °C\nUmiditate: %.0f%% (%s)\nPunct de rouă: %s °C%s\nStare: %s\n%s".formatted(
                 parcel.get().name(), parcel.get().id(), crop.name(), Messages.num(r.temperatureC()),
                 r.humidityPct(), Messages.status(st.get().humidity()),
-                Messages.num(st.get().assessment().dewPointC()), Messages.status(st.get().assessment().level()),
+                Messages.num(st.get().assessment().dewPointC()), soil, Messages.status(st.get().assessment().level()),
                 Messages.phase(CropCalendar.phase(crop, r.timestamp())));
     }
 

@@ -16,12 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
-/** Loads a replay CSV: timestamp,temperatureC,humidityPct and optionally precipitationMm. */
+/** Loads a replay CSV: timestamp,temperatureC,humidityPct and optionally precipitationMm,soilTemperatureC,soilMoisturePct. */
 final class ReplayData {
 
     private static final Logger log = LoggerFactory.getLogger(ReplayData.class);
 
-    record Row(Instant timestamp, double temperatureC, double humidityPct, double precipitationMm) {
+    /** @param soilTemperatureC null when the file has no soil columns, as soilMoisturePct */
+    record Row(Instant timestamp, double temperatureC, double humidityPct, double precipitationMm, Double soilTemperatureC,
+            Double soilMoisturePct) {
     }
 
     private ReplayData() {
@@ -46,7 +48,8 @@ final class ReplayData {
                 }
                 try {
                     rows.add(new Row(parseTime(p[0].trim(), zone), Double.parseDouble(p[1].trim()),
-                            Double.parseDouble(p[2].trim()), p.length > 3 ? Double.parseDouble(p[3].trim()) : 0));
+                            Double.parseDouble(p[2].trim()), p.length > 3 ? Double.parseDouble(p[3].trim()) : 0,
+                            optional(p, 4), optional(p, 5)));
                 } catch (DateTimeParseException | NumberFormatException e) {
                     // The header is skipped quietly; anything else that does not parse is worth a warning.
                     if (!Character.isLetter(clean.charAt(0))) {
@@ -56,6 +59,10 @@ final class ReplayData {
             }
         }
         return rows;
+    }
+
+    private static Double optional(String[] p, int i) {
+        return p.length > i && !p[i].isBlank() ? Double.valueOf(p[i].trim()) : null;
     }
 
     /** Accepts 2025-04-08T18:00, 2025-04-08 18:00[:00], and ISO with offset or Z. */

@@ -70,8 +70,15 @@ def alerts(parcel_id=None, type_="ALL"):
     return _call("GET", "/alerts", params) or []
 
 
+def send_advice(parcel_id, alert):
+    """Hands watering or sowing advice to sensors-alerts, which stores it and sends it to Telegram.
+    alert: {type: IRRIGATION | SOWING, timestamp, level, temperatureC, humidityPct, dewPointC, message}.
+    Returns {"sent": bool} or None."""
+    return _call("POST", _parcel_path(parcel_id) + "/advice", body=alert)
+
+
 def demo(kind, parcel_id):
-    """kind: frost | humid | dry | replay | normal. SensorsConflict when the crop has no spell to replay."""
+    """kind: frost | humid | dry | replay | normal | irrigate. SensorsConflict when the demo cannot run now."""
     return _call("POST", f"/demo/{kind}/{urllib.parse.quote(parcel_id)}")
 
 

@@ -18,13 +18,15 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     humidity_pct  REAL NOT NULL,
     received_at   TEXT NOT NULL,   -- when this API stored it; differs from timestamp for a replayed night
     precipitation_mm REAL,         -- rain since the previous reading; NULL when the sensor does not say
+    soil_temperature_c REAL,       -- soil at ~5 cm; NULL without a soil probe
+    soil_moisture_pct  REAL,       -- soil water at ~20 cm, % of the soil volume; NULL without a soil probe
     PRIMARY KEY (parcel_id, timestamp)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS idx_readings_received ON sensor_readings(parcel_id, received_at);
 CREATE TABLE IF NOT EXISTS sensor_alerts (
     parcel_id     TEXT NOT NULL,
     timestamp     TEXT NOT NULL,   -- when the alert was sent
-    type          TEXT NOT NULL,   -- FROST | HUMIDITY_HIGH | HUMIDITY_LOW
+    type          TEXT NOT NULL,   -- FROST | HUMIDITY_HIGH | HUMIDITY_LOW | IRRIGATION | SOWING
     level         TEXT NOT NULL,   -- WARNING | CRITICAL | OK (the all-clear)
     parcel_name   TEXT NOT NULL,
     crop          TEXT,
@@ -61,21 +63,25 @@ def get_conn():
 def init_db():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
-        # Databases created before the rain column was added.
-        if "precipitation_mm" not in {row["name"] for row in conn.execute("PRAGMA table_info(sensor_readings)")}:
-            conn.execute("ALTER TABLE sensor_readings ADD COLUMN precipitation_mm REAL")
+        # Databases created before the rain and soil columns were added.
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(sensor_readings)")}
+        for column in ("precipitation_mm", "soil_temperature_c", "soil_moisture_pct"):
+            if column not in columns:
+                conn.execute(f"ALTER TABLE sensor_readings ADD COLUMN {column} REAL")
         conn.executescript(IMAGERY_SCHEMA)
 
 
 def add_readings(conn, parcel_id, readings, received_at):
-    """readings: (timestamp text, temperature, humidity[, rain mm]). A reading stored before is replaced, so a
-    night replayed twice is kept once and counts as the newest data again."""
+    """readings: (timestamp text, temperature, humidity[, rain mm[, soil temperature, soil moisture]]). A reading
+    stored before is replaced, so a night replayed twice is kept once and counts as the newest data again."""
     conn.executemany(
-        "INSERT INTO sensor_readings (parcel_id, timestamp, temperature_c, humidity_pct, precipitation_mm, received_at) "
-        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (parcel_id, timestamp) DO UPDATE SET "
+        "INSERT INTO sensor_readings (parcel_id, timestamp, temperature_c, humidity_pct, precipitation_mm, "
+        "soil_temperature_c, soil_moisture_pct, received_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT (parcel_id, timestamp) DO UPDATE SET "
         "temperature_c = excluded.temperature_c, humidity_pct = excluded.humidity_pct, "
-        "precipitation_mm = excluded.precipitation_mm, received_at = excluded.received_at",
-        [(parcel_id, r[0], r[1], r[2], r[3] if len(r) > 3 else None, received_at) for r in readings],
+        "precipitation_mm = excluded.precipitation_mm, soil_temperature_c = excluded.soil_temperature_c, "
+        "soil_moisture_pct = excluded.soil_moisture_pct, received_at = excluded.received_at",
+        [(parcel_id, *r[:3], *(list(r[3:6]) + [None] * (6 - len(r))), received_at) for r in readings],
     )
 
 
@@ -90,6 +96,30 @@ def daily_weather(conn, parcel_id, start, end):
         "FROM sensor_readings WHERE parcel_id = ? AND timestamp >= ? AND timestamp < ? GROUP BY 1 ORDER BY 1",
         (f"+{LOCAL_OFFSET_SEC} seconds", parcel_id, first, last),
     ).fetchall()
+
+
+def soil_hours(conn, parcel_id, start, end, by_minute=False):
+    """One row per clock hour (UTC) from start to end (aware datetimes) with soil readings: the start of the hour,
+    its mean soil temperature and moisture and its rain, oldest first. by_minute: one row per minute with the
+    minute's last soil reading (SQLite takes the bare columns from the row of MAX), so a quick change is not
+    averaged away."""
+    if by_minute:
+        key, soil = "substr(timestamp, 1, 16) || ':00.000Z'", "soil_temperature_c AS soil_t, soil_moisture_pct AS soil_m, MAX(timestamp)"
+    else:
+        key, soil = "substr(timestamp, 1, 13) || ':00:00.000Z'", "AVG(soil_temperature_c) AS soil_t, AVG(soil_moisture_pct) AS soil_m"
+    return conn.execute(
+        f"SELECT {key} AS hour, {soil}, COALESCE(SUM(precipitation_mm), 0) AS rain_mm FROM sensor_readings "
+        "WHERE parcel_id = ? AND timestamp >= ? AND timestamp < ? AND soil_moisture_pct IS NOT NULL "
+        "GROUP BY 1 ORDER BY 1",
+        (parcel_id, ts_text(start), ts_text(end)),
+    ).fetchall()
+
+
+def latest_soil_time(conn, parcel_id, end):
+    """Timestamp of the newest reading with soil data before `end` (aware datetime), or None."""
+    row = conn.execute("SELECT MAX(timestamp) AS t FROM sensor_readings WHERE parcel_id = ? AND timestamp < ? "
+                       "AND soil_moisture_pct IS NOT NULL", (parcel_id, ts_text(end))).fetchone()
+    return row["t"]
 
 
 def newest_timestamp(conn, parcel_id):
@@ -131,6 +161,11 @@ def readings_summary(conn, parcel_id, minutes, bucket_sec):
     ).fetchall()
 
 
+def alert_stored(conn, parcel_id, timestamp, type_, level):
+    return conn.execute("SELECT 1 FROM sensor_alerts WHERE parcel_id = ? AND timestamp = ? AND type = ? AND level = ?",
+                        (parcel_id, timestamp, type_, level)).fetchone() is not None
+
+
 def add_alerts(conn, alerts):
     """alerts: dicts with ALERT_COLUMNS as keys. An alert stored before is left as it is."""
     conn.executemany(
@@ -138,14 +173,18 @@ def add_alerts(conn, alerts):
         f"VALUES ({', '.join(':' + c for c in ALERT_COLUMNS)})", alerts)
 
 
+ALERT_KINDS = {"FROST": "type = 'FROST'", "HUMIDITY": "type IN ('HUMIDITY_HIGH', 'HUMIDITY_LOW')",
+               "IRRIGATION": "type = 'IRRIGATION'", "SOWING": "type = 'SOWING'"}
+
+
 def alerts(conn, parcel_id=None, kind="ALL", limit=1000):
-    """Stored alerts, newest first. kind: FROST | HUMIDITY | ALL."""
+    """Stored alerts, newest first. kind: FROST | HUMIDITY | IRRIGATION | ALL."""
     where, params = [], []
     if parcel_id:
         where.append("parcel_id = ?")
         params.append(parcel_id)
     if kind != "ALL":
-        where.append("type = 'FROST'" if kind == "FROST" else "type <> 'FROST'")
+        where.append(ALERT_KINDS[kind])
     return conn.execute(
         f"SELECT {', '.join(ALERT_COLUMNS)} FROM sensor_alerts "
         f"{'WHERE ' + ' AND '.join(where) if where else ''} ORDER BY timestamp DESC LIMIT ?",

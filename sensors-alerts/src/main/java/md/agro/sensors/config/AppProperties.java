@@ -19,10 +19,15 @@ public record AppProperties(
 
     /** Used for parcels whose crop is missing or not listed under app.crops: frost at 2 / 0 °C all year, nothing else. */
     public static final Crop DEFAULT_CROP = new Crop("cultură", "Pregătiți măsurile de protecție.",
-            List.of(new Phase("01-01", "sezon", "growing", 2.0, 0.0, null, null)), null, null);
+            List.of(new Phase("01-01", "sezon", "growing", 2.0, 0.0, null, null)), null, null, null);
 
-    /** @param crop key into app.crops, e.g. wheat */
-    public record Parcel(String id, String name, @DefaultValue("") String crop) {
+    /**
+     * @param crop       key into app.crops, e.g. wheat
+     * @param sowingDate when the farmer sowed (2026-05-10); null if not given. For a crop with calendarSowing it
+     *                   moves the crop's whole calendar
+     */
+    // Configuration records keep a single constructor: Spring binds application.yml through it.
+    public record Parcel(String id, String name, @DefaultValue("") String crop, String sowingDate) {
     }
 
     /**
@@ -33,13 +38,16 @@ public record AppProperties(
      * @param phases  in calendar order; the first one should start on 01-01
      * @param disease null: no damp-air rule
      * @param dry     null: no dry-air rule
+     * @param calendarSowing the sowing day (month-day) the calendar assumes; a parcel sown N days later has all its
+     *                phases and windows N days later. null: the calendar does not depend on the sowing day
      */
     public record Crop(
             @DefaultValue("cultură") String name,
             @DefaultValue("Pregătiți măsurile de protecție.") String frostAdvice,
             @DefaultValue List<Phase> phases,
             Disease disease,
-            Window dry) {
+            Window dry,
+            String calendarSowing) {
     }
 
     /**

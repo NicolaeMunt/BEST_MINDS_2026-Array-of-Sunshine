@@ -47,7 +47,9 @@ class Collector(threading.Thread):
             self._stopped.wait(POLL_SEC)
 
     def collect(self):
-        for parcel in sensors_client.parcels():
+        sensor_parcels = sensors_client.parcels()
+        self.sync_crops(sensor_parcels)
+        for parcel in sensor_parcels:
             parcel_id = parcel["id"]
             first = parcel_id not in self._last
             if first:
@@ -83,6 +85,18 @@ class Collector(threading.Thread):
         if alerts:
             with db.get_conn() as conn:
                 db.add_alerts(conn, alerts)
+
+    def sync_crops(self, sensor_parcels):
+        """sensors-alerts starts with the crops of its configuration; the crops and sowing dates set on the account
+        page are in the database, so a parcel that differs there is registered again (after each restart of that
+        service)."""
+        with db.get_conn() as conn:
+            stored = {row["id"]: row for row in db.parcels(conn)}
+        for p in sensor_parcels:
+            row = stored.get(p["id"])
+            if row and row["crop"] and (row["crop"] != p.get("crop") or row["sowing_date"] != p.get("sowingDate")):
+                sensors_client.register_parcel(p["id"], row["name"], row["crop"], row["sowing_date"])
+                log.info("Crop of %s set to %s, sown %s, in sensors-alerts", p["id"], row["crop"], row["sowing_date"])
 
     def send_advice(self):
         """Watering and sowing advice of today and yesterday that was not sent yet goes to sensors-alerts, which

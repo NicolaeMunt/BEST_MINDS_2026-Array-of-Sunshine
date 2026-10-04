@@ -125,6 +125,45 @@ class AlertOut(CamelModel):
     deficit_mm: float | None = Field(None, description="IRRIGATION: water missing from the soil that day, mm")
 
 
+class UserOut(CamelModel):
+    id: int
+    name: str = Field(description="What the app shows: first and last name")
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+
+
+class UserIn(CamelModel):
+    first_name: str = Field("", max_length=60)
+    last_name: str = Field("", max_length=60)
+    email: str = Field("", max_length=120)
+
+
+class CropIn(CamelModel):
+    crop: str = Field(description="Crop key: wheat, corn, sunflower, orchard, vineyard")
+
+
+class SowingIn(CamelModel):
+    sowing_date: date | None = Field(None, description="null clears it")
+
+
+class CropOptionOut(CamelModel):
+    key: str
+    name: str
+    sown: bool = Field(description="true: the crop is sown each year, so its sowing date can be given")
+
+
+class TemperatureStatOut(CamelModel):
+    minutes: int = Field(description="The window, counted back from the newest reading")
+    min_c: float | None = None
+    mean_c: float | None = None
+    max_c: float | None = None
+    min_humidity_pct: float | None = None
+    mean_humidity_pct: float | None = None
+    max_humidity_pct: float | None = None
+    readings: int
+
+
 class DemoOut(CamelModel):
     parcel_id: str | None = None
     mode: Mode
@@ -147,6 +186,7 @@ class ParcelOut(CamelModel):
     lpis_parcel: str | None = Field(None, description="Agricultural parcel in LPIS, once that system exists")
     geometry: dict | None = Field(None, description="GeoJSON Polygon in [lon, lat]; null = no satellite analysis")
     note: str | None = None
+    sowing_date: date | None = Field(None, description="Set by the farmer; moves the calendar of spring crops")
 
 
 class ImageryWarning(CamelModel):

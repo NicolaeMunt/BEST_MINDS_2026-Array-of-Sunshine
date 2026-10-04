@@ -56,6 +56,11 @@ def latest(parcel_id):
     return _call("GET", _parcel_path(parcel_id) + "/latest")
 
 
+def register_parcel(parcel_id, name, crop, sowing_date=None):
+    """Tells sensors-alerts the parcel's name, crop and sowing date, so its rules follow them."""
+    return _call("PUT", _parcel_path(parcel_id), body={"name": name, "crop": crop, "sowingDate": sowing_date})
+
+
 def readings(parcel_id, minutes):
     """[{parcelId, timestamp, temperatureC, humidityPct}], oldest first."""
     return _call("GET", _parcel_path(parcel_id) + "/readings", {"minutes": minutes}) or []

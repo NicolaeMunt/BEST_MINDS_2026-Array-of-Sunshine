@@ -69,6 +69,13 @@ def init_db():
             if column not in columns:
                 conn.execute(f"ALTER TABLE sensor_readings ADD COLUMN {column} REAL")
         conn.executescript(IMAGERY_SCHEMA)
+        # Databases created before the account page.
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
+        for column in ("first_name", "last_name", "email"):
+            if column not in columns:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {column} TEXT")
+        if "sowing_date" not in {row["name"] for row in conn.execute("PRAGMA table_info(parcels)")}:
+            conn.execute("ALTER TABLE parcels ADD COLUMN sowing_date TEXT")
 
 
 def add_readings(conn, parcel_id, readings, received_at):
@@ -96,6 +103,27 @@ def daily_weather(conn, parcel_id, start, end):
         "FROM sensor_readings WHERE parcel_id = ? AND timestamp >= ? AND timestamp < ? GROUP BY 1 ORDER BY 1",
         (f"+{LOCAL_OFFSET_SEC} seconds", parcel_id, first, last),
     ).fetchall()
+
+
+def temperature_stats(conn, parcel_id, windows):
+    """For each window (minutes, counted back from the newest reading): lowest, mean (of the hourly means) and
+    highest temperature and humidity, and the number of readings. [(minutes, row)]."""
+    newest = newest_timestamp(conn, parcel_id)
+    if not newest:
+        return []
+    end = datetime.fromisoformat(newest.replace("Z", "+00:00"))
+    out = []
+    for minutes in windows:
+        # The mean of the hourly means: live readings every few seconds must not outweigh the hourly history.
+        row = conn.execute(
+            "SELECT MIN(lo) AS lo, AVG(mean) AS mean, MAX(hi) AS hi, MIN(h_lo) AS h_lo, AVG(h_mean) AS h_mean, "
+            "MAX(h_hi) AS h_hi, SUM(n) AS n FROM ("
+            "SELECT MIN(temperature_c) AS lo, AVG(temperature_c) AS mean, MAX(temperature_c) AS hi, MIN(humidity_pct) AS h_lo, "
+            "AVG(humidity_pct) AS h_mean, MAX(humidity_pct) AS h_hi, COUNT(*) AS n "
+            "FROM sensor_readings WHERE parcel_id = ? AND timestamp BETWEEN ? AND ? GROUP BY substr(timestamp, 1, 13))",
+            (parcel_id, ts_text(end - timedelta(minutes=minutes)), newest)).fetchone()
+        out.append((minutes, row))
+    return out
 
 
 def soil_hours(conn, parcel_id, start, end, by_minute=False):
@@ -197,8 +225,11 @@ def alerts(conn, parcel_id=None, kind="ALL", limit=1000):
 IMAGERY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL,
-    created_at  TEXT NOT NULL
+    name        TEXT NOT NULL,                  -- what the app shows: first and last name
+    created_at  TEXT NOT NULL,
+    first_name  TEXT,
+    last_name   TEXT,
+    email       TEXT
 );
 CREATE TABLE IF NOT EXISTS parcels (
     id              TEXT PRIMARY KEY,           -- cadastral number (fictive in the demo), as in sensors-alerts
@@ -210,7 +241,8 @@ CREATE TABLE IF NOT EXISTS parcels (
     lpis_parcel     TEXT,                       -- agricultural parcel in LPIS, once that system exists
     geometry        TEXT,                       -- GeoJSON Polygon in [lon, lat]; NULL = no satellite analysis
     note            TEXT,
-    created_at      TEXT NOT NULL
+    created_at      TEXT NOT NULL,
+    sowing_date     TEXT                        -- set by the farmer (2026-05-10); moves the crop calendar of spring crops
 );
 CREATE TABLE IF NOT EXISTS imagery_results (
     parcel_id        TEXT NOT NULL REFERENCES parcels(id),
@@ -267,7 +299,7 @@ CREATE TABLE IF NOT EXISTS imagery_runs (
 ) WITHOUT ROWID;
 """
 PARCEL_COLUMNS = ("id", "user_id", "name", "crop", "crop_confirmed", "ids_fictive", "lpis_parcel", "geometry", "note",
-                  "created_at")
+                  "created_at", "sowing_date")
 RESULT_COLUMNS = ("parcel_id", "scene_date", "scene_id", "ndvi_median", "ndmi_median", "affected_pct",
                   "affected_sector", "zone_count", "zone_lon", "zone_lat", "zone_confirmed", "valid_pct",
                   "prev_scene_date", "median_change", "ndmi_change", "declined_pct", "overlay_path", "photo_path",
@@ -281,14 +313,39 @@ def _insert(table, columns):
 
 
 def upsert_user(conn, user_id, name, created_at):
-    conn.execute("INSERT INTO users (id, name, created_at) VALUES (?, ?, ?) "
-                 "ON CONFLICT (id) DO UPDATE SET name = excluded.name", (user_id, name, created_at))
+    """Creates the user; one stored before keeps what was saved on the account page."""
+    conn.execute("INSERT INTO users (id, name, created_at) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING",
+                 (user_id, name, created_at))
+
+
+def user(conn, user_id):
+    return conn.execute("SELECT id, name, first_name, last_name, email FROM users WHERE id = ?", (user_id,)).fetchone()
+
+
+def update_user(conn, user_id, first_name, last_name, email):
+    name = " ".join(p for p in (first_name, last_name) if p) or "Fermier"
+    conn.execute("UPDATE users SET first_name = ?, last_name = ?, email = ?, name = ? WHERE id = ?",
+                 (first_name, last_name, email, name, user_id))
 
 
 def upsert_parcels(conn, rows):
-    """rows: dicts with PARCEL_COLUMNS as keys. A parcel stored before takes the new values but keeps created_at."""
-    updates = ", ".join(f"{c} = excluded.{c}" for c in PARCEL_COLUMNS if c not in ("id", "created_at"))
-    conn.executemany(f"{_insert('parcels', PARCEL_COLUMNS)} ON CONFLICT (id) DO UPDATE SET {updates}", rows)
+    """rows: dicts with PARCEL_COLUMNS as keys. A parcel stored before takes the new values but keeps created_at,
+    and keeps its crop once the farmer has set it (crop_confirmed)."""
+    updates = ", ".join(f"{c} = excluded.{c}" for c in PARCEL_COLUMNS
+                        if c not in ("id", "created_at", "crop", "crop_confirmed", "sowing_date"))
+    conn.executemany(
+        f"{_insert('parcels', PARCEL_COLUMNS)} ON CONFLICT (id) DO UPDATE SET {updates}, "
+        "crop = CASE WHEN parcels.crop_confirmed = 1 THEN parcels.crop ELSE excluded.crop END, "
+        "crop_confirmed = MAX(parcels.crop_confirmed, excluded.crop_confirmed)", rows)
+
+
+def set_sowing_date(conn, parcel_id, sowing_date):
+    conn.execute("UPDATE parcels SET sowing_date = ? WHERE id = ?", (sowing_date, parcel_id))
+
+
+def set_crop(conn, parcel_id, crop):
+    """The farmer's own crop for the parcel: it is confirmed from now on."""
+    conn.execute("UPDATE parcels SET crop = ?, crop_confirmed = 1 WHERE id = ?", (crop, parcel_id))
 
 
 def parcels(conn):

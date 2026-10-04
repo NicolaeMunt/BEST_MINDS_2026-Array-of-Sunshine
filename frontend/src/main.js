@@ -1,9 +1,10 @@
-import { html, useState, useEffect, useRef, useMemo, api, START_PARCEL } from './lib.js';
+import { html, useState, useEffect, useRef, useMemo, api, START_PARCEL, DEMO } from './lib.js';
 import { CROP, verdict } from './labels.js';
-import { SensorList } from './SensorList.js';
+import { FieldTabs } from './FieldTabs.js';
 import { SensorSheet } from './SensorSheet.js';
 import { DemoMenu } from './Demo.js';
-import { OverviewMap } from './OverviewMap.js';
+import { Account } from './Account.js';
+import { AlertsPanel } from './AlertsPanel.js';
 
 const POLL_MS = 3000;
 const EMPTY = { sensors: [], alerts: [], readings: [], state: 'loading', id: null, asked: undefined };
@@ -35,14 +36,14 @@ function useLiveData(selected, minutes, reload) {
   return data;
 }
 
-/** The parcels with their polygons (once), and the satellite history of the selected one (when it changes). */
-function useParcels(selected, apiUp) {
+/** The parcels with their polygons (again after the account page saves), and the satellite history of the selected one. */
+function useParcels(selected, apiUp, version) {
   const [parcels, setParcels] = useState([]);
   const [history, setHistory] = useState({ id: null, data: null });
   useEffect(() => {
-    if (!apiUp || parcels.length) return;
+    if (!apiUp) return;
     api('/parcels').then(setParcels).catch(() => {});
-  }, [apiUp]);
+  }, [apiUp, version]);
   useEffect(() => {
     if (!selected || !parcels.some(p => p.parcelId === selected)) return;
     let stopped = false;
@@ -50,8 +51,24 @@ function useParcels(selected, apiUp) {
       .then(data => { if (!stopped) setHistory({ id: selected, data }); })
       .catch(() => { if (!stopped) setHistory({ id: selected, data: null }); });
     return () => { stopped = true; };
-  }, [selected, parcels]);
+  }, [selected, parcels, version]);
   return { parcels, history: history.id === selected ? history.data : null };
+}
+
+/** #/cont is the account page; anything else the fields. */
+function useRoute() {
+  const [route, setRoute] = useState(location.hash);
+  useEffect(() => {
+    const changed = () => { setRoute(location.hash); scrollTo(0, 0); };
+    addEventListener('hashchange', changed);
+    return () => removeEventListener('hashchange', changed);
+  }, []);
+  return route === '#/cont' ? 'account' : 'fields';
+}
+
+function initials(user) {
+  const parts = [user.firstName, user.lastName].filter(Boolean);
+  return (parts.length ? parts : [user.name || '?']).map(p => p.trim()[0] || '').join('').toUpperCase().slice(0, 2);
 }
 
 const TROUBLE = {
@@ -62,21 +79,25 @@ const TROUBLE = {
 };
 
 function App() {
+  const route = useRoute();
+  const [user, setUser] = useState(null);
+  const [version, setVersion] = useState(0);  // bumped after the account page saves
   const [selected, setSelected] = useState(START_PARCEL);
   const [minutes, setMinutes] = useState(1440);
   const [reload, setReload] = useState(0);
   const [toast, setToast] = useState('');
   const data = useLiveData(selected, minutes, reload);
-  const { parcels, history } = useParcels(selected, data.state === 'up');
+  const { parcels, history } = useParcels(selected, data.state === 'up', version);
   const parcel = parcels.find(p => p.parcelId === selected);
+  useEffect(() => { api('/users/me').then(setUser).catch(() => {}); }, [version]);
 
-  // Sensors that need attention come first.
+  // Fields that need attention come first.
   const sensors = useMemo(() => [...data.sensors].sort((a, b) =>
     SEVERITY[verdict(a).status] - SEVERITY[verdict(b).status] || a.id.localeCompare(b.id)), [data.sensors]);
   const sensor = sensors.find(s => s.id === selected);
-  const own = data.id === selected;  // the details on hand belong to the selected sensor
+  const own = data.id === selected;  // the details on hand belong to the selected field
 
-  // The server does not know the selected sensor (first load, or a stale ?parcel=): take the first one.
+  // The server does not know the selected field (first load, or a stale ?parcel=): take the first one.
   useEffect(() => {
     if (data.state === 'up' && data.asked === selected && !sensor && sensors.length) setSelected(sensors[0].id);
   }, [data, selected, sensor, sensors]);
@@ -87,7 +108,7 @@ function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // A new alert for the selected sensor is announced once.
+  // A new alert for the selected field is announced once.
   const lastAlert = useRef(null);
   useEffect(() => {
     if (!own) return;
@@ -99,6 +120,15 @@ function App() {
   function select(id) {
     lastAlert.current = null;
     setSelected(id);
+    if (route !== 'fields') location.hash = '#/';
+    scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // The logo and the name: back to the main page, on the field that needs attention most.
+  function home(e) {
+    e.preventDefault();
+    location.hash = '#/';
+    if (sensors.length) select(sensors[0].id);
   }
 
   async function runDemo(kind) {
@@ -107,7 +137,7 @@ function App() {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
       // A replayed night needs a day on the chart, a replayed spell a week.
-      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 15);
+      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 60);
       setReload(n => n + 1);
     } catch (e) {
       // 409: nothing to replay for this crop, or a replay is running; the API says why.
@@ -117,30 +147,47 @@ function App() {
   }
 
   const up = data.state === 'up';
-  return html`<div className="shell">
-    <aside className="side">
-      <p className="wordmark">Agronomicon</p>
-      <h2 className="side-title">Terenurile tale</h2>
-      ${parcels.length > 0 && html`<${OverviewMap} parcels=${parcels} sensors=${sensors} selected=${selected} onSelect=${select} />`}
-      <p className="note">Cele cu probleme sunt primele.</p>
-      <${SensorList} sensors=${sensors} selected=${selected} onSelect=${select} />
-      <div className="side-foot">
-        <${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />
-        <p className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
-          ${up ? 'Se actualizează singur' : TROUBLE[data.state][0]}</p>
-      </div>
-    </aside>
+  return html`<div className="app">
+    <header className="topbar">
+      <a className="brand" href="#/" onClick=${home}>
+        <img src="assets/logo.png" alt="" width="44" height="44" />
+        <span className="wordmark">Agronomicon</span>
+      </a>
+      <span className=${'conn ' + (up ? 'up' : data.state === 'loading' ? '' : 'down')}>
+        ${up ? 'Se actualizează singur' : TROUBLE[data.state][0]}</span>
+      ${user && html`<a className=${'user-card' + (route === 'account' ? ' is-current' : '')} href="#/cont">
+        <span className="avatar" aria-hidden="true">${initials(user)}</span>
+        <span className="user-text">
+          <span className="user-name">${user.name}</span>
+          <span className="user-mail">${user.email || 'Profilul tău'}</span>
+        </span>
+      </a>`}
+    </header>
 
-    <main className="sheet">
-      ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
+    ${route === 'account'
+      ? html`<main className="page">
+          <${Account} user=${user} parcels=${parcels} sensors=${sensors} onToast=${setToast} onSelect=${select}
+                      onSaved=${() => { setVersion(n => n + 1); setReload(n => n + 1); }} />
+        </main>`
       : html`
-        <header className="sheet-head">
-          <h1>${sensor.name}</h1>
-          <p className="sheet-meta">${CROP[sensor.crop] || sensor.crop || ''}</p>
-        </header>
-        <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
-                        alerts=${own ? data.alerts : []} parcel=${parcel} history=${history} />`}
-    </main>
+        <${FieldTabs} sensors=${sensors} selected=${selected} onSelect=${select} />
+        <div className="main-grid">
+          <main className="sheet">
+            ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
+            : html`
+              <header className="sheet-head">
+                <h1>${sensor.name}</h1>
+                <p className="sheet-meta">${CROP[sensor.crop] || sensor.crop || ''}${parcel && parcel.sowingDate
+                  ? ` · semănat pe ${new Date(parcel.sowingDate + 'T12:00:00').toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })}` : ''}</p>
+              </header>
+              <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes}
+                              onMinutes=${setMinutes} alerts=${own ? data.alerts : []} parcel=${parcel} history=${history} />`}
+          </main>
+          <aside className="side-panel">
+            <${AlertsPanel} sensors=${sensors} onSelect=${select} reload=${reload} />
+            ${DEMO && html`<${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />`}
+          </aside>
+        </div>`}
 
     <p className="toast" role="status">${toast}</p>
   </div>`;

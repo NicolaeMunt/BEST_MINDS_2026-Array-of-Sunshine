@@ -34,6 +34,12 @@ def latitude(conn, parcel_id):
     return sum(lat for _, lat in ring) / len(ring)
 
 
+def _crop(conn, parcel_id, crop_key):
+    """The parcel's crop rules, moved to its sowing date."""
+    row = db.parcel(conn, parcel_id)
+    return crops.parcel_crop(crop_key, row["sowing_date"] if row else None)
+
+
 def _limits(cfg):
     """Soil limits for the crop: total and readily available water in mm, and the moisture threshold in %."""
     fc, wp = crops.soil()
@@ -96,7 +102,7 @@ def waterings(series, rise_pct):
 
 def season(conn, parcel_id, crop_key, day):
     """The daily balance from 1 May to `day`, or None for a crop without water parameters (or before May)."""
-    cfg = crops.crop(crop_key)
+    cfg = _crop(conn, parcel_id, crop_key)
     if not cfg or not cfg.get("water") or day < crops.season_start(day):
         return None
     lim = _limits(cfg)
@@ -128,7 +134,7 @@ def _needs_water(s, d):
 def status(conn, parcel_id, crop_key, day, with_days=False):
     """Whether to water on `day` and how much, from the soil probe if it reported in the last two days, else from
     the balance; None for a crop without water parameters."""
-    cfg = crops.crop(crop_key)
+    cfg = _crop(conn, parcel_id, crop_key)
     if not cfg or not cfg.get("water"):
         return None
     s = season(conn, parcel_id, crop_key, day)
@@ -175,7 +181,7 @@ def alerts(conn, parcel, day, dew_point):
     """Watering alerts of the season up to `day`, newest first: WARNING when the crop starts to suffer for water,
     OK when rain or a watering brings the soil back. From the soil probe where it reported, else from the balance.
     parcel: {'id', 'name', 'crop'}."""
-    cfg = crops.crop(parcel["crop"])
+    cfg = _crop(conn, parcel["id"], parcel["crop"])
     if not cfg or not cfg.get("water"):
         return []
     title = f"{parcel['name']} ({cfg['name']})"

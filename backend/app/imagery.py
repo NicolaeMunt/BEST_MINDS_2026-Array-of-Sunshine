@@ -60,7 +60,8 @@ def load_seed():
         rows.append({"id": p["parcel_id"], "user_id": p.get("user_id", DEMO_USER[0]), "name": p["name"],
                      "crop": p.get("crop"), "crop_confirmed": int(bool(p.get("crop_confirmed"))),
                      "ids_fictive": int(bool(p.get("ids_fictive"))), "lpis_parcel": p.get("lpis_parcel"),
-                     "geometry": json.dumps(f["geometry"]), "note": p.get("note"), "created_at": created})
+                     "geometry": json.dumps(f["geometry"]), "note": p.get("note"), "created_at": created,
+                     "sowing_date": p.get("sowing_date")})
     with db.get_conn() as conn:
         db.upsert_user(conn, *DEMO_USER, created)
         db.upsert_parcels(conn, rows)
@@ -71,7 +72,7 @@ def parcel_out(row):
     return {"parcel_id": row["id"], "user_id": row["user_id"], "name": row["name"], "crop": row["crop"],
             "crop_confirmed": bool(row["crop_confirmed"]), "ids_fictive": bool(row["ids_fictive"]),
             "lpis_parcel": row["lpis_parcel"], "geometry": json.loads(row["geometry"]) if row["geometry"] else None,
-            "note": row["note"]}
+            "note": row["note"], "sowing_date": row["sowing_date"]}
 
 
 def export_parcels():
@@ -80,7 +81,8 @@ def export_parcels():
         rows = [row for row in db.parcels(conn) if row["geometry"]]
     features = [{"type": "Feature", "geometry": json.loads(row["geometry"]),
                  "properties": {"parcel_id": row["id"], "name": row["name"], "crop": row["crop"],
-                                "crop_confirmed": bool(row["crop_confirmed"])}} for row in rows]
+                                "crop_confirmed": bool(row["crop_confirmed"]), "sowing_date": row["sowing_date"]}}
+                for row in rows]
     PARCELS_EXPORT.write_text(json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False,
                                          indent=1), encoding="utf-8")
     return len(features)
@@ -210,7 +212,7 @@ def status(updater):
 
 # ---------- results for the frontend ----------
 
-def result_out(row, warnings, crop=None):
+def result_out(row, warnings, crop=None, sowing_date=None):
     """One stored result for the API, with the crop's phase on the scene's day (from the crop calendar)."""
     out = {k: row[k] for k in ("scene_date", "scene_id", "ndvi_median", "ndmi_median", "affected_pct",
                                "affected_sector", "zone_count", "valid_pct", "prev_scene_date", "median_change",
@@ -219,7 +221,7 @@ def result_out(row, warnings, crop=None):
     out["zone_confirmed"] = None if row["zone_confirmed"] is None else bool(row["zone_confirmed"])
     out["overlay_bounds"] = [row["bounds_south"], row["bounds_west"], row["bounds_north"], row["bounds_east"]]
     out["warnings"] = [{"code": code, "text": text} for code, text in warnings]
-    phase = crops.phase_out(crop, date.fromisoformat(row["scene_date"])) if crop else None
+    phase = crops.phase_out(crop, date.fromisoformat(row["scene_date"]), sowing_date) if crop else None
     out["phase"], out["season"] = (phase["phase"], phase["season"]) if phase else (None, None)
     return out
 
@@ -235,9 +237,10 @@ def at_date(parcel_id, day):
         row = db.imagery_at(conn, parcel_id, day.isoformat())
         skipped = db.imagery_skipped(conn, parcel_id, row["scene_date"] if row else "", day.isoformat())
         warnings = db.imagery_warnings(conn, parcel_id, [row["scene_date"]]) if row else {}
-        crop = (db.parcel(conn, parcel_id) or {"crop": None})["crop"]
+        p = db.parcel(conn, parcel_id)
+        crop, sown = (p["crop"], p["sowing_date"]) if p else (None, None)
     return {"parcel_id": parcel_id, "day": day,
-            "result": result_out(row, warnings.get(row["scene_date"], []), crop) if row else None,
+            "result": result_out(row, warnings.get(row["scene_date"], []), crop, sown) if row else None,
             "days_old": (day - date.fromisoformat(row["scene_date"])).days if row else None,
             "skipped_since": [skipped_out(s) for s in skipped]}
 
@@ -248,7 +251,8 @@ def history(parcel_id, start, end):
         rows = db.imagery_results(conn, parcel_id, start.isoformat(), end.isoformat())
         warnings = db.imagery_warnings(conn, parcel_id, [row["scene_date"] for row in rows])
         skipped = db.imagery_skipped(conn, parcel_id, (start - timedelta(days=1)).isoformat(), end.isoformat())
-        crop = (db.parcel(conn, parcel_id) or {"crop": None})["crop"]
+        p = db.parcel(conn, parcel_id)
+        crop, sown = (p["crop"], p["sowing_date"]) if p else (None, None)
     return {"parcel_id": parcel_id, "start": start, "end": end,
-            "results": [result_out(row, warnings.get(row["scene_date"], []), crop) for row in rows],
+            "results": [result_out(row, warnings.get(row["scene_date"], []), crop, sown) for row in rows],
             "skipped": [skipped_out(s) for s in skipped]}

@@ -78,7 +78,9 @@ read it. Per phase it gives the frost thresholds (none when frost does no harm: 
 dormant), the disease the damp-air rule watches for (hours of damp air at its temperatures, e.g. apple scab,
 downy mildew, head blight), the days when dry, hot air harms the crop, and the FAO-56 crop coefficient for
 the water balance. The numbers come from extension services, FAO and the Moldovan weather service; the
-sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi".
+sources and the reasons are in `imagery/LOGIC.md`, "Reguli pe culturi". When the farmer gives the sowing
+date of a corn or sunflower field (profile page), that field's whole calendar moves by the days between the
+calendar's sowing day and the farmer's.
 
 ### Soil, watering and sowing
 
@@ -111,18 +113,22 @@ and the components from `frontend/src/` as plain ES modules, so it needs neither
 Components are written with htm templates (`html\`<div>...</div>\``) instead of JSX. The fonts
 (Bricolage Grotesque and Commissioner, both SIL Open Font License) are in `frontend/vendor/fonts/`.
 
-Written for farmers: large type, plain words, no jargon. The left column lists the fields (one sensor
-each), those with a problem first. The selected field opens with one coloured block that says what is
-happening and what to do (frost, disease risk, hot and dry air, time to water, or all fine), then the
-temperature and humidity now with the crop's phase, then the water in the soil, then the temperature over
-time (now, a day, a week or since April) with every alert marked on it and listed underneath, one line each.
+Written for farmers: large type, plain words, no jargon. A bar on top has the logo (back to the main page)
+and the farmer's card (to the profile). Under it, the fields as a row of cards in their status colour, those
+with a problem first. The chosen field opens with one coloured block that says what is happening and what to
+do (frost, disease risk, hot and dry air, time to water, or all fine), with the temperature now and the crop's
+phase; then the air and the soil in two cards, what the satellite sees, the water in the soil, and the
+temperature (lowest, mean and highest over the last hour, day, week and month, and a chart). On the right,
+"Alerte": every field's alerts of the last 7 days, filtered by high (red) or medium (yellow) risk; a click opens
+the field. The profile page (`#/cont`) holds the farmer's name and e-mail and, for each field, its crop and
+sowing date, with a map of all fields.
 Under the numbers, "Ce vede satelitul": the field on a map (Leaflet, in `frontend/vendor/`) with the
 Sentinel-2 picture, the weak zones in red, the main zone and the sensor, a sentence in plain words (what was
 seen, how old the picture is, what is normal for the crop's phase), a "Du-mă acolo" link for navigation, and
-the season's passes (clear or cloudy) to pick any day; `?day=2026-07-20` in the address opens that day. A small
-map in the side column shows all the fields in their status colour. The map background (OpenStreetMap) needs the
-internet; without it the satellite picture stays. The demo menu can replay a real frost night and real damp or
-hot, dry spells of 2026, and water a field.
+the clear pictures before and after to step through the season, or any day picked; `?day=2026-07-20` in the
+address opens that day. The map background (OpenStreetMap) needs the internet; without it the satellite picture
+stays. With `?demo=1` a "Prezentare" panel appears under the alerts: replay a real frost night and real damp or
+hot, dry spells of 2026, or water a field.
 
 ## Parcels and satellite results
 

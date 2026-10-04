@@ -1,17 +1,26 @@
-// Scenarios for the presentation: they change what the simulated sensor measures.
+// Presentation only (open the app with ?demo=1): each button makes the selected field's simulated sensor show a
+// situation, so the alerts can be seen live; the weather outside is usually calm.
 import { html } from './lib.js';
 
-// humid and dry replay a real spell of 2026 for the field's crop (a few days in under two minutes); irrigate
-// raises the soil moisture without rain, so the app sees the watering.
-const SCENARIOS = [['frost', 'Îngheț'], ['replay', 'O noapte reală de îngheț'], ['humid', 'Zile umede: risc de boală'],
-  ['dry', 'Zile de arșiță'], ['irrigate', 'S-a udat'], ['normal', 'Vreme normală'], ['reset', 'Resetează tot']];
+const SCENARIOS = [
+  ['frost', 'Îngheț', 'Temperatura coboară în un minut sub pragul periculos al culturii.'],
+  ['replay', 'O noapte reală de îngheț', 'Noaptea de 8–9 aprilie 2025, redată în trei minute.'],
+  ['humid', 'Zile umede', 'Zile ploioase reale din 2026: apare riscul de boală al culturii.'],
+  ['dry', 'Zile de arșiță', 'Caniculă reală din august 2026; solul rămâne uscat.'],
+  ['irrigate', 'S-a udat', 'Apa din sol crește fără ploaie: aplicația vede udarea.'],
+  ['normal', 'Vreme normală', 'Terenul ales revine la vremea obișnuită.'],
+  ['reset', 'Resetează tot', 'Toate terenurile revin la normal, alertele se șterg.'],
+];
 
 export function DemoMenu({ sensorName, onRun }) {
-  return html`<details className="demo">
-    <summary>Scenarii pentru prezentare</summary>
+  return html`<section className="demo">
+    <h2>Prezentare</h2>
     <p className="note">${sensorName ? `Se aplică pe ${sensorName}.` : 'Alege întâi un teren.'}</p>
-    <div className="demo-buttons">
-      ${SCENARIOS.map(([kind, label]) => html`<button key=${kind} className="btn btn-small" onClick=${() => onRun(kind)}>${label}</button>`)}
-    </div>
-  </details>`;
+    <ul className="demo-list">
+      ${SCENARIOS.map(([kind, label, what]) => html`<li key=${kind}>
+        <button className="btn btn-small" onClick=${() => onRun(kind)}>${label}</button>
+        <span>${what}</span>
+      </li>`)}
+    </ul>
+  </section>`;
 }

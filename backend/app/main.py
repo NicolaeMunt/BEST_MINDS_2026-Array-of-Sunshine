@@ -1,4 +1,5 @@
 import os
+import re
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
@@ -8,9 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, imagery, sensors, sensors_client
+from . import crops, db, imagery, sensors, sensors_client
 from .collector import Collector
-from .models import (AlertOut, DemoOut, ImageryAtDateOut, ImageryFileIn, ImageryHistoryOut, ImageryImportOut,
+from .models import (AlertOut, CropIn, CropOptionOut, SowingIn, DemoOut, TemperatureStatOut, UserIn, UserOut, ImageryAtDateOut, ImageryFileIn, ImageryHistoryOut, ImageryImportOut,
                      ImageryStatusOut, ParcelOut, SensorLatestOut, SensorParcelOut, SensorReadingOut, WaterStatusOut)
 from .sensors_client import SensorsConflict, SensorsUnavailable
 
@@ -91,6 +92,21 @@ def stored_readings(parcel_id: str, minutes: int = Query(60, ge=1, le=366 * 24 *
     return sensors.readings(parcel_id, minutes)
 
 
+STAT_WINDOWS = (60, 24 * 60, 7 * 24 * 60, 30 * 24 * 60)
+
+
+@app.get("/sensors/parcels/{parcel_id}/stats", response_model=list[TemperatureStatOut])
+def temperature_stats(parcel_id: str):
+    """Lowest, mean and highest temperature and air humidity over the last hour, day, week and month (counted back from the newest
+    reading, so a replay shows its own night)."""
+    with db.get_conn() as conn:
+        rows = db.temperature_stats(conn, parcel_id, STAT_WINDOWS)
+    r1 = lambda v: None if v is None else round(v, 1)
+    return [{"minutes": m, "min_c": r["lo"], "mean_c": r1(r["mean"]), "max_c": r["hi"], "min_humidity_pct": r1(r["h_lo"]),
+             "mean_humidity_pct": r1(r["h_mean"]), "max_humidity_pct": r1(r["h_hi"]), "readings": r["n"] or 0}
+            for m, r in rows]
+
+
 @app.get("/sensors/parcels/{parcel_id}/water", response_model=WaterStatusOut)
 def soil_water(parcel_id: str, day: date | None = Query(None, alias="date", description="YYYY-MM-DD; default today")):
     """Soil water balance of the parcel on that day (FAO-56) and day by day since 1 May: when to water and how much."""
@@ -136,6 +152,75 @@ def demo_reset():
     sensors_client.demo_reset()
     sensors.reset_modes()
     return {"mode": "NORMAL", "message": "Toți senzorii au revenit la vremea normală"}
+
+
+# ---------- the farmer's account ----------
+
+EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _user_out(row):
+    return {"id": row["id"], "name": row["name"], "first_name": row["first_name"], "last_name": row["last_name"],
+            "email": row["email"]}
+
+
+@app.get("/users/me", response_model=UserOut)
+def get_me():
+    """The demo farmer (there is one user until there is a login)."""
+    with db.get_conn() as conn:
+        return _user_out(db.user(conn, imagery.DEMO_USER[0]))
+
+
+@app.put("/users/me", response_model=UserOut)
+def update_me(body: UserIn):
+    first, last, email = body.first_name.strip(), body.last_name.strip(), body.email.strip()
+    if email and not EMAIL.match(email):
+        raise HTTPException(422, "Adresa de e-mail nu pare corectă")
+    with db.get_conn() as conn:
+        db.update_user(conn, imagery.DEMO_USER[0], first, last, email)
+        return _user_out(db.user(conn, imagery.DEMO_USER[0]))
+
+
+SOWN_CROPS = {"wheat", "barley", "corn", "sunflower"}
+
+
+@app.get("/crops", response_model=list[CropOptionOut])
+def crop_options():
+    """The crops the rules know, with their Romanian names."""
+    # Orchards and vineyards are planted once; wheat, corn and sunflower are sown every year.
+    return [{"key": key, "name": cfg["name"], "sown": key in SOWN_CROPS} for key, cfg in crops.config()["crops"].items()]
+
+
+@app.put("/parcels/{parcel_id}/crop", response_model=ParcelOut)
+def set_parcel_crop(parcel_id: str, body: CropIn):
+    """The farmer says what grows on the parcel: the rules of sensors-alerts follow it at once; the satellite
+    advice follows from the next daily run."""
+    row = _require_parcel(parcel_id)
+    if not crops.crop(body.crop):
+        raise HTTPException(422, f"Unknown crop {body.crop}")
+    with db.get_conn() as conn:
+        db.set_crop(conn, parcel_id, body.crop)
+        row = db.parcel(conn, parcel_id)
+    try:
+        sensors_client.register_parcel(parcel_id, row["name"], body.crop, row["sowing_date"])
+    except SensorsUnavailable:
+        pass  # the collector registers it when the service is back
+    return imagery.parcel_out(row)
+
+
+@app.put("/parcels/{parcel_id}/sowing", response_model=ParcelOut)
+def set_parcel_sowing(parcel_id: str, body: SowingIn):
+    """When the farmer sowed: for corn and sunflower the crop calendar (frost thresholds, disease and dry windows,
+    watering, what is normal on the satellite) moves with it; for wheat it is kept and shown."""
+    row = _require_parcel(parcel_id)
+    with db.get_conn() as conn:
+        db.set_sowing_date(conn, parcel_id, body.sowing_date.isoformat() if body.sowing_date else None)
+        row = db.parcel(conn, parcel_id)
+    try:
+        sensors_client.register_parcel(parcel_id, row["name"], row["crop"], row["sowing_date"])
+    except SensorsUnavailable:
+        pass
+    return imagery.parcel_out(row)
 
 
 # ---------- parcels and satellite imagery ----------

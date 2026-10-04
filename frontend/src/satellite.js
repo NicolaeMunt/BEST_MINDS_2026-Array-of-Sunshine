@@ -42,42 +42,40 @@ function dateList(items) {
 
 /** Sentences about the scene for the chosen day; `today` says whether that day is today. */
 export function describe({ result, skipped, daysOld }, today) {
-  if (!result) return ['Satelitul nu are încă o poză fără nori a câmpului până în această zi.'];
-  const when = result.phase ? `, când cultura era în faza „${result.phase}”` : '';
-  const out = [`Satelitul a trecut pe ${longDay(result.sceneDate)} (${ago(daysOld, today)})${when}.`];
-  if (skipped.length) out.push(`După aceea, pe ${dateList(skipped)}, au fost nori peste câmp, deci aceasta e ultima poză bună.`);
+  if (!result) return ['Încă nu e nicio poză fără nori până în această zi.'];
+  const out = [`Poza din ${longDay(result.sceneDate)} (${ago(daysOld, today)})${result.phase ? `, faza „${result.phase}”` : ''}.`];
+  if (skipped.length) out.push(`De atunci au fost nori (${dateList(skipped)}).`);
 
   switch (result.season) {
     case 'dormant':
-      out.push('Câmpul e în repaus sau încă nesemănat: în poză se vede mai mult pământ, și așa e normal.');
+      out.push('Câmp în repaus sau nesemănat: e normal să se vadă pământ.');
       break;
     case 'establishing':
-      out.push(`Cultura e la început: plantele nu acoperă încă tot câmpul, deci petele de pământ sunt normale.`);
+      out.push('Plantele sunt mici: e normal să se vadă pământ.');
       break;
     case 'maturing':
-      out.push(`Cultura se coace: e normal ca verdele să scadă.`);
+      out.push('Cultura se coace: e normal să se îngălbenească.');
       break;
     case 'harvested':
-      out.push('Câmpul e după recoltare: poza arată pământ și miriște.');
+      out.push('Câmpul e recoltat.');
       break;
     default:
       if (result.affectedPct === 0) {
-        out.push(`Tot câmpul e verde la fel; nu se vede nicio pată mai slabă.`);
+        out.push('Tot câmpul arată bine.');
       } else {
-        const where = result.affectedSector === 'scattered' ? 'în mai multe locuri mici'
-          : result.affectedSector === 'C' ? 'în mijlocul câmpului (semnul roșu pe hartă)'
-          : `spre ${DIRECTION[result.affectedSector] || 'o margine'} (semnul roșu pe hartă)`;
-        out.push(`${num(result.affectedPct, 1)}% din câmp e mai slab decât restul, ${where}.`);
-        if (result.zoneConfirmed === true) out.push('Pata se vedea și în poza dinainte, deci nu e o întâmplare: merită o privire.');
-        if (result.zoneConfirmed === false) out.push('În poza dinainte nu se vedea: poate fi ceva nou sau o umbră.');
+        const where = result.affectedSector === 'scattered' ? 'în mai multe locuri'
+          : result.affectedSector === 'C' ? 'în mijloc' : `spre ${DIRECTION[result.affectedSector] || 'o margine'}`;
+        out.push(`${num(result.affectedPct, 1)}% din câmp e mai slab, ${where}.`);
+        if (result.zoneConfirmed === true) out.push('Se vedea și în poza dinainte: merită verificat.');
+        if (result.zoneConfirmed === false) out.push('Pată nouă: poate fi și o umbră.');
       }
   }
 
   const codes = new Set(result.warnings.map(w => w.code));
-  if (codes.has('possible_cloud')) out.push('Pata e lângă un nor; poate fi umbra lui, verifică la fața locului.');
-  if (codes.has('low_vegetation')) out.push('Câmpul e mai puțin verde decât ar trebui în această fază: plante slabe sau goluri.');
-  if (codes.has('whole_field_drop')) out.push('Tot câmpul a pălit față de poza dinainte: poate fi grindină, secetă sau o boală.');
-  if (codes.has('low_pixel_count')) out.push('Câmpul e mic pentru satelit, așa că cifrele sunt aproximative.');
+  if (codes.has('possible_cloud')) out.push('E lângă un nor: poate fi umbra lui.');
+  if (codes.has('low_vegetation')) out.push('Câmpul e mai puțin verde decât ar trebui acum.');
+  if (codes.has('whole_field_drop')) out.push('Tot câmpul a pălit: grindină, secetă sau boală?');
+  if (codes.has('low_pixel_count')) out.push('Câmp mic pentru satelit: cifre aproximative.');
   return out;
 }
 

@@ -8,6 +8,8 @@ const query = new URLSearchParams(location.search);
 export const API = query.get('api') || (location.pathname.startsWith('/app/') ? '' : 'http://localhost:8000');
 export const START_PARCEL = query.get('parcel');
 export const START_DAY = query.get('day');
+// ?demo=1 shows the presentation buttons; a farmer does not see them.
+export const DEMO = query.get('demo') === '1';
 
 /** The API's JSON; on an error status, an Error with .status and the API's .detail (its reason, if any). */
 export async function api(path, options) {

@@ -7,7 +7,7 @@ import { Fold } from './Fold.js';
 import { Topbar } from './Topbar.js';
 import { FieldFacts } from './FieldFacts.js';
 
-const CROPS = ['wheat', 'barley', 'corn', 'sunflower', 'orchard', 'vineyard'];
+const CROPS = ['wheat', 'corn', 'sunflower', 'orchard', 'vineyard'];  // the crops of sensors-alerts
 const CADASTRAL = /^\d[\d.]{3,28}\d$/;
 const EMPTY = { docType: '', docNumber: '', docDate: '', cadastralNumber: '', name: '', location: '', areaAri: '', crop: '' };
 
@@ -82,7 +82,8 @@ function FieldDocForm({ userId, field, onSaved, onCancel }) {
         <${Input} form=${form} name="docDate" label="Data actului" type="date" min="1990-01-01" max=${localToday()} />
       </div>
       <${Input} form=${form} name="cadastralNumber" label="Numărul cadastral" placeholder="0100415.123" className="mono"
-                hint="Așa cum e scris în act: cifre și puncte." />
+                disabled=${!!field} hint=${field ? 'E ID-ul terenului și nu se schimbă. Dacă e greșit, șterge terenul și adaugă-l din nou.'
+                  : 'Așa cum e scris în act: cifre și puncte. Devine ID-ul terenului.'} />
     </fieldset>
     <fieldset className="doc-group">
       <legend><span className="step">2</span> Terenul</legend>
@@ -125,7 +126,7 @@ function AdminFieldCard({ field, onChanged, onDeleted }) {
   return html`<li className="field-card">
     <div className="field-top">
       <div className="field-text">
-        <h3>${field.name} <span className="field-id">${field.id}</span></h3>
+        <h3>${field.name}</h3>
         <p className="note">${CROP[field.crop] || field.crop} · înregistrat ${day(field.createdAt)}</p>
       </div>
     </div>

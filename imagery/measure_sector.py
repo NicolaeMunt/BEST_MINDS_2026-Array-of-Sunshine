@@ -12,7 +12,7 @@ Scenarios: the real accepted dates, and patches planted at known places on a cop
 scene (lowered by 0.20, so every patch is surely weak). Weak zones come from analyze.py exactly
 as in the pipeline. Nothing planted reaches out/imagery.json.
 
-    python measure_sector.py demo1      ->  out/<parcel>/sector_study.png
+    python measure_sector.py 6401307.101      ->  out/<parcel>/sector_study.png
 """
 import argparse
 

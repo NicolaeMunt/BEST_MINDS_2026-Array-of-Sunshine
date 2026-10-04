@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.model.Reading;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -45,14 +46,19 @@ public class ThresholdFrostRule implements FrostRule {
             min = Math.min(min, r.temperatureC());
         }
         double drop = oldest == null ? 0 : oldest - temp;
-        boolean fallingFast = temp < crop.frostWarningC() + cfg.fallingMarginC()
+        // The thresholds of the crop's phase on the reading's day; none when frost does no harm then.
+        AppProperties.Phase phase = CropCalendar.phase(crop, current.timestamp());
+        if (!phase.frostHarms()) {
+            return new FrostAssessment(FrostLevel.OK, dewPoint(temp, current.humidityPct()), drop);
+        }
+        boolean fallingFast = temp < phase.frostWarningC() + cfg.fallingMarginC()
                 && drop > cfg.fallingDropC()
                 && temp <= min + NEAR_MIN_C;
 
         FrostLevel level;
-        if (temp <= crop.frostCriticalC()) {
+        if (temp <= phase.frostCriticalC()) {
             level = FrostLevel.CRITICAL;
-        } else if (temp <= crop.frostWarningC() || fallingFast) {
+        } else if (temp <= phase.frostWarningC() || fallingFast) {
             level = FrostLevel.WARNING;
         } else {
             level = FrostLevel.OK;

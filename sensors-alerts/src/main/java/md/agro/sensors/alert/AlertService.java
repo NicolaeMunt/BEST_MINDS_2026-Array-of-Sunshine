@@ -11,10 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.frost.FrostAssessment;
 import md.agro.sensors.frost.FrostLevel;
 import md.agro.sensors.frost.FrostRule;
-import md.agro.sensors.humidity.HumidityLevel;
+import md.agro.sensors.humidity.HumidityAssessment;
 import md.agro.sensors.humidity.HumidityRule;
 import md.agro.sensors.model.Alert;
 import md.agro.sensors.model.AlertType;
@@ -34,7 +35,7 @@ public class AlertService {
         boolean notified;
     }
 
-    /** One humidity episode per parcel: from leaving the crop's range until back inside it. */
+    /** One humidity episode per parcel: from the first HIGH (or LOW) until the rule no longer says so. */
     private static final class HumidityEpisode {
         final AlertType type;
         boolean notified;
@@ -69,11 +70,11 @@ public class AlertService {
         AppProperties.Crop crop = parcels.cropFor(reading.parcelId());
         List<Reading> history = store.readings(reading.parcelId());
         FrostAssessment a = frostRule.evaluate(reading, history, crop);
-        HumidityLevel humidity = humidityRule.evaluate(reading, crop);
-        store.addReading(reading, a, humidity);
+        HumidityAssessment humidity = humidityRule.evaluate(reading, history, crop);
+        store.addReading(reading, a, humidity.level());
         log.info("{} {} {} °C {}% dew {} °C -> frost {}, humidity {}", reading.parcelId(), reading.timestamp(),
                 Messages.num(reading.temperatureC()), Messages.num(reading.humidityPct()),
-                Messages.num(a.dewPointC()), a.level(), humidity);
+                Messages.num(a.dewPointC()), a.level(), humidity.level());
 
         checkFrost(reading, a, crop);
         checkHumidity(reading, a, humidity, crop);
@@ -83,6 +84,7 @@ public class AlertService {
         Episode ep = episodes.computeIfAbsent(reading.parcelId(), k -> new Episode());
         FrostLevel level = a.level();
         String name = parcelName(reading);
+        AppProperties.Phase phase = CropCalendar.phase(crop, reading.timestamp());
 
         if (level.compareTo(ep.level) > 0) {
             // Each level is sent at most once per episode, so noise around a threshold cannot spam.
@@ -90,14 +92,14 @@ public class AlertService {
             ep.level = level;
             String key = key(reading.parcelId(), "FROST_" + level);
             if (escalation || !inCooldown(key)) {
-                send(reading, a, AlertType.FROST, level, Messages.frost(name, crop, reading, a));
+                send(reading, a, AlertType.FROST, level, Messages.frost(name, crop, phase, reading, a));
                 ep.notified = true;
                 lastSent.put(key, Instant.now());
             } else {
                 log.info("{} frost {} suppressed by cooldown", reading.parcelId(), level);
             }
         } else if (level == FrostLevel.OK && ep.level != FrostLevel.OK
-                && reading.temperatureC() > crop.frostWarningC() + props.frost().allClearMarginC()) {
+                && (!phase.frostHarms() || reading.temperatureC() > phase.frostWarningC() + props.frost().allClearMarginC())) {
             if (ep.notified) {
                 send(reading, a, AlertType.FROST, FrostLevel.OK, Messages.frostAllClear(name, crop, reading));
             }
@@ -105,38 +107,56 @@ public class AlertService {
         }
     }
 
-    private void checkHumidity(Reading reading, FrostAssessment a, HumidityLevel level, AppProperties.Crop crop) {
+    private void checkHumidity(Reading reading, FrostAssessment a, HumidityAssessment h, AppProperties.Crop crop) {
         HumidityEpisode ep = humidityEpisodes.get(reading.parcelId());
         String name = parcelName(reading);
+        AlertType type = switch (h.level()) {
+            case HIGH -> AlertType.HUMIDITY_HIGH;
+            case LOW -> AlertType.HUMIDITY_LOW;
+            case OK -> null;
+        };
 
-        if (ep == null) {
-            if (level == HumidityLevel.OK) {
-                return;
+        // The rule counts hours over a window, so it does not flicker around a threshold: OK ends the episode.
+        if (ep != null && ep.type != type) {
+            if (ep.notified) {
+                send(reading, a, ep.type, FrostLevel.OK, Messages.humidityAllClear(name, crop, reading, ep.type));
             }
-            AlertType type = level == HumidityLevel.HIGH ? AlertType.HUMIDITY_HIGH : AlertType.HUMIDITY_LOW;
+            humidityEpisodes.remove(reading.parcelId());
+            ep = null;
+        }
+        if (ep == null && type != null) {
             ep = new HumidityEpisode(type);
             humidityEpisodes.put(reading.parcelId(), ep);
             String key = key(reading.parcelId(), type.name());
             if (!inCooldown(key)) {
-                send(reading, a, type, FrostLevel.WARNING, Messages.humidity(name, crop, reading, type));
+                send(reading, a, type, FrostLevel.WARNING, Messages.humidity(name, crop, reading, h));
                 ep.notified = true;
                 lastSent.put(key, Instant.now());
             } else {
                 log.info("{} {} suppressed by cooldown", reading.parcelId(), type);
             }
-            return;
         }
+    }
 
-        // The margin keeps noise around a threshold from ending and restarting the episode.
-        double margin = props.humidity().clearMarginPct();
-        boolean backInRange = reading.humidityPct() >= crop.humidityLowPct() + margin
-                && reading.humidityPct() <= crop.humidityHighPct() - margin;
-        if (level == HumidityLevel.OK && backInRange) {
-            if (ep.notified) {
-                send(reading, a, ep.type, FrostLevel.OK, Messages.humidityAllClear(name, crop, reading));
-            }
-            humidityEpisodes.remove(reading.parcelId());
+    /**
+     * An alert decided elsewhere (the backend's irrigation advice): stored and sent like the others. The same
+     * alert (parcel, time, type, level) is sent once, so the backend may repeat it.
+     *
+     * @return false if it had been sent already
+     */
+    public synchronized boolean sendExternal(Alert alert) {
+        boolean known = store.alerts(alert.parcelId()).stream().anyMatch(a -> a.timestamp().equals(alert.timestamp())
+                && a.type() == alert.type() && a.level() == alert.level());
+        if (known) {
+            return false;
         }
+        store.addAlert(alert);
+        try {
+            notifier.send(alert);
+        } catch (RuntimeException e) {
+            log.error("Notifier failed for {}", alert.parcelId(), e);
+        }
+        return true;
     }
 
     /** Clears alerts, episodes and cooldowns. */

@@ -7,7 +7,7 @@ For the accepted scenes, on 20 m pixels fully inside the valid shrunken parcel:
   3. for every weak zone of the pipeline: its NDVI and NDMI below the parcel median, the NDMI drop
      that the NDVI drop alone predicts (slope x NDVI drop), and how many distinct 20 m pixels it has
 
-    python measure_ndmi.py demo1      ->  out/<parcel>/ndmi_study.png
+    python measure_ndmi.py 6401307.101      ->  out/<parcel>/ndmi_study.png
 """
 import argparse
 

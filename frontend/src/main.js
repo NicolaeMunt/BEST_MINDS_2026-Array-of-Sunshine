@@ -4,6 +4,7 @@ import { SensorList } from './SensorList.js';
 import { SensorSheet } from './SensorSheet.js';
 import { DemoMenu } from './Demo.js';
 import { Fold } from './Fold.js';
+import { OverviewMap } from './OverviewMap.js';
 import { LoginPage, RegisterPage } from './Account.js';
 import { ProfilePage } from './Profile.js';
 import { AdminPage } from './Admin.js';
@@ -46,6 +47,26 @@ function useLiveData(selected, minutes, reload, userId) {
   return data;
 }
 
+/** The parcels with their polygons (once), and the satellite history of the selected one (when it changes). */
+function useParcels(selected, apiUp) {
+  const [parcels, setParcels] = useState([]);
+  const [history, setHistory] = useState({ id: null, data: null });
+  useEffect(() => {
+    if (!apiUp || parcels.length) return;
+    // Only the parcels with a polygon go on the maps; a user's parcel gets one later, if ever.
+    api('/parcels').then(list => setParcels(list.filter(p => p.geometry))).catch(() => {});
+  }, [apiUp]);
+  useEffect(() => {
+    if (!selected || !parcels.some(p => p.parcelId === selected)) return;
+    let stopped = false;
+    api('/parcels/' + encodeURIComponent(selected) + '/imagery/history')
+      .then(data => { if (!stopped) setHistory({ id: selected, data }); })
+      .catch(() => { if (!stopped) setHistory({ id: selected, data: null }); });
+    return () => { stopped = true; };
+  }, [selected, parcels]);
+  return { parcels, history: history.id === selected ? history.data : null };
+}
+
 const TROUBLE = {
   loading: ['Se încarcă terenurile', ''],
   down: ['Serverul nu răspunde', 'Pornește aplicația cu start.ps1. Pagina se reîncarcă singură când serverul răspunde.'],
@@ -79,6 +100,8 @@ function Dashboard({ user, startParcel }) {
   const [toast, setToast] = useState('');
   const [refreshing, setRefreshing] = useState(0);  // when the refresh button was pressed, 0 when idle
   const data = useLiveData(selected, minutes, reload, user && user.id);
+  const { parcels, history } = useParcels(selected, data.state === 'up');
+  const parcel = parcels.find(p => p.parcelId === selected);
   const lastToast = useRef('');
   if (toast) lastToast.current = toast;  // kept on screen while the toast fades out
 
@@ -134,10 +157,13 @@ function Dashboard({ user, startParcel }) {
     try {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
-      if (kind !== 'reset') setMinutes(kind === 'replay' ? 1440 : 15);  // a replayed night needs the long chart
+      // A replayed night needs a day on the chart, a replayed spell a week.
+      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 15);
       setReload(n => n + 1);
     } catch (e) {
-      setToast(String(e.message).includes('503') ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
+      // 409: nothing to replay for this crop, or a replay is running; the API says why.
+      setToast(e.status === 409 && e.detail ? e.detail
+        : e.status === 503 ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
     }
   }
 
@@ -149,6 +175,7 @@ function Dashboard({ user, startParcel }) {
         <p><span className="wordmark">Agronomicon</span><span className="tagline">See. Analyze. Grow.</span></p>
       </div>
       <${AccountBox} user=${user} />
+      ${parcels.length > 0 && html`<${OverviewMap} parcels=${parcels} sensors=${sensors} selected=${selected} onSelect=${select} />`}
       ${user && html`<${Fold} title="Terenurile tale" extra=${mine.length || null} className="lands" storageKey="lands">
         ${mine.length
           ? html`<p className="note">Cele cu probleme sunt primele.</p>
@@ -188,7 +215,8 @@ function Dashboard({ user, startParcel }) {
           </div>
         </header>
         <${SensorSheet} sensor=${sensor} readings=${current ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
-                        alerts=${current ? data.alerts : []} drawKey=${current ? data.id + ':' + data.minutes : ''} />
+                        alerts=${current ? data.alerts : []} drawKey=${current ? data.id + ':' + data.minutes : ''}
+                        parcel=${parcel} history=${history} />
       </div>`}
     </main>
 

@@ -11,7 +11,7 @@ public interface FrostRule {
     /**
      * @param current the new reading
      * @param history earlier readings of the same parcel, oldest first (without {@code current})
-     * @param crop    thresholds of the crop grown on the parcel
+     * @param crop    the crop grown on the parcel; its phase on the reading's day gives the thresholds
      */
     FrostAssessment evaluate(Reading current, List<Reading> history, AppProperties.Crop crop);
 }

@@ -7,6 +7,7 @@ const query = new URLSearchParams(location.search);
 // Served by the API at /app/ -> same origin; otherwise the API on localhost:8000 (override with ?api=http://host:port)
 export const API = query.get('api') || (location.pathname.startsWith('/app/') ? '' : 'http://localhost:8000');
 export const START_PARCEL = query.get('parcel');
+export const START_DAY = query.get('day');
 
 // The session token of the signed-in user. Storage can be blocked (private window): then nobody stays signed in.
 const TOKEN_KEY = 'agronomicon:token';

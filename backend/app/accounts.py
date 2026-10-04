@@ -1,8 +1,8 @@
-"""Accounts and their fields. A user registers with name, email, phone and password and gets a session token.
-Fields are entered by an administrator (role 'admin', see make_admin.py) from the official land documents:
-cadastral number, area in ares, the document. Users only see theirs. Each field is registered with
-sensors-alerts as parcel F<num>, which starts a simulated sensor with that crop's thresholds.
-Messages are in Romanian, for the page."""
+"""Accounts and their parcels. A user registers with name, email, phone and password and gets a session token.
+A user's parcels are entered by an administrator (role 'admin', see make_admin.py) from the official land
+documents: cadastral number (the parcel's ID), area in ares, the document. Users see their parcels and the demo
+ones (owned by the demo user, who cannot sign in). Each parcel is registered with sensors-alerts, which starts a
+simulated sensor with that crop's thresholds. Messages are in Romanian, for the page."""
 import hashlib
 import hmac
 import re
@@ -12,8 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 from . import db
 
 SESSION_DAYS = 30
-CROPS = ("wheat", "barley", "corn", "sunflower", "orchard", "vineyard")
-FIELD_ID = re.compile(r"^F(\d+)$")
+CROPS = ("wheat", "corn", "sunflower", "orchard", "vineyard")  # the crops of sensors-alerts app.crops
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE = re.compile(r"^\+?\d{8,15}$")
 CADASTRAL = re.compile(r"^\d[\d.]{3,28}\d$")
@@ -43,15 +42,6 @@ class Invalid(Exception):
 
 def _now():
     return datetime.now(timezone.utc)
-
-
-def field_id(num):
-    return f"F{num}"
-
-
-def is_field_id(parcel_id):
-    """True for the parcels of user fields (F1, F2, ...); the demo sensors of the config are P1, P2, ..."""
-    return bool(FIELD_ID.match(parcel_id or ""))
 
 
 # ---------- checks ----------
@@ -143,7 +133,7 @@ def login(email, password):
     """{token, user}; the same answer for an unknown email and a wrong password."""
     with db.get_conn() as conn:
         user = conn.execute("SELECT * FROM users WHERE email = ?", ((email or "").strip().lower(),)).fetchone()
-        if not user or not _matches(password or "", user["password_hash"]):
+        if not user or not user["password_hash"] or not _matches(password or "", user["password_hash"]):
             raise Invalid({"password": "Email sau parolă greșită."}, status=401)
         conn.execute("DELETE FROM sessions WHERE expires_at < ?", (db.ts_text(_now()),))
         token = _new_session(conn, user["id"])
@@ -185,13 +175,13 @@ def change_password(user_id, current, new):
         conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (_hash(new), user_id))
 
 
-# ---------- fields: entered by an administrator from the official documents ----------
+# ---------- parcels: the demo ones for everyone, a user's ones entered by an administrator ----------
 
 def _field_out(row):
     area_ari = row["area_ari"]
-    return {"id": field_id(row["num"]), "userId": row["user_id"], "name": row["name"], "crop": row["crop"],
+    return {"id": row["id"], "userId": row["user_id"], "name": row["name"], "crop": row["crop"],
             "areaAri": area_ari, "areaHa": None if area_ari is None else round(area_ari / 100, 4),
-            "cadastralNumber": row["cadastral_number"], "location": row["location"], "docType": row["doc_type"],
+            "cadastralNumber": row["id"], "location": row["location"], "docType": row["doc_type"],
             "docNumber": row["doc_number"], "docDate": row["doc_date"], "createdAt": row["created_at"]}
 
 
@@ -229,99 +219,104 @@ def _field_input(data):
         raise Invalid({"docDate": "Scrie data actului."})
     if not date(1990, 1, 1) <= when <= date.today():
         raise Invalid({"docDate": "Data actului trebuie să fie între 1990 și azi."})
-    return {"name": name, "crop": data["crop"], "area_ari": area, "cadastral_number": cadastral,
-            "location": location, "doc_type": data["doc_type"], "doc_number": number, "doc_date": when.isoformat()}
+    return {"id": cadastral, "name": name, "crop": data["crop"], "area_ari": area, "location": location,
+            "doc_type": data["doc_type"], "doc_number": number, "doc_date": when.isoformat()}
 
 
-def _cadastral_taken(conn, cadastral, except_num=None):
-    row = conn.execute("SELECT num FROM fields WHERE cadastral_number = ?", (cadastral,)).fetchone()
-    if row and row["num"] != except_num:
-        raise Invalid({"cadastralNumber": f"Numărul cadastral e deja înregistrat (terenul {field_id(row['num'])})."},
-                      status=409)
+# A parcel belongs to a user's account when its owner can sign in (has an email); the others are the demo ones.
+_OWNED = "SELECT p.* FROM parcels p JOIN users u ON u.id = p.user_id WHERE u.email IS NOT NULL"
 
 
 def fields(user_id):
-    """The user's fields, oldest first."""
+    """The user's parcels, oldest first."""
     with db.get_conn() as conn:
-        rows = conn.execute("SELECT * FROM fields WHERE user_id = ? ORDER BY num", (user_id,)).fetchall()
+        rows = conn.execute(_OWNED + " AND p.user_id = ? ORDER BY p.created_at, p.id", (user_id,)).fetchall()
     return [_field_out(r) for r in rows]
 
 
-def all_fields():
-    """Every user field, for registering them with sensors-alerts."""
+def account_parcels():
+    """Every parcel of a user account, for registering them with sensors-alerts."""
     with db.get_conn() as conn:
-        rows = conn.execute("SELECT * FROM fields ORDER BY num").fetchall()
+        rows = conn.execute(_OWNED + " ORDER BY p.created_at, p.id").fetchall()
     return [_field_out(r) for r in rows]
 
 
-def owner(parcel_id):
-    """User ID of a field's owner; None for a demo sensor or a deleted field."""
-    match = FIELD_ID.match(parcel_id or "")
-    if not match:
-        return None
+def visible_parcels(user):
+    """[(parcel row, own)]: the user's parcels first, then the demo ones. Other users' parcels are left out."""
     with db.get_conn() as conn:
-        row = conn.execute("SELECT user_id FROM fields WHERE num = ?", (int(match[1]),)).fetchone()
-    return row["user_id"] if row else None
+        rows = conn.execute(
+            "SELECT p.*, u.email IS NOT NULL AS owned FROM parcels p LEFT JOIN users u ON u.id = p.user_id "
+            "WHERE u.email IS NULL OR p.user_id = ? ORDER BY owned DESC, p.created_at, p.id",
+            (user["id"] if user else -1,)).fetchall()
+    return [(r, bool(r["owned"])) for r in rows]
 
 
 def can_see(parcel_id, user):
-    """Demo sensors are for everyone; a user field only for its owner."""
-    return not is_field_id(parcel_id) or (user is not None and owner(parcel_id) == user["id"])
+    """Demo parcels are for everyone, a user's parcel only for its owner. A parcel the database does not know
+    (a deleted one whose simulated sensor still runs) is for nobody."""
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT p.user_id, u.email FROM parcels p LEFT JOIN users u ON u.id = p.user_id "
+                           "WHERE p.id = ?", (parcel_id,)).fetchone()
+    return row is not None and (row["email"] is None or (user is not None and row["user_id"] == user["id"]))
 
 
-def _num(parcel_id):
-    match = FIELD_ID.match(parcel_id or "")
-    if not match or owner(parcel_id) is None:
+def _owned_parcel(conn, parcel_id):
+    row = conn.execute(_OWNED + " AND p.id = ?", (parcel_id,)).fetchone()
+    if not row:  # unknown, or a demo parcel: those come from backend/data/parcels.geojson
         raise Invalid({"field": "Terenul nu există."}, status=404)
-    return int(match[1])
+    return row
 
 
 def add_field(admin_id, user_id, data):
-    """A field for the user, as written in the document. Only administrators call this (see main.py)."""
+    """A parcel for the user, as written in the document; its cadastral number is its ID everywhere (sensors-alerts,
+    readings, alerts). Only administrators call this (see main.py)."""
     values = _field_input(data)
     with db.get_conn() as conn:
-        if not conn.execute("SELECT 1 FROM users WHERE id = ?", (user_id,)).fetchone():
+        if not conn.execute("SELECT 1 FROM users WHERE id = ? AND email IS NOT NULL", (user_id,)).fetchone():
             raise Invalid({"user": "Utilizatorul nu există."}, status=404)
-        _cadastral_taken(conn, values["cadastral_number"])
-        cur = conn.execute(
-            f"INSERT INTO fields (user_id, added_by, created_at, {', '.join(values)}) "
-            f"VALUES (?, ?, ?, {', '.join('?' for _ in values)})",
-            (user_id, admin_id, db.ts_text(_now()), *values.values()))
-        row = conn.execute("SELECT * FROM fields WHERE num = ?", (cur.lastrowid,)).fetchone()
-    return _field_out(row)
+        if conn.execute("SELECT 1 FROM parcels WHERE id = ?", (values["id"],)).fetchone():
+            raise Invalid({"cadastralNumber": "Un teren cu acest număr cadastral e deja înregistrat."}, status=409)
+        row = {**values, "user_id": user_id, "crop_confirmed": 1, "ids_fictive": 0, "added_by": admin_id,
+               "created_at": db.ts_text(_now())}
+        conn.execute(f"INSERT INTO parcels ({', '.join(row)}) VALUES ({', '.join('?' for _ in row)})", tuple(row.values()))
+        saved = conn.execute("SELECT * FROM parcels WHERE id = ?", (values["id"],)).fetchone()
+    return _field_out(saved)
 
 
 def update_field(parcel_id, data):
-    num = _num(parcel_id)
-    values = _field_input(data)
+    """Everything but the cadastral number, which is the parcel's ID: a wrong one means deleting and adding again."""
+    values = _field_input({**data, "cadastral_number": data.get("cadastral_number") or parcel_id})
+    if values.pop("id") != parcel_id:
+        raise Invalid({"cadastralNumber": "Numărul cadastral nu se schimbă. Șterge terenul și adaugă-l din nou."})
     with db.get_conn() as conn:
-        _cadastral_taken(conn, values["cadastral_number"], except_num=num)
-        conn.execute(f"UPDATE fields SET {', '.join(k + ' = ?' for k in values)} WHERE num = ?", (*values.values(), num))
-        row = conn.execute("SELECT * FROM fields WHERE num = ?", (num,)).fetchone()
-    return _field_out(row)
+        _owned_parcel(conn, parcel_id)
+        conn.execute(f"UPDATE parcels SET {', '.join(k + ' = ?' for k in values)} WHERE id = ?",
+                     (*values.values(), parcel_id))
+        saved = conn.execute("SELECT * FROM parcels WHERE id = ?", (parcel_id,)).fetchone()
+    return _field_out(saved)
 
 
 def delete_field(parcel_id):
-    """Deletes the field with its stored readings and alerts. sensors-alerts cannot forget a parcel, so its
-    simulated sensor runs on until that service restarts; the API hides it and stops storing it."""
-    num = _num(parcel_id)
+    """Deletes a user's parcel with its stored readings, alerts and satellite results. sensors-alerts cannot forget
+    a parcel, so its simulated sensor runs on until that service restarts; the API hides it and stops storing it."""
     with db.get_conn() as conn:
-        conn.execute("DELETE FROM fields WHERE num = ?", (num,))
-        conn.execute("DELETE FROM sensor_readings WHERE parcel_id = ?", (parcel_id,))
-        conn.execute("DELETE FROM sensor_alerts WHERE parcel_id = ?", (parcel_id,))
+        _owned_parcel(conn, parcel_id)
+        for table in ("sensor_readings", "sensor_alerts", "imagery_results", "imagery_warnings", "imagery_skipped"):
+            conn.execute(f"DELETE FROM {table} WHERE parcel_id = ?", (parcel_id,))
+        conn.execute("DELETE FROM parcels WHERE id = ?", (parcel_id,))
 
 
 # ---------- administrators ----------
 
 def users(query=""):
-    """Every account, newest first, with the number of fields and their total area. query: part of the name,
-    email or phone."""
+    """Every account (not the demo owner), newest first, with the number of parcels and their total area.
+    query: part of the name, email or phone."""
     like = "%" + (query or "").strip().lower() + "%"
     with db.get_conn() as conn:
         rows = conn.execute(
-            "SELECT u.*, COUNT(f.num) AS field_count, COALESCE(SUM(f.area_ari), 0) AS total_ari "
-            "FROM users u LEFT JOIN fields f ON f.user_id = u.id "
-            "WHERE lower(u.name) LIKE ? OR lower(u.email) LIKE ? OR u.phone LIKE ? "
+            "SELECT u.*, COUNT(p.id) AS field_count, COALESCE(SUM(p.area_ari), 0) AS total_ari "
+            "FROM users u LEFT JOIN parcels p ON p.user_id = u.id WHERE u.email IS NOT NULL "
+            "AND (lower(u.name) LIKE ? OR lower(u.email) LIKE ? OR u.phone LIKE ?) "
             "GROUP BY u.id ORDER BY u.id DESC",
             (like, like, "%" + re.sub(r"[\s\-().]", "", query or "") + "%")).fetchall()
     return [{**_user_out(r), "fieldCount": r["field_count"], "totalAri": r["total_ari"]} for r in rows]
@@ -329,7 +324,7 @@ def users(query=""):
 
 def user(user_id):
     with db.get_conn() as conn:
-        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        row = conn.execute("SELECT * FROM users WHERE id = ? AND email IS NOT NULL", (user_id,)).fetchone()
     if not row:
         raise Invalid({"user": "Utilizatorul nu există."}, status=404)
     return _user_out(row)

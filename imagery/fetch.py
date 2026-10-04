@@ -11,13 +11,14 @@ MIN_VALID_PCT of the shrunken parcel is usable, the analysis would skip the scen
 so its other bands are not downloaded; the scene stays listed with bands_downloaded false.
 
     python fetch.py --area
-    python fetch.py --parcels parcels.geojson
-    python fetch.py --parcels parcels.geojson --from 2026-05-01 --to 2026-07-31
+    python fetch.py --parcels                          # the parcels file of common.PARCELS
+    python fetch.py --parcels --from 2026-05-01        # every scene from 1 May until today
 """
 import argparse
 import json
 import math
 import time
+from datetime import date as Date
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +29,7 @@ from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
 from analyze import MIN_VALID_PCT, SCL_KEEP, parcel_masks
-from common import to_10m
+from common import PARCELS, to_10m
 
 STAC_SEARCH = "https://earth-search.aws.element84.com/v1/search"
 COLLECTION = "sentinel-2-l2a"
@@ -37,7 +38,7 @@ TILE = "35TPN"
 HERE = Path(__file__).resolve().parent
 CACHE = HERE / "cache"
 
-# Three clear dates, plus 2026-07-28 (two thirds cloud over demo1) to test the cloud mask.
+# Three clear dates, plus 2026-07-28 (two thirds cloud over J4) to test the cloud mask.
 DATES = ["2026-06-28", "2026-06-30", "2026-07-18", "2026-07-28"]
 
 # ~12 x 12 km around Orhei; only used to look at the zone and choose the demo parcel.
@@ -60,6 +61,9 @@ GDAL_ENV = {
     "GDAL_HTTP_MERGE_CONSECUTIVE_RANGES": "YES",
     "GDAL_HTTP_MULTIRANGE": "YES",
     "VSI_CACHE": "TRUE",
+    # Downloaded blocks stay in memory for the whole run, so nearby parcels of the same scene
+    # reuse them instead of downloading the same 10 km block again.
+    "CPL_VSIL_CURL_CACHE_SIZE": str(512 * 2**20),
 }
 
 
@@ -154,7 +158,7 @@ def parcel_usable_pct(scl_path, geometry):
     return 100.0 * np.isin(scl10[inner], SCL_KEEP).mean() if inner.any() else 0.0
 
 
-def fetch_region(name, bbox, assets, dates, margin, geometry=None, items_by_date=None):
+def fetch_region(name, bbox, assets, dates, margin, geometry=None, items_by_date=None, report_done=True):
     region_dir = CACHE / name
     index_path = region_dir / "scenes.json"
     if index_path.exists():
@@ -174,7 +178,8 @@ def fetch_region(name, bbox, assets, dates, margin, geometry=None, items_by_date
     total = 0
     for date in dates:
         if date in done:
-            print(f"{name} {date}: already on disk, nothing downloaded")
+            if report_done:
+                print(f"{name} {date}: already on disk, nothing downloaded")
             continue
         t0 = time.time()
         items = (items_by_date or {}).get(date) or search(bbox, date).get(date, [])
@@ -226,7 +231,7 @@ def fetch_region(name, bbox, assets, dates, margin, geometry=None, items_by_date
             f"{name} {date}: {item['id']}  scene clouds {props.get('eo:cloud_cover'):.1f}%  "
             f"usable in {'parcel' if geometry else 'window'} {candidates[best]['usable_pct']}%  "
             + ("" if bands else "too cloudy, bands not downloaded  ")
-            + f"read ~{fetched / 1e6:.1f} MB, on disk {on_disk / 1e6:.2f} MB, {time.time() - t0:.0f} s"
+            + f"read <= {fetched / 1e6:.1f} MB, on disk {on_disk / 1e6:.2f} MB, {time.time() - t0:.0f} s"
             + (f"  (also seen: {others})" if others else "")
         )
         total += fetched
@@ -253,10 +258,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     what = ap.add_mutually_exclusive_group(required=True)
     what.add_argument("--area", action="store_true", help="overview around Orhei, to choose the parcel")
-    what.add_argument("--parcels", help="GeoJSON with parcel polygons in lon/lat")
+    what.add_argument("--parcels", nargs="?", const="", metavar="FILE",
+                      help=f"GeoJSON with parcel polygons in lon/lat (default {PARCELS})")
     ap.add_argument("--dates", nargs="+", default=DATES)
     ap.add_argument("--from", dest="start", help="every scene from this day (YYYY-MM-DD), instead of --dates")
-    ap.add_argument("--to", dest="end", help="last day for --from")
+    ap.add_argument("--to", dest="end", help="last day for --from (default: today)")
     args = ap.parse_args()
 
     t0 = time.time()
@@ -264,12 +270,18 @@ def main():
         if args.area:
             total = fetch_region("area", AREA_BBOX, AREA_ASSETS, args.dates, margin=0)
         else:
+            parcels = list(parcel_regions(args.parcels or PARCELS))
+            union = (min(b[0] for _, b, _ in parcels), min(b[1] for _, b, _ in parcels),
+                     max(b[2] for _, b, _ in parcels), max(b[3] for _, b, _ in parcels))
+            by_day = search(union, args.start, args.end or Date.today().isoformat()) if args.start else None
             total = 0
-            for pid, bbox, geometry in parcel_regions(args.parcels):
-                by_day = search(bbox, args.start, args.end) if args.start else None
-                dates = sorted(by_day) if by_day else args.dates
-                total += fetch_region(pid, bbox, PARCEL_ASSETS, dates, PARCEL_MARGIN_M, geometry, by_day)
-    print(f"total read from the network: ~{total / 1e6:.0f} MB in {time.time() - t0:.0f} s")
+            # Date by date, all parcels of that scene together: their windows share the downloaded blocks.
+            for date in sorted(by_day) if by_day else args.dates:
+                for pid, bbox, geometry in parcels:
+                    total += fetch_region(pid, bbox, PARCEL_ASSETS, [date], PARCEL_MARGIN_M, geometry, by_day,
+                                          report_done=False)
+    print(f"done in {time.time() - t0:.0f} s; blocks touched <= {total / 1e6:.0f} MB "
+          f"(the real download is smaller: blocks shared by nearby parcels are fetched once)")
 
 
 if __name__ == "__main__":

@@ -255,11 +255,12 @@ function App() {
     await send('POST', '/auth/logout').catch(() => {});
     setToken('');
     setUser(null);
-    navigate('');
+    navigate('login');
   }
 
-  // Pages for signed-in users send the others to the login, and the other way round; admin is for administrators.
-  const wanted = (page === 'profile' || page === 'admin') && user === null ? 'login'
+  // Every page but login and register needs an account: the others go to the login, and a signed-in user away from
+  // it; admin is for administrators.
+  const wanted = page !== 'login' && page !== 'register' && user === null ? 'login'
     : (page === 'login' || page === 'register') && user ? 'profile'
     : page === 'admin' && user && user.role !== 'admin' ? 'profile' : null;
   useEffect(() => { if (wanted) navigate(wanted); }, [wanted]);

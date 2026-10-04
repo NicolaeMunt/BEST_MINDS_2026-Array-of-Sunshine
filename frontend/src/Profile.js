@@ -62,7 +62,7 @@ function PasswordForm() {
 
 function FieldCard({ field, sensor, onSaved }) {
   const v = sensor ? verdict(sensor) : null;
-  return html`<li className="field-card">
+  return html`<li className=${'field-card' + (v ? ' is-' + v.status : '')}>
     <div className="field-top">
       <div className="field-text">
         <h3>${field.name}</h3>
@@ -100,17 +100,29 @@ export function ProfilePage({ user, onUser, onSignOut, welcome }) {
   const savedDemo = id => change => setDemo(list => list.map(f => (f.id === id ? { ...f, ...change } : f)));
 
   const totalAri = (fields || []).reduce((sum, f) => sum + (f.areaAri || 0), 0);
+  // Own fields whose sensor says something is wrong: frost, disease, hot air, time to water.
+  const attention = (fields || []).filter(f => sensors[f.id] && verdict(sensors[f.id]).status !== 'ok').length;
+  const initials = (user.name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
   return html`<div className="page">
     <${Topbar} user=${user} page="profile" onSignOut=${onSignOut} />
 
     <main className="profile">
-      <div className="profile-head">
-        <span className="avatar avatar-big" aria-hidden="true">${(user.name || '?').trim()[0].toUpperCase()}</span>
-        <div>
+      <header className="profile-hero">
+        <span className="avatar avatar-big" aria-hidden="true">${initials}</span>
+        <div className="profile-id">
           <h1>${user.name}</h1>
-          <p className="note">${user.role === 'admin' ? 'Administrator · ' : ''}Cont creat ${day(user.createdAt)}</p>
+          <p className="profile-meta">
+            ${user.role === 'admin' && html`<span className="pill">Administrator</span>`}
+            <span>${user.email}</span>
+            <span>Cont creat ${day(user.createdAt)}</span>
+          </p>
         </div>
-      </div>
+        <dl className="profile-stats">
+          <div><dt>Terenuri</dt><dd>${fields ? fields.length : '…'}</dd></div>
+          <div><dt>Suprafața</dt><dd>${fields ? num(totalAri / 100, 2) : '…'}<small> ha</small></dd></div>
+          <div className=${attention ? 'is-alert' : ''}><dt>Au nevoie de atenție</dt><dd>${fields ? attention : '…'}</dd></div>
+        </dl>
+      </header>
 
       ${welcome && html`<div className="welcome">
         <h2>Bine ai venit, ${user.name.split(' ')[0]}!</h2>
@@ -121,6 +133,9 @@ export function ProfilePage({ user, onUser, onSignOut, welcome }) {
       <section className="card">
         <${Fold} title="Terenurile mele" extra=${fields ? fields.length : null} storageKey="profile-fields">
           ${loadError && html`<p className="form-error">${loadError}</p>`}
+          ${!fields && !loadError && html`<ul className="field-cards" aria-label="Se încarcă terenurile">
+            <li className="skeleton"></li><li className="skeleton"></li>
+          </ul>`}
           ${fields && fields.length > 0 && html`<p className="note fields-total">
             În total ${num(totalAri, 2)} ari (${num(totalAri / 100, 2)} ha), după acte.</p>`}
           ${fields && fields.length > 0 && html`<ul className="field-cards">

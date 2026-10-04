@@ -37,6 +37,8 @@ class SensorReadingOut(CamelModel):
     soil_moisture_pct: float | None = Field(None, description="Soil water at ~20 cm, % of the soil volume; null without a soil probe")
     min_temperature_c: float | None = Field(None, description="Lowest in this point's stretch of time (long charts)")
     max_temperature_c: float | None = Field(None, description="Highest in this point's stretch of time (long charts)")
+    min_humidity_pct: float | None = Field(None, description="Lowest air humidity in this point's stretch (long charts)")
+    max_humidity_pct: float | None = Field(None, description="Highest air humidity in this point's stretch (long charts)")
 
 
 class FrostAssessment(CamelModel):

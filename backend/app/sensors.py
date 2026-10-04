@@ -70,7 +70,7 @@ def latest(parcel_id):
 def readings(parcel_id, minutes, max_points=300):
     """Stored readings of the last N minutes with the dew point, at most ~max_points for the chart.
     Up to two hours: the readings themselves, thinned out evenly. Longer: one point per 5 minutes,
-    hour or day with the average, and the lowest and highest temperature of that stretch."""
+    hour or day with the average, and the lowest and highest temperature and humidity of that stretch."""
     bucket = next((sec for limit, sec in SUMMARY_STEPS if minutes <= limit), 86400)
     with db.get_conn() as conn:
         rows = db.readings_summary(conn, parcel_id, minutes, bucket) if bucket else db.readings(conn, parcel_id, minutes)
@@ -80,7 +80,9 @@ def readings(parcel_id, minutes, max_points=300):
     return [{"parcelId": r["parcel_id"], "timestamp": r["timestamp"], "temperatureC": round(r["temperature_c"], 1),
              "humidityPct": round(r["humidity_pct"], 1), "dewPointC": dew_point(r["temperature_c"], r["humidity_pct"]),
              "minTemperatureC": r["min_temperature_c"] if bucket else None,
-             "maxTemperatureC": r["max_temperature_c"] if bucket else None}
+             "maxTemperatureC": r["max_temperature_c"] if bucket else None,
+             "minHumidityPct": round(r["min_humidity_pct"], 1) if bucket else None,
+             "maxHumidityPct": round(r["max_humidity_pct"], 1) if bucket else None}
             for r in rows]
 
 

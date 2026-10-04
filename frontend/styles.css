@@ -175,7 +175,7 @@ a.btn-admin{color:#fff}
 /* ---------- maps: all the fields in the side column, the chosen one with its satellite picture ---------- */
 .side > *{flex-shrink:0}  /* the column scrolls instead of squeezing the map and the lists */
 .overview-map{height:190px;margin:14px 24px 18px 0;border-radius:6px;background:var(--rule)}
-/* ---------- "Ce vede satelitul": tools, the map, the words, the season ---------- */
+/* ---------- "Ce vede satelitul": tools, the map, the words ---------- */
 .sat-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
 .toggles{display:flex;flex-wrap:wrap;gap:6px;padding:4px;border-radius:26px;background:var(--sky)}
 .toggles button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;border:0;border-radius:20px;background:none;
@@ -208,50 +208,6 @@ a.btn-admin{color:#fff}
 
 .sat-words{margin-top:16px;font-size:20px;line-height:1.45;animation:rise .35s var(--ease) both}
 .sat-words p + p{margin-top:6px}
-
-/* The season: steps between good pictures, one band per month, the passes in two lanes. */
-.season{margin-top:20px;padding:16px 18px 14px;border:1.5px solid var(--rule);border-radius:14px;background:linear-gradient(var(--sheet),#FAFBFC)}
-.season-head{display:flex;align-items:center;gap:12px}
-.season-now{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;animation:rise .3s var(--ease) both}
-.season-now b{font:650 22px/1.2 var(--display)}
-.season-now small{color:var(--mute);font-size:14px}
-.season-step{display:grid;place-items:center;width:44px;height:44px;border:1.5px solid var(--rule);border-radius:50%;background:var(--sheet);
-  color:var(--ink);transition:background-color .2s,border-color .2s,transform .15s var(--ease),opacity .2s}
-.season-step:hover:not(:disabled){border-color:var(--ink);background:var(--sky)}
-.season-step:active:not(:disabled){transform:scale(.9)}
-.season-step:disabled{opacity:.35;cursor:default}
-.season-board{margin-top:14px}
-.season-months{display:flex;border-radius:10px;overflow:hidden;background:var(--sky)}
-.season-month{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:0;min-height:52px;padding:6px 2px;
-  border:0;border-left:1px solid rgba(255,255,255,.9);background:none;color:var(--mute);
-  transition:background-color .25s,color .25s}
-.season-month:first-child{border-left:0}
-.season-month:hover:not(:disabled){background:color-mix(in srgb,var(--leaf) 10%,var(--sky));color:var(--ink)}
-.season-month.is-active,.season-month.is-active:hover:not(:disabled){background:var(--leaf);color:#fff}
-.season-month.is-future{cursor:default;color:#A6B0AB;background:repeating-linear-gradient(-45deg,transparent 0 6px,rgba(124,136,130,.12) 6px 12px)}
-.season-month-name{font:650 16px/1.1 var(--display);white-space:nowrap}
-.season-month-count{font-size:12px;font-weight:600;opacity:.8}
-.season-track{position:relative;height:50px;margin-top:6px}
-.season-future{position:absolute;top:0;bottom:0;right:0;border-left:1px dashed var(--rule);
-  background:repeating-linear-gradient(-45deg,transparent 0 6px,rgba(124,136,130,.08) 6px 12px)}
-.season-lane{position:absolute;left:0;right:0;height:22px}
-.season-lane::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--rule)}
-.season-lane-clear{top:2px}
-.season-lane-cloud{top:28px}
-.pass{position:absolute;top:50%;width:12px;height:12px;padding:0;border-radius:50%;border:2px solid var(--sheet);background:var(--leaf);
-  transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(29,36,32,.08);transition:transform .2s var(--ease),box-shadow .25s}
-button.pass:hover{transform:translate(-50%,-50%) scale(1.45);z-index:2}
-.pass-weak{background:var(--sun)}
-.pass-cloud{width:8px;height:8px;background:var(--sheet);border:1.5px solid var(--none);box-shadow:none}
-.pass-chosen{width:18px;height:18px;z-index:3;box-shadow:0 0 0 2px var(--ink);animation:pop .3s var(--ease) both}
-.season-day{position:absolute;top:-6px;bottom:-2px;width:2px;margin-left:-1px;border-radius:1px;background:var(--blue);pointer-events:none;
-  transition:left .45s var(--ease)}
-.season-day::after{content:"";position:absolute;bottom:-4px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--blue)}
-.season-legend{margin-top:10px}
-.key-pass{width:12px;height:12px;border-radius:50%;background:var(--leaf)}
-.key-pass-weak{background:var(--sun)}
-.key-pass-cloud{background:var(--sheet);border:2px solid var(--none);width:10px;height:10px}
-.key-day{width:3px;height:14px;border-radius:2px;background:var(--blue)}
 
 /* ---------- drawing a field's outline (administration) ---------- */
 .outline{display:flex;flex-direction:column;gap:10px}
@@ -453,6 +409,8 @@ button.pass:hover{transform:translate(-50%,-50%) scale(1.45);z-index:2}
 @keyframes badge{from{opacity:0;transform:translateY(-6px)}}
 @keyframes pulse{from{transform:scale(1);opacity:.55}to{transform:scale(2.6);opacity:0}}
 @keyframes unclip{to{overflow:visible}}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes drift{to{transform:translate(-40px,30px) scale(1.2)}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -496,10 +454,7 @@ button.pass:hover{transform:translate(-50%,-50%) scale(1.45);z-index:2}
   .overview-map{margin-right:0}
   .parcel-map{height:320px}
   .go{margin-left:0}
-  .season{padding:12px 12px 10px}
-  .season-now b{font-size:18px}
-  .season-month-name{font-size:13px}
-  .season-month-count{display:none}
+
   .draw-map{height:300px}
   .draw-hint{white-space:normal;width:max-content;max-width:85%;text-align:center}
 }
@@ -560,6 +515,9 @@ button.pass:hover{transform:translate(-50%,-50%) scale(1.45);z-index:2}
 .stat-hi b{color:#B4531C}
 .chart-title{font:650 19px/1.2 var(--display);margin:0 0 6px}
 .sat-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.day-step{display:inline-flex;align-items:center;gap:6px}
+.day-arrow{min-width:42px;font-size:24px;line-height:1;padding:4px 10px}
+.day-arrow:disabled{opacity:.35;cursor:default}
 .sat-bar input[type=date]{font:inherit;min-height:42px;padding:6px 10px;border:1.5px solid var(--ink);border-radius:6px;background:var(--sheet)}
 .sat-bar-end{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
 .more-words{margin-top:8px}
@@ -623,3 +581,67 @@ button.pass:hover{transform:translate(-50%,-50%) scale(1.45);z-index:2}
 .crop-sowing{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;margin:14px 0 4px}
 .crop-sowing .field{flex:1 1 200px}
 .crop-sowing-status{flex-basis:100%;margin:0}
+/* ---------- the profile: a header with the account's figures, then the blocks rising one after another ---------- */
+.profile-hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;
+  gap:18px 22px;margin-bottom:22px;padding:28px 30px 24px;border-radius:16px;color:#fff;
+  background:linear-gradient(135deg,var(--brand) 0%,#155a4a 55%,var(--leaf) 100%);box-shadow:0 10px 30px rgba(15,70,91,.18);
+  animation:rise .5s var(--ease) both}
+.profile-hero::before{content:"";position:absolute;z-index:-1;right:-80px;top:-90px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(243,210,122,.38),transparent 68%);animation:drift 7s ease-in-out infinite alternate}
+.profile-hero .avatar-big{width:76px;height:76px;font-size:30px;letter-spacing:.02em;background:#fff;color:var(--brand);
+  box-shadow:0 0 0 5px rgba(255,255,255,.2);animation:pop .5s .15s var(--ease) both}
+.profile-id{min-width:0}
+.profile-hero h1{font:700 38px/1.1 var(--display);letter-spacing:-.02em;overflow-wrap:anywhere}
+.profile-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:8px;font-size:16px;color:rgba(255,255,255,.85)}
+.pill{display:inline-block;padding:4px 10px;border-radius:12px;background:#F3D27A;color:var(--brand);
+  font:700 12px/1.3 var(--body);letter-spacing:.06em;text-transform:uppercase}
+.profile-stats{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 0}
+.profile-stats div{padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);
+  animation:rise .45s var(--ease) both;transition:background-color .25s,transform .25s var(--ease)}
+.profile-stats div:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+.profile-stats div:nth-child(1){animation-delay:.12s}
+.profile-stats div:nth-child(2){animation-delay:.2s}
+.profile-stats div:nth-child(3){animation-delay:.28s}
+.profile-stats .is-alert{background:rgba(233,168,0,.28);border-color:rgba(243,210,122,.6)}
+.profile-stats dt{font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;opacity:.85}
+.profile-stats dd{margin:4px 0 0;font:700 30px/1 var(--display);font-variant-numeric:tabular-nums}
+.profile-stats small{font:500 16px var(--body);opacity:.85}
+.profile > .card{animation:rise .45s var(--ease) both;transition:box-shadow .3s}
+.profile > .card:hover{box-shadow:0 6px 22px rgba(29,36,32,.07)}
+.profile > .card:nth-of-type(1){animation-delay:.15s}
+.profile > .card:nth-of-type(2){animation-delay:.22s}
+.profile > .card:nth-of-type(3){animation-delay:.29s}
+.profile > .card:nth-of-type(4){animation-delay:.36s}
+.profile .field-card{border-left:6px solid var(--status,var(--rule));transition:border-color .2s,box-shadow .3s,transform .3s var(--ease)}
+.profile .field-card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(29,36,32,.09)}
+.profile .field-card:nth-child(2){animation-delay:.06s}
+.profile .field-card:nth-child(3){animation-delay:.12s}
+.profile .field-card:nth-child(n+4){animation-delay:.18s}
+.skeleton{height:132px;border-radius:10px;background:linear-gradient(90deg,var(--sky) 0%,#F4F7F9 50%,var(--sky) 100%);
+  background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.crop-sowing select,.crop-sowing input{transition:border-color .2s,box-shadow .2s}
+.crop-sowing select:focus,.crop-sowing input:focus{outline:none;border-color:var(--leaf);box-shadow:0 0 0 3px color-mix(in srgb,var(--leaf) 20%,transparent)}
+.crop-sowing-status{color:var(--leaf);font-weight:600;animation:rise .3s var(--ease) both}
+.topbar-nav .btn{transition:background-color .2s,color .2s,transform .15s var(--ease)}
+.topbar-nav .btn:active{transform:scale(.96)}
+@media (max-width:640px){
+  .profile-hero{padding:22px 18px 18px;gap:14px}
+  .profile-hero h1{font-size:28px}
+  .profile-hero .avatar-big{width:60px;height:60px;font-size:24px}
+  .profile-stats{gap:8px}
+  .profile-stats div{padding:10px}
+  .profile-stats dd{font-size:24px}
+  .profile-stats dt{font-size:11px}
+}
+/* ---------- the weather of the chosen period: the two cards also pick what the chart shows ---------- */
+button.stat-card{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--sheet);cursor:pointer;
+  transition:border-color .2s,box-shadow .25s,transform .2s var(--ease),background-color .2s}
+button.stat-card:hover{border-color:var(--mute);transform:translateY(-2px);box-shadow:0 8px 22px rgba(29,36,32,.08)}
+button.stat-card:active{transform:scale(.99)}
+button.stat-card[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink) inset}
+.stat-card h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.stat-pick{font:600 13px/1 var(--body);color:var(--mute);letter-spacing:.02em}
+button.stat-card[aria-pressed="true"] .stat-pick{color:#fff;background:var(--ink);border-radius:10px;padding:4px 8px}
+.humid-zone{fill:color-mix(in srgb,var(--blue) 10%,transparent)}
+.key-humid{width:16px;height:12px;border-radius:2px;background:color-mix(in srgb,var(--blue) 20%,transparent)}
+.temp-chart{animation:fade .35s ease both}

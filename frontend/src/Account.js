@@ -18,7 +18,6 @@ function AuthShell({ title, lead, children }) {
     </aside>
     <main className="auth-main">
       <div className="auth-card">
-        <a className="auth-back" href="#/">← Înapoi la terenuri</a>
         <h1>${title}</h1>
         ${lead && html`<p className="auth-lead">${lead}</p>`}
         ${children}

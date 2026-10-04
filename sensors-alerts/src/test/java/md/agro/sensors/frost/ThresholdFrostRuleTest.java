@@ -8,13 +8,15 @@ import java.time.Instant;
 import java.util.List;
 
 import md.agro.sensors.config.AppProperties;
+import md.agro.sensors.config.CropCalendar;
 import md.agro.sensors.model.Reading;
 import org.junit.jupiter.api.Test;
 
 class ThresholdFrostRuleTest {
 
+    // 03:00 local time on 9 April.
     private static final Instant T0 = Instant.parse("2025-04-09T00:00:00Z");
-    // Warning at 2 °C, critical at 0 °C.
+    // Warning at 2 °C, critical at 0 °C, all year.
     private static final AppProperties.Crop CROP = AppProperties.DEFAULT_CROP;
 
     private final FrostRule rule = new ThresholdFrostRule(new AppProperties.Frost(3, 3, 1, 1800));
@@ -23,9 +25,24 @@ class ThresholdFrostRuleTest {
         return new Reading("P1", T0.plusSeconds(minute * 60L), temp, 85);
     }
 
-    private static AppProperties.Crop crop(double frostWarningC, double frostCriticalC) {
-        return new AppProperties.Crop("test", frostWarningC, frostCriticalC, 30, 85, "", "", "");
+    private static Reading on(String isoUtc, double temp) {
+        return new Reading("P1", Instant.parse(isoUtc), temp, 85);
     }
+
+    private static AppProperties.Crop crop(double frostWarningC, double frostCriticalC) {
+        return new AppProperties.Crop("test", "", List.of(phase("01-01", frostWarningC, frostCriticalC)), null, null);
+    }
+
+    private static AppProperties.Phase phase(String from, Double warning, Double critical) {
+        return new AppProperties.Phase(from, "faza " + from, "growing", warning, critical, null, null);
+    }
+
+    /** Wheat-like: hardy until May, sensitive while it flowers, frost-proof after the harvest. */
+    private static final AppProperties.Crop WHEAT = new AppProperties.Crop("grâu", "", List.of(
+            phase("01-01", null, null),
+            phase("03-15", -9.0, -11.0),
+            phase("05-15", 1.0, -1.0),
+            phase("07-15", null, null)), null, null);
 
     @Test
     void levelsByTemperature() {
@@ -44,6 +61,26 @@ class ThresholdFrostRuleTest {
         assertEquals(FrostLevel.WARNING, rule.evaluate(at(0, 1.0), List.of(), sensitive).level());
         assertEquals(FrostLevel.WARNING, rule.evaluate(at(0, -1.0), List.of(), hardy).level());
         assertEquals(FrostLevel.CRITICAL, rule.evaluate(at(0, -1.0), List.of(), sensitive).level());
+    }
+
+    @Test
+    void sameTemperatureDifferentLevelPerPhase() {
+        // -2 °C: harmless while tillering, critical in flower, harmless after the harvest and in winter.
+        assertEquals(FrostLevel.OK, rule.evaluate(on("2026-04-01T00:00:00Z", -2), List.of(), WHEAT).level());
+        assertEquals(FrostLevel.CRITICAL, rule.evaluate(on("2026-05-20T00:00:00Z", -2), List.of(), WHEAT).level());
+        assertEquals(FrostLevel.OK, rule.evaluate(on("2026-09-30T00:00:00Z", -2), List.of(), WHEAT).level());
+        assertEquals(FrostLevel.OK, rule.evaluate(on("2026-01-10T00:00:00Z", -15), List.of(), WHEAT).level());
+        // Tillering wheat is only hurt by a hard frost.
+        assertEquals(FrostLevel.CRITICAL, rule.evaluate(on("2026-04-01T00:00:00Z", -11.5), List.of(), WHEAT).level());
+    }
+
+    @Test
+    void phaseFollowsTheLocalDay() {
+        // 14 May 21:30 UTC is already 15 May 00:30 in Chișinău (UTC+3): the flowering phase.
+        assertEquals("faza 05-15", CropCalendar.phase(WHEAT, Instant.parse("2026-05-14T21:30:00Z")).name());
+        assertEquals("faza 03-15", CropCalendar.phase(WHEAT, Instant.parse("2026-05-14T20:30:00Z")).name());
+        assertTrue(CropCalendar.within("05-20", "06-15", Instant.parse("2026-06-15T20:00:00Z")));
+        assertFalse(CropCalendar.within("05-20", "06-15", Instant.parse("2026-06-15T21:00:00Z")));
     }
 
     @Test

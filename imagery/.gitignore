@@ -3,3 +3,5 @@ __pycache__/
 # Overview around Orhei, only used to choose the parcel; `python fetch.py --area` rebuilds it.
 cache/area/
 out/area/
+# Written by the API from the database before every satellite run.
+parcels.geojson

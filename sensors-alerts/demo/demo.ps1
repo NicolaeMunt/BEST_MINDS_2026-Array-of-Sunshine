@@ -1,7 +1,7 @@
 # Replays the frost night on one parcel and prints every reading and alert until the all-clear.
 # The app must already be running with REPLAY_FILE pointing at demo/frost-demo.csv (see README).
 param(
-    [string]$ParcelId = "P1",
+    [string]$ParcelId = "6401512.058",
     [string]$BaseUrl = "http://localhost:8081",
     [int]$TimeoutSeconds = 300
 )

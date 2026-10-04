@@ -1,0 +1,201 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "parcel_id": "6401307.101",
+    "name": "Lotul de Floarea-soarelui",
+    "crop": "sunflower",
+    "crop_confirmed": false,
+    "ids_fictive": true,
+    "lpis_parcel": null,
+    "user_id": 1,
+    "note": "J4: green until late July, dry by 22 Aug, harvested before 18 Sep; crop assumed from that curve"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       28.860917,
+       47.4049
+      ],
+      [
+       28.8672,
+       47.407147
+      ],
+      [
+       28.872487,
+       47.401735
+      ],
+      [
+       28.868142,
+       47.397103
+      ],
+      [
+       28.860917,
+       47.4049
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parcel_id": "6401307.102",
+    "name": "Câmpul Mare",
+    "crop": "wheat",
+    "crop_confirmed": false,
+    "ids_fictive": true,
+    "lpis_parcel": null,
+    "user_id": 1,
+    "note": "next to J4 (north-west), the lower of two plots: green in May-June, harvested before 18 Jul; the narrow plot along the road is left out"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       28.850541,
+       47.409472
+      ],
+      [
+       28.855691,
+       47.410793
+      ],
+      [
+       28.855563,
+       47.404883
+      ],
+      [
+       28.850541,
+       47.409472
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parcel_id": "6401204.045",
+    "name": "Via Nord",
+    "crop": "vineyard",
+    "crop_confirmed": false,
+    "ids_fictive": true,
+    "lpis_parcel": null,
+    "user_id": 1,
+    "note": "~4.7 km north: north-south rows with service alleys, NDVI 0.46-0.69 all season"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       28.827224,
+       47.43973
+      ],
+      [
+       28.829876,
+       47.439688
+      ],
+      [
+       28.829651,
+       47.433213
+      ],
+      [
+       28.827,
+       47.433255
+      ],
+      [
+       28.827224,
+       47.43973
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parcel_id": "6401512.033",
+    "name": "Lanul de Porumb",
+    "crop": "corn",
+    "crop_confirmed": false,
+    "ids_fictive": true,
+    "lpis_parcel": null,
+    "user_id": 1,
+    "note": "~5 km south: peak late June-early August, still green on 22 Aug, bare in October"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       28.847828,
+       47.359649
+      ],
+      [
+       28.851283,
+       47.3592
+      ],
+      [
+       28.850635,
+       47.356964
+      ],
+      [
+       28.846958,
+       47.357573
+      ],
+      [
+       28.847828,
+       47.359649
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parcel_id": "6401512.058",
+    "name": "Livada Sud",
+    "crop": "orchard",
+    "crop_confirmed": false,
+    "ids_fictive": true,
+    "lpis_parcel": null,
+    "user_id": 1,
+    "note": "~6 km south: tree rows, green all season, greener again in autumn"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       28.849162,
+       47.350454
+      ],
+      [
+       28.851521,
+       47.349668
+      ],
+      [
+       28.851428,
+       47.347017
+      ],
+      [
+       28.84771,
+       47.347077
+      ],
+      [
+       28.849162,
+       47.350454
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

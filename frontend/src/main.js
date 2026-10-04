@@ -3,6 +3,7 @@ import { CROP, verdict } from './labels.js';
 import { SensorList } from './SensorList.js';
 import { SensorSheet } from './SensorSheet.js';
 import { DemoMenu } from './Demo.js';
+import { OverviewMap } from './OverviewMap.js';
 
 const POLL_MS = 3000;
 const EMPTY = { sensors: [], alerts: [], readings: [], state: 'loading', id: null, asked: undefined };
@@ -34,6 +35,25 @@ function useLiveData(selected, minutes, reload) {
   return data;
 }
 
+/** The parcels with their polygons (once), and the satellite history of the selected one (when it changes). */
+function useParcels(selected, apiUp) {
+  const [parcels, setParcels] = useState([]);
+  const [history, setHistory] = useState({ id: null, data: null });
+  useEffect(() => {
+    if (!apiUp || parcels.length) return;
+    api('/parcels').then(setParcels).catch(() => {});
+  }, [apiUp]);
+  useEffect(() => {
+    if (!selected || !parcels.some(p => p.parcelId === selected)) return;
+    let stopped = false;
+    api('/parcels/' + encodeURIComponent(selected) + '/imagery/history')
+      .then(data => { if (!stopped) setHistory({ id: selected, data }); })
+      .catch(() => { if (!stopped) setHistory({ id: selected, data: null }); });
+    return () => { stopped = true; };
+  }, [selected, parcels]);
+  return { parcels, history: history.id === selected ? history.data : null };
+}
+
 const TROUBLE = {
   loading: ['Se încarcă terenurile', ''],
   down: ['Serverul nu răspunde', 'Pornește aplicația cu start.ps1. Pagina se reîncarcă singură când serverul răspunde.'],
@@ -47,6 +67,8 @@ function App() {
   const [reload, setReload] = useState(0);
   const [toast, setToast] = useState('');
   const data = useLiveData(selected, minutes, reload);
+  const { parcels, history } = useParcels(selected, data.state === 'up');
+  const parcel = parcels.find(p => p.parcelId === selected);
 
   // Sensors that need attention come first.
   const sensors = useMemo(() => [...data.sensors].sort((a, b) =>
@@ -84,10 +106,13 @@ function App() {
     try {
       const result = await api(kind === 'reset' ? '/demo/reset' : `/demo/${kind}/${encodeURIComponent(sensor.id)}`, { method: 'POST' });
       setToast(result.message);
-      if (kind !== 'reset') setMinutes(kind === 'replay' ? 1440 : 15);  // a replayed night needs the long chart
+      // A replayed night needs a day on the chart, a replayed spell a week.
+      if (kind !== 'reset' && kind !== 'irrigate') setMinutes({ replay: 1440, humid: 10080, dry: 10080 }[kind] || 15);
       setReload(n => n + 1);
     } catch (e) {
-      setToast(String(e.message).includes('503') ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
+      // 409: nothing to replay for this crop, or a replay is running; the API says why.
+      setToast(e.status === 409 && e.detail ? e.detail
+        : e.status === 503 ? 'Serviciul de senzori nu răspunde.' : 'Serverul nu răspunde.');
     }
   }
 
@@ -96,6 +121,7 @@ function App() {
     <aside className="side">
       <p className="wordmark">Agronomicon</p>
       <h2 className="side-title">Terenurile tale</h2>
+      ${parcels.length > 0 && html`<${OverviewMap} parcels=${parcels} sensors=${sensors} selected=${selected} onSelect=${select} />`}
       <p className="note">Cele cu probleme sunt primele.</p>
       <${SensorList} sensors=${sensors} selected=${selected} onSelect=${select} />
       <div className="side-foot">
@@ -113,7 +139,7 @@ function App() {
           <p className="sheet-meta">${CROP[sensor.crop] || sensor.crop || ''}</p>
         </header>
         <${SensorSheet} key=${sensor.id} sensor=${sensor} readings=${own ? data.readings : []} minutes=${minutes} onMinutes=${setMinutes}
-                        alerts=${own ? data.alerts : []} />`}
+                        alerts=${own ? data.alerts : []} parcel=${parcel} history=${history} />`}
     </main>
 
     <p className="toast" role="status">${toast}</p>

@@ -11,7 +11,11 @@ TIMEOUT_SEC = float(os.getenv("SENSORS_TIMEOUT_SEC", 2))
 
 
 class SensorsUnavailable(Exception):
-    """The service is down or answered with an error other than 404."""
+    """The service is down or answered with an error other than 404 and 409."""
+
+
+class SensorsConflict(Exception):
+    """409: the service refused the request; the message says why, in Romanian."""
 
 
 def _call(method, path, params=None, body=None):
@@ -26,6 +30,12 @@ def _call(method, path, params=None, body=None):
     except urllib.error.HTTPError as e:
         if e.code == 404:  # unknown parcel or no readings yet
             return None
+        if e.code == 409:
+            try:
+                message = json.loads(e.read()).get("message")
+            except ValueError:
+                message = None
+            raise SensorsConflict(message or "Serviciul de senzori a refuzat cererea") from e
         raise SensorsUnavailable(f"{method} {path}: HTTP {e.code}") from e
     except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
         raise SensorsUnavailable(f"Serviciul de senzori ({SENSORS_URL}) nu răspunde") from e
@@ -41,7 +51,8 @@ def parcels():
 
 
 def latest(parcel_id):
-    """{parcelId, timestamp, temperatureC, humidityPct, dewPointC, frostLevel, crop, humidityLevel, mode} or None."""
+    """{parcelId, timestamp, temperatureC, humidityPct, precipitationMm, dewPointC, frostLevel, crop, humidityLevel,
+    mode, phase, frostWarningC, frostCriticalC, disease} or None."""
     return _call("GET", _parcel_path(parcel_id) + "/latest")
 
 
@@ -59,8 +70,15 @@ def alerts(parcel_id=None, type_="ALL"):
     return _call("GET", "/alerts", params) or []
 
 
+def send_advice(parcel_id, alert):
+    """Hands watering or sowing advice to sensors-alerts, which stores it and sends it to Telegram.
+    alert: {type: IRRIGATION | SOWING, timestamp, level, temperatureC, humidityPct, dewPointC, message}.
+    Returns {"sent": bool} or None."""
+    return _call("POST", _parcel_path(parcel_id) + "/advice", body=alert)
+
+
 def demo(kind, parcel_id):
-    """kind: frost | humid | dry | replay | normal."""
+    """kind: frost | humid | dry | replay | normal | irrigate. SensorsConflict when the demo cannot run now."""
     return _call("POST", f"/demo/{kind}/{urllib.parse.quote(parcel_id)}")
 
 

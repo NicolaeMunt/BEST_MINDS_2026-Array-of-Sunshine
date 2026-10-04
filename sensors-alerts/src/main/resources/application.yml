@@ -5,96 +5,202 @@ spring:
 
 server:
   port: ${PORT:8081}
+  error:
+    # The demo endpoints answer 409 with a reason the web app shows (e.g. no damp spell for this crop).
+    include-message: always
 
 app:
   # Frontend origin(s), comma separated. "*" allows everything (fine for the demo).
   cors-origins: ${FRONTEND_ORIGIN:*}
 
-  # IDs must match Coder 3's parcel IDs; crop is a key of app.crops below.
+  # IDs are the parcels' cadastral numbers (fictive for the demo), the same as in
+  # backend/data/parcels.geojson; crop is a key of app.crops below.
   parcels:
-    - id: P1
-      name: Livada Nord
+    - id: 6401512.058
+      name: Livada Sud
       crop: orchard
-    - id: P2
-      name: Via Sud
+    - id: 6401204.045
+      name: Via Nord
       crop: vineyard
-    - id: P3
+    - id: 6401307.102
       name: Câmpul Mare
       crop: wheat
-    - id: P4
+    - id: 6401512.033
       name: Lanul de Porumb
       crop: corn
-    - id: P5
+    - id: 6401307.101
       name: Lotul de Floarea-soarelui
       crop: sunflower
 
-  # Per-crop alert thresholds (same crop keys as the backend). Spring values, air temperature and
-  # relative air humidity. Starting points only: to be verified by the research teammate.
+  # Per-crop rules (same crop keys as the backend and the satellite job, which read this section too).
+  # Each crop goes through phases on a fixed calendar for the Orhei area: a phase starts on its "from"
+  # day (month-day) and lasts until the next one. An early or late year can be 1-2 weeks off.
+  # Sources and reasons for every number: imagery/LOGIC.md, section "Reguli pe culturi".
+  #
+  # phases:   frost-warning-c / frost-critical-c: air temperature thresholds in that phase; left out =
+  #           frost does no harm then (dormant, not sown, harvested). frost-advice: replaces the crop's. season: what the satellite expects
+  #           (dormant, establishing, growing, maturing, harvested). kc: FAO-56 crop coefficient for the
+  #           water balance; left out = no crop to water.
+  # disease:  damp air (min-humidity-pct or more, standing in for wet leaves) between from and to. Any one
+  #           condition is enough: at least "hours" damp hours in the last "within-hours", with the hourly
+  #           temperature between min-temp-c and max-temp-c.
+  # dry:      the days when dry, hot air (app.humidity) harms the crop.
+  # water:    root depth (FAO-56 table 22, middle of the range) and the share of the soil water the crop can
+  #           use without stress (FAO-56 p).
+  # sowing:   the days when the backend says "poți semăna" once the soil at seed depth has had a daily mean
+  #           of at least min-soil-temp-c for `days` days in a row.
   crops:
     wheat:
       name: grâu
-      frost-warning-c: 0
-      frost-critical-c: -3
-      humidity-low-pct: 30
-      humidity-high-pct: 85
-      frost-advice: Grâul rezistă la înghețuri ușoare. Verificați lanul dimineața.
-      humid-advice: Risc de rugină, septorioză și fuzarioză. Verificați lanul și pregătiți tratamentul fungicid.
-      dry-advice: Risc de șiștăvire a boabelor. Irigați dacă este posibil.
-    barley:
-      name: orz
-      frost-warning-c: 0
-      frost-critical-c: -3
-      humidity-low-pct: 30
-      humidity-high-pct: 85
-      frost-advice: Orzul rezistă la înghețuri ușoare. Verificați lanul dimineața.
-      humid-advice: Risc de făinare și helmintosporioză. Verificați lanul și pregătiți tratamentul fungicid.
-      dry-advice: Risc de șiștăvire a boabelor. Irigați dacă este posibil.
+      frost-advice: Verificați spicele peste 2-3 zile; înghețul în această fază poate lăsa spicele fără boabe.
+      phases:
+        - { from: "01-01", name: iernare, season: dormant }
+        - { from: "03-15", name: înfrățire, season: growing, frost-warning-c: -9, frost-critical-c: -11, kc: 0.7 }
+        - { from: "04-10", name: alungirea paiului, season: growing, frost-warning-c: -2, frost-critical-c: -4, kc: 0.9 }
+        - { from: "05-01", name: burduf, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 1.15 }
+        - { from: "05-15", name: spicuire și înflorire, season: growing, frost-warning-c: 1, frost-critical-c: -1, kc: 1.15 }
+        - { from: "06-05", name: formarea boabelor, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 1.15 }
+        - { from: "06-20", name: coacere, season: maturing, kc: 0.4 }
+        - { from: "07-15", name: după recoltare, season: harvested }
+        - { from: "10-01", name: semănat și răsărire, season: establishing }
+      disease:
+        name: fuzarioza spicului
+        from: "05-20"
+        to: "06-15"
+        min-humidity-pct: 90
+        conditions:
+          - { hours: 48, within-hours: 168, min-temp-c: 15, max-temp-c: 30 }
+        advice: Spicele au stat ude mult timp în înflorire. Verificați lanul și pregătiți tratamentul fungicid.
+      dry:
+        from: "05-15"
+        to: "07-10"
+        advice: Risc de șiștăvire a boabelor. Irigați dacă este posibil.
+      water: { root-depth-m: 1.65, depletion-fraction: 0.55 }
     corn:
       name: porumb
-      frost-warning-c: 3
-      frost-critical-c: 0
-      humidity-low-pct: 35
-      humidity-high-pct: 85
-      frost-advice: Plantele tinere de porumb sunt sensibile la îngheț. Pregătiți măsurile de protecție.
-      humid-advice: Risc de fuzarioză și helmintosporioză. Verificați frunzele și știuleții.
-      dry-advice: Risc de polenizare slabă. Irigați dacă este posibil.
+      frost-advice: Frunzele arse de îngheț cresc la loc; verificați peste câteva zile dacă vârful de creștere e viu.
+      phases:
+        - { from: "01-01", name: înainte de semănat, season: dormant }
+        - { from: "04-20", name: semănat și răsărire, season: establishing, frost-warning-c: 0, frost-critical-c: -2, kc: 0.3 }
+        - { from: "06-15", name: creștere, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 0.8 }
+        - { from: "07-10", name: înflorire și umplerea boabelor, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 1.2 }
+        - { from: "08-20", name: coacere, season: maturing, frost-warning-c: 0, frost-critical-c: -2, kc: 0.6 }
+        - { from: "09-20", name: maturitate, season: maturing }
+        - { from: "10-15", name: după recoltare, season: harvested }
+      disease:
+        name: helmintosporioză
+        from: "06-15"
+        to: "08-31"
+        min-humidity-pct: 90
+        conditions:
+          - { hours: 6, within-hours: 6, min-temp-c: 18, max-temp-c: 27 }
+        advice: Frunzele au stat ude la căldură. Căutați pete lungi, cenușii pe frunzele de jos.
+      dry:
+        from: "07-10"
+        to: "08-31"
+        advice: Risc de polenizare slabă și boabe puține pe știulete. Irigați dacă este posibil.
+      water: { root-depth-m: 1.35, depletion-fraction: 0.55 }
+      # Corn germinates once the soil at planting depth stays at 10 °C or more (Purdue, Iowa State).
+      sowing: { from: "04-01", to: "05-31", min-soil-temp-c: 10, days: 3 }
     sunflower:
       name: floarea-soarelui
-      frost-warning-c: 1
-      frost-critical-c: -3
-      humidity-low-pct: 25
-      humidity-high-pct: 80
       frost-advice: Plantele tinere suportă înghețuri scurte. Verificați cultura dimineața.
-      humid-advice: Risc de putregai alb și putregai cenușiu. Verificați tulpinile și calatidiile.
-      dry-advice: Risc de stres hidric. Urmăriți umiditatea solului.
+      phases:
+        - { from: "01-01", name: înainte de semănat, season: dormant }
+        - { from: "04-10", name: semănat și răsărire, season: establishing, frost-warning-c: 0, frost-critical-c: -3, kc: 0.35 }
+        - { from: "06-10", name: creștere, season: growing, frost-warning-c: 1, frost-critical-c: -1, kc: 0.7 }
+        - { from: "07-01", name: buton și înflorire, season: growing, frost-warning-c: 1, frost-critical-c: -1, kc: 1.05 }
+        - { from: "07-25", name: umplerea semințelor, season: maturing, frost-warning-c: -2, frost-critical-c: -4, kc: 0.7 }
+        - { from: "08-25", name: coacere, season: maturing, kc: 0.35 }
+        - { from: "09-10", name: după recoltare, season: harvested }
+      disease:
+        name: putregai alb
+        from: "07-01"
+        to: "07-25"
+        min-humidity-pct: 90
+        conditions:
+          - { hours: 48, within-hours: 72, min-temp-c: 10, max-temp-c: 29 }
+        advice: Calatidiile au stat ude în înflorire. Verificați spatele calatidiilor pentru pete moi, albe.
+      dry:
+        from: "07-01"
+        to: "08-15"
+        advice: Risc de semințe seci în calatidiu. Urmăriți umiditatea solului.
+      water: { root-depth-m: 1.15, depletion-fraction: 0.45 }
+      # Even emergence needs the soil near 10 °C (NDSU).
+      sowing: { from: "04-01", to: "05-31", min-soil-temp-c: 10, days: 3 }
     orchard:
       name: livadă
-      frost-warning-c: 2
-      frost-critical-c: -1
-      humidity-low-pct: 35
-      humidity-high-pct: 85
       frost-advice: Florile și mugurii sunt în pericol. Pregătiți aspersiunea sau fumigația.
-      humid-advice: Risc de rapăn și monilioză. Pregătiți tratamentul fungicid.
-      dry-advice: Risc de stres hidric și cădere a fructelor. Irigați livada.
+      phases:
+        - { from: "01-01", name: repaus, season: dormant }
+        - { from: "03-20", name: dezmugurire, season: establishing, frost-warning-c: -3, frost-critical-c: -5, kc: 0.5 }
+        - { from: "04-01", name: buton, season: establishing, frost-warning-c: -0.8, frost-critical-c: -2.8, kc: 0.5 }
+        - { from: "04-20", name: înflorire și legarea fructelor, season: establishing, frost-warning-c: 2, frost-critical-c: -2, kc: 0.5 }
+        - { from: "05-15", name: creșterea fructelor, season: growing, frost-warning-c: 2, frost-critical-c: -2, kc: 1.2 }
+        - { from: "08-15", name: coacere și recoltare, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 0.95,
+            frost-advice: "Merele îngheață pe la -2 °C. Nu culegeți și nu mișcați fructele cât sunt înghețate; așteptați să se dezghețe la amiază." }
+        - { from: "11-01", name: repaus, season: dormant }
+      disease:
+        name: rapăn
+        from: "04-01"
+        to: "05-31"
+        min-humidity-pct: 90
+        # Mills table (revised): the colder it is, the longer the leaves must stay wet.
+        conditions:
+          - { hours: 6, within-hours: 6, min-temp-c: 16, max-temp-c: 24 }
+          - { hours: 12, within-hours: 12, min-temp-c: 9, max-temp-c: 24 }
+          - { hours: 15, within-hours: 15, min-temp-c: 7, max-temp-c: 24 }
+          - { hours: 28, within-hours: 28, min-temp-c: 4, max-temp-c: 24 }
+        advice: Frunzele au stat ude destul cât să prindă rapănul. Pregătiți tratamentul fungicid.
+      dry:
+        from: "06-01"
+        to: "08-31"
+        advice: Risc de stres hidric și cădere a fructelor. Irigați livada.
+      water: { root-depth-m: 1.5, depletion-fraction: 0.5 }
     vineyard:
       name: viță-de-vie
-      frost-warning-c: 2
-      frost-critical-c: -1
-      humidity-low-pct: 30
-      humidity-high-pct: 80
       frost-advice: Lăstarii tineri sunt în pericol. Pregătiți fumigația sau aspersiunea.
-      humid-advice: Risc de mană și putregai cenușiu. Pregătiți tratamentul fungicid.
-      dry-advice: Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere.
+      phases:
+        - { from: "01-01", name: repaus, season: dormant }
+        - { from: "04-20", name: dezmugurire și lăstari tineri, season: establishing, frost-warning-c: 2, frost-critical-c: -1, kc: 0.3 }
+        - { from: "05-20", name: creșterea lăstarilor și înflorire, season: growing, frost-warning-c: 2, frost-critical-c: -1, kc: 0.7 }
+        - { from: "08-01", name: coacerea strugurilor și recoltare, season: growing, frost-warning-c: 0, frost-critical-c: -2, kc: 0.45,
+            frost-advice: "Înghețul arde frunzele și oprește coacerea. Dacă boabele au înghețat, culegeți strugurii cât mai repede." }
+        - { from: "10-20", name: după recoltare, season: harvested }
+        - { from: "11-15", name: repaus, season: dormant }
+      disease:
+        name: mană
+        from: "05-15"
+        to: "08-31"
+        min-humidity-pct: 95
+        conditions:
+          - { hours: 4, within-hours: 4, min-temp-c: 13, max-temp-c: 29 }
+        advice: Noaptea a fost caldă și foarte umedă. Verificați fața de jos a frunzelor și pregătiți tratamentul.
+      dry:
+        from: "06-01"
+        to: "08-31"
+        advice: Risc de stres hidric și arsuri pe frunze. Irigați plantațiile tinere.
+      water: { root-depth-m: 1.5, depletion-fraction: 0.45 }
 
   simulator:
     interval-seconds: 5
-    # How long FROST, HUMID and DRY modes take to reach their target values.
+    # How long the FROST mode takes to reach its target temperature.
     frost-ramp-seconds: 60
-    # classpath:... or file:... (timestamp,temperatureC,humidityPct)
+    # classpath:... or file:... (timestamp,temperatureC,humidityPct[,precipitationMm,soilTemperatureC,soilMoisturePct])
     replay-file: ${REPLAY_FILE:classpath:replay/sample-frost-night.csv}
     # 1 hour of the CSV is replayed in this many real seconds.
     replay-seconds-per-hour: 10
+    # HUMID and DRY replay a real damp or hot, dry spell of 2026 for the parcel's crop ({mode} is
+    # humid or dry, {crop} the crop key). Written by backend/make_sample.py.
+    episode-file: classpath:replay/{mode}-{crop}.csv
+    episode-seconds-per-hour: 0.5
     max-readings-per-parcel: 720
+    # The soil probe of the live sensors: moisture at ~20 cm (% of the soil volume) until a replay or a
+    # watering changes it; the soil temperature at ~5 cm follows the air slowly (soil-lag-hours).
+    soil-moisture-pct: 23
+    soil-lag-hours: 6
+    # A watering (POST /demo/irrigate) brings the soil moisture up to app.water.field-capacity-pct in this time.
+    watering-seconds: 30
 
   frost:
     # WARNING also when less than falling-margin-c above the crop's warning threshold and
@@ -107,10 +213,21 @@ app:
     cooldown-seconds: ${FROST_COOLDOWN_SECONDS:1800}
 
   humidity:
-    # High humidity only counts as disease risk when it is at least this warm.
-    disease-min-temp-c: 10
-    # All-clear when humidity is this far back inside the crop's low/high range.
-    clear-margin-pct: 5
+    # Dry, hot air harms the crops in their dry window: "suhovei" in the glossary of the Moldovan
+    # weather service (meteo.md) is 30% humidity or less at 25 °C or more (and wind, not measured here).
+    dry-max-pct: 30
+    dry-min-temp-c: 25
+    # A risk lasts this many hours after its conditions were last met (damp hours enough for the disease, or
+    # dry, hot air), so one rainy spell or one heat wave is one alert and the farmer has time to act.
+    hold-hours: 24
+
+  # The soil of the parcels: silt loam, FAO-56 table 19 (field capacity 0.27, wilting point 0.10 m3/m3).
+  # The backend's water advice uses it (backend/app/water.py); this service only for the demo watering.
+  water:
+    field-capacity-pct: 27
+    wilting-point-pct: 10
+    # A watering seen by the soil sensor: moisture up by this many points within 6 hours with under 2 mm of rain.
+    watering-rise-pct: 3
 
   telegram:
     token: ${TELEGRAM_BOT_TOKEN:}

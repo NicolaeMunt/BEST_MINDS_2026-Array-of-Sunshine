@@ -9,11 +9,11 @@ function AuthShell({ title, lead, children }) {
         <img src="assets/logo-mark.png" alt="" width="72" height="72" />
         <span><span className="wordmark">Agronomicon</span><span className="tagline">See. Analyze. Grow.</span></span>
       </a>
-      <p className="auth-pitch">Află la timp de îngheț și de aerul prea umed sau prea uscat de pe terenurile tale.</p>
+      <p className="auth-pitch">Află la timp ce se întâmplă pe terenurile tale și ce ai de făcut.</p>
       <ul className="auth-points">
-        <li>Adaugi terenurile și cultura de pe fiecare.</li>
-        <li>Fiecare cultură are pragurile ei de îngheț și umiditate.</li>
-        <li>Vezi temperatura de azi, de săptămâna asta și din mai încoace.</li>
+        <li>Alerte de îngheț, boli, arșiță și udare, după cultură și faza ei, și pe Telegram.</li>
+        <li>Senzori pe fiecare teren: aerul și solul, oră cu oră.</li>
+        <li>Satelitul arată ce părți ale câmpului sunt mai slabe.</li>
       </ul>
     </aside>
     <main className="auth-main">
@@ -53,7 +53,7 @@ export function RegisterPage({ onSignedIn }) {
       repeat: (v, all) => (v !== all.password ? 'Parolele nu sunt la fel.' : ''),
     }, async ({ repeat, ...v }) => onSignedIn(await send('POST', '/auth/register', v), 'profile?welcome=1'));
   }
-  return html`<${AuthShell} title="Creează cont" lead="Durează un minut. Apoi îți adaugi terenurile.">
+  return html`<${AuthShell} title="Creează cont" lead="Durează un minut. Terenurile ți le adaugă apoi administratorul, după acte.">
     <form className="form" onSubmit=${submit} noValidate>
       <${Input} form=${form} name="name" label="Numele tău" autoComplete="name" placeholder="Ion Popescu" autoFocus />
       <${Input} form=${form} name="email" label="Email" type="email" autoComplete="email" inputMode="email" placeholder="ion@exemplu.md" />

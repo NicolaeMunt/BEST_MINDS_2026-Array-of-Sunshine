@@ -196,7 +196,15 @@ function Dashboard({ user, startParcel }) {
     <${FieldTabs} mine=${mine} demo=${demo} signedIn=${!!user} selected=${selected} onSelect=${select} />
     <div className="main-grid">
       <main className="sheet">
-        ${!sensor ? html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`
+        ${!sensor ? (up && !sensors.length && user ? html`<div className="blank">
+            <h1>Încă nu ai terenuri</h1>
+            ${user.role === 'admin'
+              ? html`<p>Ca administrator adaugi terenurile oamenilor, după actele oficiale.</p>
+                <p><a className="btn btn-primary" href="#/admin">Mergi la Administrare</a></p>`
+              : html`<p>Terenurile ți le adaugă administratorul, după actele oficiale (titlul de autentificare sau
+                extrasul din Registrul bunurilor imobile). Apar aici imediat după aceea.</p>`}
+          </div>`
+          : html`<div className="blank"><h1>${TROUBLE[data.state][0]}</h1><p>${TROUBLE[data.state][1]}</p></div>`)
         : html`<div key=${sensor.id} className="sheet-body">
           <header className="sheet-head">
             <div>
@@ -221,8 +229,8 @@ function Dashboard({ user, startParcel }) {
         </div>`}
       </main>
       <aside className="side-panel">
-        <${AlertsPanel} sensors=${sensors} onSelect=${select} reload=${reload} />
         ${DEMO && html`<${DemoMenu} sensorName=${sensor && sensor.name} onRun=${runDemo} />`}
+        <${AlertsPanel} sensors=${sensors} onSelect=${select} reload=${reload} />
       </aside>
     </div>
 

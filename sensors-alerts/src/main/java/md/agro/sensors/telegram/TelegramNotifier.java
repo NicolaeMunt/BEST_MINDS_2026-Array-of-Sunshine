@@ -132,7 +132,8 @@ public class TelegramNotifier implements AlertNotifier {
             case "/start" -> {
                 chats.add(chatId);
                 saveChats();
-                yield "Bun venit! Veți primi alerte de îngheț și de umiditate pentru toate parcelele.\n"
+                yield "Bun venit! Veți primi alertele de îngheț, boli (aer umed) și arșiță, și sfaturile de udare "
+                        + "și de semănat pentru toate parcelele.\n"
                         + "/parcele – lista parcelelor\n/status <parcelId> – detalii parcelă\n"
                         + "Chat ID: " + chatId;
             }
